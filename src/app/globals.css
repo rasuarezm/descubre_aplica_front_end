@@ -1,0 +1,111 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 30 14% 17%; /* #2a2220 - Dark Gray */
+    --foreground: 36 43% 95%; /* #f5f0ea - Soft Complementary */
+
+    --card: 30 14% 20%;
+    --card-foreground: 36 43% 95%;
+
+    --popover: 30 14% 17%;
+    --popover-foreground: 36 43% 95%;
+
+    --primary: 36 43% 95%; 
+    --primary-foreground: 30 14% 10%;
+
+    --secondary: 206 40% 38%; /* #3a6d8c - Sober Blue */
+    --secondary-foreground: 36 43% 95%;
+
+    --muted: 206 40% 28%;
+    --muted-foreground: 36 43% 85%;
+
+    --accent: 175 100% 33%; /* #00A99D - Emerald Green */
+    --accent-foreground: 36 43% 98%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 36 43% 98%;
+    
+    --highlight: 39 59% 65%; /* #dab26f - Mustard */
+
+    --border: 206 40% 24%;
+    --input: 206 40% 24%;
+    --ring: 175 100% 33%;
+
+    --radius: 0.5rem;
+
+    /* Sidebar specific theme */
+    --sidebar-background: 30 14% 14%;
+    --sidebar-foreground: 36 43% 95%;
+    --sidebar-primary: 175 100% 33%;
+    --sidebar-primary-foreground: 36 43% 98%;
+    --sidebar-accent: 175 100% 28%;
+    --sidebar-accent-foreground: 36 43% 98%;
+    --sidebar-border: 30 14% 10%;
+    --sidebar-ring: 175 100% 33%;
+    
+    --chart-1: 175 100% 33%;
+    --chart-2: 39 59% 65%;
+    --chart-3: 206 40% 38%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+  }
+
+  .dark {
+    /* Keeping dark theme consistent with root for now */
+    --background: 30 14% 17%; /* #2a2220 - Dark Gray */
+    --foreground: 36 43% 95%; /* #f5f0ea - Soft Complementary */
+
+    --card: 30 14% 20%;
+    --card-foreground: 36 43% 95%;
+
+    --popover: 30 14% 17%;
+    --popover-foreground: 36 43% 95%;
+
+    --primary: 36 43% 95%; 
+    --primary-foreground: 30 14% 10%;
+
+    --secondary: 206 40% 38%; /* #3a6d8c - Sober Blue */
+    --secondary-foreground: 36 43% 95%;
+
+    --muted: 206 40% 28%;
+    --muted-foreground: 36 43% 85%;
+
+    --accent: 175 100% 33%; /* #00A99D - Emerald Green */
+    --accent-foreground: 36 43% 98%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 36 43% 98%;
+    
+    --highlight: 39 59% 65%; /* #dab26f - Mustard */
+
+    --border: 206 40% 24%;
+    --input: 206 40% 24%;
+    --ring: 175 100% 33%;
+    
+    /* Sidebar specific theme */
+    --sidebar-background: 30 14% 14%;
+    --sidebar-foreground: 36 43% 95%;
+    --sidebar-primary: 175 100% 33%;
+    --sidebar-primary-foreground: 36 43% 98%;
+    --sidebar-accent: 175 100% 28%;
+    --sidebar-accent-foreground: 36 43% 98%;
+    --sidebar-border: 30 14% 10%;
+    --sidebar-ring: 175 100% 33%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+    @apply font-body;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-headline;
+  }
+}

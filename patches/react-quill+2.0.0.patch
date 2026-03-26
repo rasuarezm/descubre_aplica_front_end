@@ -1,0 +1,88 @@
+diff --git a/node_modules/react-quill/lib/index.js b/node_modules/react-quill/lib/index.js
+index 47c35a5..4184a5a 100644
+--- a/node_modules/react-quill/lib/index.js
++++ b/node_modules/react-quill/lib/index.js
+@@ -1,7 +1,7 @@
+ 'use strict';
+ 
+ var React = require('react');
+-var ReactDOM = require('react-dom');
++var ReactDOM = require('react-dom/client');
+ var Quill = require('quill');
+ var PropTypes = require('prop-types');
+ 
+@@ -113,7 +113,7 @@
+ 	 *
+ 	 * See: https://github.com/zenoamaro/react-quill/issues/307
+ 	 */
+-	unprivilegedEditor: null,
++	unprivilegedEditor:  null,
+ 
+ 	/*
+ 	Methods
+@@ -201,15 +201,17 @@
+ 	},
+ 
+ 	getEditorNode: function() {
+-		return ReactDOM.findDOMNode(this.editorRef.current);
++		return this.editorRef.current;
+ 	},
+ 
+ 	getEditor: function() {
+ 		return this.editor;
+ 	},
+ 
+-	getUnprivilegedEditor: function() {
+-		return this.unprivilegedEditor;
++	getUnprivilegedEditor: function () {
++    return this.unprivilegedEditor;
+ 	},
+ 
+ 	getEditingArea: function() {
+@@ -231,14 +233,14 @@
+ 		var editor = this.getEditor();
+ 		if (!editor) return;
+ 		// Regular users can't be trusted with editor.selection
+-		// so we create a surrogate property that gets the job done.
++		// so we create a surrogate property that gets the job done
+ 		var unprivilegedEditor = this.getUnprivilegedEditor();
+ 		if (!unprivilegedEditor) {
+ 			var editor = this.getEditor();
+-			this.unprivilegedEditor = {
++			this.unprivilegedEditor = { 
+ 				getHTML: editor.root.innerHTML,
+ 				getLength: editor.getLength.bind(editor),
+-				getText: editor.getText.bind(editor),
++				getText: editor.getText.bind(editor),	
+ 				getContents: editor.getContents.bind(editor),
+ 				getSelection: editor.getSelection.bind(editor),
+ 				getBounds: editor.getBounds.bind(editor),
+diff --git a/node_modules/react-quill/lib/mixin.js b/node_modules/react-quill/lib/mixin.js
+index 7a58a9e..79d5010 100644
+--- a/node_modules/react-quill/lib/mixin.js
++++ b/node_modules/react-quill/lib/mixin.js
+@@ -1,5 +1,5 @@
+ 'use strict';
+-var ReactDOM = require('react-dom');
++var ReactDOM = require('react-dom/client');
+ var Quill = require('quill');
+ var isEqual = require('lodash/isEqual');
+ var isObject = require('lodash/isObject');
+@@ -87,7 +87,7 @@
+ 	 *
+ 	 * See: https://github.com/zenoamaro/react-quill/issues/307
+ 	 */
+-	unprivilegedEditor: null,
++	unprivilegedEditor:  null,
+ 
+ 	/*
+ 	Methods
+@@ -175,7 +175,7 @@
+ 	},
+ 
+ 	getEditorNode: function() {
+-		return ReactDOM.findDOMNode(this);
++		return this;
+ 	},
+ 
+ 	getEditor: function() {

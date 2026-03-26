@@ -1,0 +1,15 @@
+<svg width="500" height="120" viewBox="0 0 500 120" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400&amp;display=swap');
+    </style>
+  </defs>
+  <image href="/Bidtoryv1Web.svg" x="0" y="0" width="500" height="100" />
+  <text x="490" y="115"
+        font-family="'DM Sans', sans-serif"
+        font-size="24"
+        fill="#f5f0ea"
+        text-anchor="end">
+    Aplica
+  </text>
+</svg>
