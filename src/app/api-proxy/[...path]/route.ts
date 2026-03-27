@@ -5,6 +5,28 @@ const GATEWAY_ORIGIN = (
   process.env.APLICA_GATEWAY_URL ?? 'https://aplica-gateway-1xa8cm8z.uc.gateway.dev'
 ).replace(/\/$/, '');
 
+const API_PROXY_PREFIX = '/api-proxy';
+
+/**
+ * Construye la URL del gateway a partir de la URL del request.
+ * No usamos solo `params` del catch-all: con Turbopack/Next 15 a veces llega vacío
+ * y el proxy llamaba a `https://…gateway.dev/` (raíz) → 403 "permission … URL /".
+ */
+function resolveGatewayTarget(request: NextRequest): { target: string; error: string | null } {
+  const url = new URL(request.url);
+  if (!url.pathname.startsWith(API_PROXY_PREFIX)) {
+    return { target: '', error: 'Ruta debe empezar por /api-proxy' };
+  }
+  const rest = url.pathname.slice(API_PROXY_PREFIX.length).replace(/^\/+/, '');
+  if (!rest) {
+    return { target: '', error: 'Falta el path del API tras /api-proxy' };
+  }
+  return {
+    target: `${GATEWAY_ORIGIN}/${rest}${url.search}`,
+    error: null,
+  };
+}
+
 const HOP_BY_HOP = new Set([
   'connection',
   'keep-alive',
@@ -23,22 +45,36 @@ function forwardHeaders(request: NextRequest): Headers {
     if (HOP_BY_HOP.has(key.toLowerCase())) return;
     out.set(key, value);
   });
+  // Evita gzip upstream: fetch() en Node descomprime el cuerpo pero a veces deja
+  // Content-Encoding en cabeceras; al reenviar al navegador provoca ERR_CONTENT_DECODING_FAILED.
+  out.set('Accept-Encoding', 'identity');
   return out;
 }
+
+const SKIP_RESPONSE_HEADERS = new Set([
+  'transfer-encoding',
+  'content-encoding',
+  'content-length',
+]);
 
 function forwardResponseHeaders(source: Headers): Headers {
   const out = new Headers();
   source.forEach((value, key) => {
-    if (key.toLowerCase() === 'transfer-encoding') return;
+    if (SKIP_RESPONSE_HEADERS.has(key.toLowerCase())) return;
     out.set(key, value);
   });
   return out;
 }
 
-async function proxy(request: NextRequest, pathSegments: string[]) {
-  const path = pathSegments.join('/');
-  const suffix = path ? `/${path}` : '';
-  const target = `${GATEWAY_ORIGIN}${suffix}${request.nextUrl.search}`;
+async function proxy(request: NextRequest) {
+  const { target, error } = resolveGatewayTarget(request);
+  if (error) {
+    return NextResponse.json({ error }, { status: 400 });
+  }
+
+  if (process.env.NODE_ENV === 'development') {
+    console.log('[api-proxy]', request.method, target);
+  }
 
   const headers = forwardHeaders(request);
 
@@ -64,34 +100,26 @@ async function proxy(request: NextRequest, pathSegments: string[]) {
   });
 }
 
-type RouteCtx = { params: Promise<{ path: string[] }> };
-
-export async function GET(request: NextRequest, ctx: RouteCtx) {
-  const { path } = await ctx.params;
-  return proxy(request, path ?? []);
+export async function GET(request: NextRequest) {
+  return proxy(request);
 }
 
-export async function POST(request: NextRequest, ctx: RouteCtx) {
-  const { path } = await ctx.params;
-  return proxy(request, path ?? []);
+export async function POST(request: NextRequest) {
+  return proxy(request);
 }
 
-export async function PATCH(request: NextRequest, ctx: RouteCtx) {
-  const { path } = await ctx.params;
-  return proxy(request, path ?? []);
+export async function PATCH(request: NextRequest) {
+  return proxy(request);
 }
 
-export async function PUT(request: NextRequest, ctx: RouteCtx) {
-  const { path } = await ctx.params;
-  return proxy(request, path ?? []);
+export async function PUT(request: NextRequest) {
+  return proxy(request);
 }
 
-export async function DELETE(request: NextRequest, ctx: RouteCtx) {
-  const { path } = await ctx.params;
-  return proxy(request, path ?? []);
+export async function DELETE(request: NextRequest) {
+  return proxy(request);
 }
 
-export async function OPTIONS(request: NextRequest, ctx: RouteCtx) {
-  const { path } = await ctx.params;
-  return proxy(request, path ?? []);
+export async function OPTIONS(request: NextRequest) {
+  return proxy(request);
 }

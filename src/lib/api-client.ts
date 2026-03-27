@@ -41,8 +41,28 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
   }
 
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({ message: `HTTP error! status: ${response.status}` }));
-    throw new ApiError(errorData.message || 'Ocurrió un error en la petición', response.status, errorData);
+    const raw = await response.text().catch(() => '');
+    let errorData: Record<string, unknown> & { message?: string } = {
+      message: `HTTP error! status: ${response.status}`,
+    };
+    try {
+      if (raw) {
+        const parsed = JSON.parse(raw) as Record<string, unknown>;
+        errorData = { ...errorData, ...parsed };
+        const msg =
+          (typeof parsed.message === 'string' && parsed.message) ||
+          (typeof parsed.error === 'string' && parsed.error);
+        if (msg) errorData.message = msg;
+      }
+    } catch {
+      if (raw) errorData.message = raw.slice(0, 300);
+    }
+    throw new ApiError(
+      (typeof errorData.message === 'string' && errorData.message) ||
+        'Ocurrió un error en la petición',
+      response.status,
+      errorData
+    );
   }
   
   // Handle cases where the response might be empty (e.g., 204 No Content)
