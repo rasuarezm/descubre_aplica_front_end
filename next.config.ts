@@ -12,18 +12,8 @@ const contentSecurityPolicy =
 
 const nextConfig: NextConfig = {
   /* config options here */
-  // En desarrollo, usa NEXT_PUBLIC_API_BASE_URL=/api-proxy (ver .env.local) para que las
-  // peticiones vayan al mismo origen y Next reenvíe al gateway; así se evita el fallo de
-  // preflight CORS desde localhost. En producción, la URL del gateway debe ir en env (Vercel).
-  async rewrites() {
-    return [
-      {
-        source: '/api-proxy/:path*',
-        destination:
-          'https://aplica-gateway-1xa8cm8z.uc.gateway.dev/:path*',
-      },
-    ];
-  },
+  // /api-proxy → `src/app/api-proxy/[...path]/route.ts` reenvía al gateway conservando
+  // Authorization (los rewrites de Next hacia URLs externas no lo garantizan y daban 403).
   typescript: {
     ignoreBuildErrors: true,
   },
