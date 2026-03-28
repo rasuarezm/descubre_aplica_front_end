@@ -17,6 +17,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { useToast } from "@/hooks/use-toast";
 import apiClient from "@/lib/api-client";
+import { avatarUrlForImg } from "@/lib/user-profile";
 
 export function AppHeader() {
   const router = useRouter();
@@ -113,7 +114,12 @@ export function AppHeader() {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-9 w-9 rounded-full">
               <Avatar className="h-9 w-9">
-                {userProfile?.photo_signed_url && <AvatarImage src={userProfile.photo_signed_url} alt="Avatar de usuario" data-ai-hint="user avatar" />}
+                <AvatarImage
+                  src={avatarUrlForImg(userProfile?.photo_signed_url, user?.photoURL)}
+                  alt="Avatar de usuario"
+                  data-ai-hint="user avatar"
+                  referrerPolicy="no-referrer"
+                />
                 <AvatarFallback>{userProfile?.displayName?.charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || 'U'}</AvatarFallback>
               </Avatar>
             </Button>

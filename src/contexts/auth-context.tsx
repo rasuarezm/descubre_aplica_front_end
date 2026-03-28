@@ -6,6 +6,7 @@ import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import type { UserProfile } from '@/types';
 import apiClient from '@/lib/api-client';
+import { normalizeUserProfile } from '@/lib/user-profile';
 
 interface AuthContextType {
   user: FirebaseUser | null;
@@ -35,14 +36,13 @@ const syncAndFetchUserProfile = async (
     if (options?.photo_gs_uri) {
       body.photo_gs_uri = options.photo_gs_uri;
     }
-    const { profile_data } = await apiClient.post<{ profile_data: UserProfile }>(
-      '/create_or_update_user_profile',
-      body
-    );
+    const res = await apiClient.post<{
+      profile_data?: unknown;
+    }>('/create_or_update_user_profile', body);
 
     await user.getIdToken(true);
 
-    return profile_data;
+    return normalizeUserProfile(res.profile_data);
 
   } catch (error) {
     console.error('Failed to sync/fetch user profile from backend:', error);
@@ -66,7 +66,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         const cachedProfile = sessionStorage.getItem(`userProfile_${uid}`);
         if (cachedProfile) {
-          setUserProfile(JSON.parse(cachedProfile));
+          const parsed = normalizeUserProfile(JSON.parse(cachedProfile));
+          if (parsed) {
+            setUserProfile(parsed);
+          }
         }
       }
 
@@ -90,8 +93,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(firebaseUser);
         
         const cachedProfile = sessionStorage.getItem(`userProfile_${firebaseUser.uid}`);
-        if(cachedProfile) {
-            setUserProfile(JSON.parse(cachedProfile));
+        if (cachedProfile) {
+          const parsed = normalizeUserProfile(JSON.parse(cachedProfile));
+          if (parsed) {
+            setUserProfile(parsed);
+          }
         }
 
         try {

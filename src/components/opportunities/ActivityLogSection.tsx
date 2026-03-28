@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import apiClient from '@/lib/api-client';
 import DOMPurify from 'dompurify';
+import { avatarUrlForImg } from '@/lib/user-profile';
 
 interface CommentThreadProps {
   comment: OpportunityComment;
@@ -36,16 +37,15 @@ function CommentThread({ comment, onReply, onRefreshData, currentUserId }: Comme
   const [isDeleting, setIsDeleting] = useState(false);
 
   const { toast } = useToast();
-  const { userProfile, getIdToken } = useAuth();
+  const { userProfile, user, getIdToken } = useAuth();
   
   const isSystemComment = useMemo(() => comment.author_user_id === 'system_ia', [comment.author_user_id]);
 
   const authorDisplayName = isSystemComment ? 'Asistente IA' : (comment.author?.displayName || comment.author_display_name || 'Usuario');
-  const authorPhotoUrl = 
-    comment.author?.photo_signed_url || // Prioridad 1: URL firmada del objeto autor enriquecido
-    comment.author?.photoURL ||         // Prioridad 2: URL directa de Firebase (si es pública)
-    comment.author_photo_url ||         // Prioridad 3: Campo plano antiguo (si existe)
-    '';
+  const authorPhotoUrl = avatarUrlForImg(
+    comment.author?.photo_signed_url ?? undefined,
+    comment.author_photo_url || undefined
+  );
 
   const isCurrentUserComment = useMemo(() => {
     if (isSystemComment) return false;
@@ -145,7 +145,7 @@ function CommentThread({ comment, onReply, onRefreshData, currentUserId }: Comme
               </div>
             ) : (
               <Avatar className="h-8 w-8">
-                <AvatarImage src={authorPhotoUrl} alt={authorDisplayName} className="object-cover" />
+                <AvatarImage src={authorPhotoUrl} alt={authorDisplayName} className="object-cover" referrerPolicy="no-referrer" />
                 <AvatarFallback>{authorDisplayName?.charAt(0) || 'U'}</AvatarFallback>
               </Avatar>
             )}
@@ -219,7 +219,7 @@ function CommentThread({ comment, onReply, onRefreshData, currentUserId }: Comme
               {showReply && (
                 <div className="mt-2 flex gap-4">
                   <Avatar className="h-8 w-8">
-                      <AvatarImage src={userProfile?.photo_signed_url || ''} alt={userProfile?.displayName || ''} />
+                      <AvatarImage src={avatarUrlForImg(userProfile?.photo_signed_url, user?.photoURL)} alt={userProfile?.displayName || ''} referrerPolicy="no-referrer" />
                       <AvatarFallback>{userProfile?.displayName?.charAt(0) || 'U'}</AvatarFallback>
                   </Avatar>
                   <div className='flex-1'>
@@ -279,6 +279,7 @@ interface ActivityLogSectionProps {
 }
 
 export function ActivityLogSection({ userProfile, comments, onPostComment, onRefreshData, currentUserId }: ActivityLogSectionProps) {
+  const { user } = useAuth();
   const [newComment, setNewComment] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   
@@ -316,7 +317,7 @@ export function ActivityLogSection({ userProfile, comments, onPostComment, onRef
         {canCollaborate && (
           <div className="flex gap-4">
              <Avatar>
-                <AvatarImage src={userProfile?.photo_signed_url || ''} alt={userProfile?.displayName || ''} />
+                <AvatarImage src={avatarUrlForImg(userProfile?.photo_signed_url, user?.photoURL)} alt={userProfile?.displayName || ''} referrerPolicy="no-referrer" />
                 <AvatarFallback>{userProfile?.displayName?.charAt(0) || 'U'}</AvatarFallback>
             </Avatar>
             <div className="flex-1 space-y-2">

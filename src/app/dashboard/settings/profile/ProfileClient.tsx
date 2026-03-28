@@ -14,6 +14,7 @@ import { updateProfile } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { FirebaseError } from 'firebase/app';
 import apiClient from '@/lib/api-client';
+import { avatarUrlForImg } from '@/lib/user-profile';
 
 export default function ProfileClient() {
     // ... (Todo el código de tu componente original va aquí) ...
@@ -138,11 +139,10 @@ export default function ProfileClient() {
                                 <AvatarImage
                                     src={
                                         avatarPreviewUrl ||
-                                        userProfile?.photo_signed_url ||
-                                        (user?.photoURL?.startsWith('http') ? user.photoURL : '') ||
-                                        ''
+                                        avatarUrlForImg(userProfile?.photo_signed_url, user?.photoURL)
                                     }
                                     alt={userProfile?.displayName || ''}
+                                    referrerPolicy="no-referrer"
                                     key={`${avatarPreviewUrl || ''}-${userProfile?.photo_signed_url || ''}`}
                                 />
                                 <AvatarFallback className="text-3xl">
