@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import Link from "next/link";
-import Image from "next/image";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/auth-context";
@@ -15,16 +14,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import apiClient from '@/lib/api-client';
-
-const isValidUrl = (url: string | undefined | null): boolean => {
-  if (!url) return false;
-  try {
-    new URL(url);
-    return true;
-  } catch (_) {
-    return false;
-  }
-};
+import { customerLogoImgSrc } from '@/lib/gcs-display';
 
 export default function DashboardClient() {
   // ... (Todo el código de tu componente original va aquí: hooks, handlers, JSX) ...
@@ -201,15 +191,18 @@ export default function DashboardClient() {
                 return (
                   <Card key={customer.id} className="flex flex-col hover:shadow-lg transition-shadow duration-300">
                     <CardHeader className="flex flex-row items-start gap-4 space-y-0 pb-4">
-                      <Image 
-                        src={isValidUrl(customer.logo_signed_url) ? customer.logo_signed_url! : `https://placehold.co/80x80.png?text=${customer.name.charAt(0)}`}
+                      <img
+                        src={customerLogoImgSrc(
+                          customer.logo_signed_url,
+                          `https://placehold.co/80x80.png?text=${customer.name.charAt(0)}`
+                        )}
                         alt={`${customer.name} logo`}
                         width={60}
                         height={60}
                         className="rounded-lg border object-cover"
                         data-ai-hint="company logo"
                         key={customer.logo_signed_url}
-                        unoptimized
+                        referrerPolicy="no-referrer"
                       />
                       <div className="flex-1">
                         <CardTitle className="text-xl font-semibold">{customer.name}</CardTitle>

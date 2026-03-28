@@ -14,8 +14,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { MoreHorizontal, ArrowLeft, Building, Loader2, AlertCircle, Archive, ArchiveRestore } from 'lucide-react';
-import Image from 'next/image';
 import apiClient from '@/lib/api-client';
+import { customerLogoImgSrc } from '@/lib/gcs-display';
 
 type ViewMode = 'active' | 'archived';
 
@@ -235,13 +235,17 @@ function CustomerTable({ customers, isLoading, error, onActionClick, actionLabel
                             customers.map((customer) => (
                                 <TableRow key={customer.id}>
                                     <TableCell>
-                                        <Image
-                                            src={customer.logo_signed_url || `https://placehold.co/80x80.png?text=${customer.name.charAt(0)}`}
+                                        <img
+                                            src={customerLogoImgSrc(
+                                              customer.logo_signed_url,
+                                              `https://placehold.co/80x80.png?text=${customer.name.charAt(0)}`
+                                            )}
                                             alt={`${customer.name} logo`}
                                             width={40}
                                             height={40}
                                             className="rounded-md border object-cover"
                                             key={customer.logo_signed_url}
+                                            referrerPolicy="no-referrer"
                                         />
                                     </TableCell>
                                     <TableCell className="font-medium">{customer.name}</TableCell>

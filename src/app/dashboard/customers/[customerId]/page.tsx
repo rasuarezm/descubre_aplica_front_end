@@ -1,10 +1,8 @@
-
 "use client";
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import Image from 'next/image';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
@@ -26,6 +24,7 @@ import { getUrgencyInfo } from '@/lib/date-utils';
 import { BidtoryRadarIcon } from '@/components/icons/BidtoryRadarIcon';
 import { Separator } from '@/components/ui/separator';
 import apiClient from '@/lib/api-client';
+import { customerLogoImgSrc } from '@/lib/gcs-display';
 import { FinancialProfileWidget } from '@/components/customers/FinancialProfileWidget';
 import { RupContractsWidget } from '@/components/customers/RupContractsWidget';
 
@@ -803,15 +802,19 @@ const handleUploadGeneralDocument = async () => {
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex items-center gap-4">
-          <Image 
-            src={customer.logo_signed_url || `https://placehold.co/100x100.png?text=${customer.name.charAt(0)}`}
+          {/* <img> nativo: URLs firmadas GCS no deben pasar por el optimizador de next/image (403 / ORB en dev). */}
+          <img
+            src={customerLogoImgSrc(
+              customer.logo_signed_url,
+              `https://placehold.co/100x100.png?text=${customer.name.charAt(0)}`
+            )}
             alt={`${customer.name} logo`}
             width={100}
             height={100}
             className="rounded-lg border shadow-md object-cover"
             data-ai-hint="company logo"
-            key={customer.logo_signed_url} // Force re-render on URL change
-            unoptimized
+            key={customer.logo_signed_url}
+            referrerPolicy="no-referrer"
           />
           <div>
             <h1 className="text-3xl font-headline tracking-tight">{customer.name}</h1>
