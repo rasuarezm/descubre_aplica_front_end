@@ -74,8 +74,8 @@ export default function ProfileClient() {
             }
 
             await updateProfile(user, { photoURL: gs_uri });
-            await refreshUserProfile(true); // Force sync to get new signed URL
-            
+            await refreshUserProfile(true, { photo_gs_uri: gs_uri });
+
             toast({ title: "Éxito", description: "Tu foto de perfil ha sido actualizada." });
         } catch (error) {
             const errorMessage = error instanceof Error ? error.message : "Ocurrió un error desconocido.";

@@ -13,7 +13,8 @@ interface AuthContextType {
   loading: boolean;
   needsToAcceptTerms: boolean;
   getIdToken: () => Promise<string | null>;
-  refreshUserProfile: (forceSync?: boolean) => Promise<void>;
+  /** Tras subir avatar, pasa `{ photo_gs_uri: gs_uri }` para que el backend firme sin depender del retraso de Auth. */
+  refreshUserProfile: (forceSync?: boolean, options?: { photo_gs_uri?: string }) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType>({ 
@@ -25,12 +26,20 @@ const AuthContext = createContext<AuthContextType>({
   refreshUserProfile: async () => {},
 });
 
-const syncAndFetchUserProfile = async (user: FirebaseUser): Promise<UserProfile | null> => {
+const syncAndFetchUserProfile = async (
+  user: FirebaseUser,
+  options?: { photo_gs_uri?: string }
+): Promise<UserProfile | null> => {
   try {
-    const { profile_data } = await apiClient.post<{ profile_data: UserProfile }>('/create_or_update_user_profile', {
-      trigger_sync: true 
-    });
-    
+    const body: Record<string, unknown> = { trigger_sync: true };
+    if (options?.photo_gs_uri) {
+      body.photo_gs_uri = options.photo_gs_uri;
+    }
+    const { profile_data } = await apiClient.post<{ profile_data: UserProfile }>(
+      '/create_or_update_user_profile',
+      body
+    );
+
     await user.getIdToken(true);
 
     return profile_data;
@@ -46,7 +55,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
-  const refreshUserProfile = useCallback(async (forceSync = false) => {
+  const refreshUserProfile = useCallback(async (forceSync = false, options?: { photo_gs_uri?: string }) => {
     if (auth.currentUser) {
       try {
         const cachedProfile = sessionStorage.getItem(`userProfile_${auth.currentUser.uid}`);
@@ -54,7 +63,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             setUserProfile(JSON.parse(cachedProfile));
         }
         
-        const profile = await syncAndFetchUserProfile(auth.currentUser);
+        const profile = await syncAndFetchUserProfile(auth.currentUser, options);
         if (profile) {
           setUserProfile(profile);
           sessionStorage.setItem(`userProfile_${auth.currentUser.uid}`, JSON.stringify(profile));
