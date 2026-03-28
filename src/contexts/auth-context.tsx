@@ -14,7 +14,7 @@ interface AuthContextType {
   needsToAcceptTerms: boolean;
   getIdToken: () => Promise<string | null>;
   /** Tras subir avatar, pasa `{ photo_gs_uri: gs_uri }` para que el backend firme sin depender del retraso de Auth. */
-  refreshUserProfile: (forceSync?: boolean, options?: { photo_gs_uri?: string }) => Promise<void>;
+  refreshUserProfile: (forceSync?: boolean, options?: { photo_gs_uri?: string }) => Promise<UserProfile | null>;
 }
 
 const AuthContext = createContext<AuthContextType>({ 
@@ -23,7 +23,7 @@ const AuthContext = createContext<AuthContextType>({
   loading: true, 
   needsToAcceptTerms: false,
   getIdToken: async () => null,
-  refreshUserProfile: async () => {},
+  refreshUserProfile: async () => null,
 });
 
 const syncAndFetchUserProfile = async (
@@ -56,21 +56,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const refreshUserProfile = useCallback(async (forceSync = false, options?: { photo_gs_uri?: string }) => {
-    if (auth.currentUser) {
-      try {
-        const cachedProfile = sessionStorage.getItem(`userProfile_${auth.currentUser.uid}`);
-        if(cachedProfile && !forceSync) {
-            setUserProfile(JSON.parse(cachedProfile));
+    if (!auth.currentUser) {
+      return null;
+    }
+    const uid = auth.currentUser.uid;
+    try {
+      if (forceSync) {
+        sessionStorage.removeItem(`userProfile_${uid}`);
+      } else {
+        const cachedProfile = sessionStorage.getItem(`userProfile_${uid}`);
+        if (cachedProfile) {
+          setUserProfile(JSON.parse(cachedProfile));
         }
-        
-        const profile = await syncAndFetchUserProfile(auth.currentUser, options);
-        if (profile) {
-          setUserProfile(profile);
-          sessionStorage.setItem(`userProfile_${auth.currentUser.uid}`, JSON.stringify(profile));
-        }
-      } catch(error) {
-        console.error("AuthContext: Failed to refresh user profile.", error);
       }
+
+      const profile = await syncAndFetchUserProfile(auth.currentUser, options);
+      if (profile) {
+        setUserProfile(profile);
+        sessionStorage.setItem(`userProfile_${uid}`, JSON.stringify(profile));
+        return profile;
+      }
+      return null;
+    } catch (error) {
+      console.error("AuthContext: Failed to refresh user profile.", error);
+      return null;
     }
   }, []);
 

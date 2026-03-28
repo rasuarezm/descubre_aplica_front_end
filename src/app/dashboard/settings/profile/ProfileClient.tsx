@@ -22,6 +22,8 @@ export default function ProfileClient() {
     const [displayName, setDisplayName] = useState('');
     const [isSubmittingName, setIsSubmittingName] = useState(false);
     const [isSubmittingPhoto, setIsSubmittingPhoto] = useState(false);
+    /** Vista previa local hasta que el backend devuelva photo_signed_url (evita depender solo de caché / Auth). */
+    const [avatarPreviewUrl, setAvatarPreviewUrl] = useState<string | null>(null);
     const fileInputRef = useRef<HTMLInputElement>(null);
 
     useEffect(() => {
@@ -29,6 +31,14 @@ export default function ProfileClient() {
             setDisplayName(userProfile.displayName || ''); 
         }
     }, [userProfile]);
+
+    useEffect(() => {
+        return () => {
+            if (avatarPreviewUrl) {
+                URL.revokeObjectURL(avatarPreviewUrl);
+            }
+        };
+    }, [avatarPreviewUrl]);
     
     const handleNameUpdate = async () => {
         if (!user) {
@@ -56,6 +66,12 @@ export default function ProfileClient() {
         const file = event.target.files?.[0];
         if (!file || !user) return;
 
+        if (avatarPreviewUrl) {
+            URL.revokeObjectURL(avatarPreviewUrl);
+        }
+        const preview = URL.createObjectURL(file);
+        setAvatarPreviewUrl(preview);
+
         setIsSubmittingPhoto(true);
 
         try {
@@ -74,10 +90,17 @@ export default function ProfileClient() {
             }
 
             await updateProfile(user, { photoURL: gs_uri });
-            await refreshUserProfile(true, { photo_gs_uri: gs_uri });
+            const profile = await refreshUserProfile(true, { photo_gs_uri: gs_uri });
+
+            if (profile?.photo_signed_url) {
+                URL.revokeObjectURL(preview);
+                setAvatarPreviewUrl(null);
+            }
 
             toast({ title: "Éxito", description: "Tu foto de perfil ha sido actualizada." });
         } catch (error) {
+            URL.revokeObjectURL(preview);
+            setAvatarPreviewUrl(null);
             const errorMessage = error instanceof Error ? error.message : "Ocurrió un error desconocido.";
             toast({ title: "Error al cambiar la foto", description: errorMessage, variant: "destructive" });
         } finally {
@@ -112,7 +135,16 @@ export default function ProfileClient() {
                     <div className="flex flex-col sm:flex-row items-center gap-6">
                         <div className="relative">
                             <Avatar className="h-24 w-24">
-                                <AvatarImage src={userProfile?.photo_signed_url || ''} alt={userProfile?.displayName || ''} key={userProfile?.photo_signed_url} />
+                                <AvatarImage
+                                    src={
+                                        avatarPreviewUrl ||
+                                        userProfile?.photo_signed_url ||
+                                        (user?.photoURL?.startsWith('http') ? user.photoURL : '') ||
+                                        ''
+                                    }
+                                    alt={userProfile?.displayName || ''}
+                                    key={`${avatarPreviewUrl || ''}-${userProfile?.photo_signed_url || ''}`}
+                                />
                                 <AvatarFallback className="text-3xl">
                                     {userProfile?.displayName?.charAt(0) || user?.email?.charAt(0) || 'U'}
                                 </AvatarFallback>
