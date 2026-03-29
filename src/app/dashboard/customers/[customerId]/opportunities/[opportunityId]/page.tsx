@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -41,6 +41,8 @@ import {
   IA_ANALYSIS_ERROR_STATUSES,
   IA_ANALYSIS_IN_PROGRESS_STATUSES,
 } from '@/lib/ia-analysis-constants';
+import { onSnapshot, doc as firestoreDoc } from 'firebase/firestore';
+import { db } from '@/lib/firebase';
 
 const FINAL_OPPORTUNITY_STATUSES = ['Ganada', 'Perdida', 'Descartada'];
 
@@ -89,7 +91,7 @@ export default function OpportunityDetailPage() {
   const [showArchiveConfirm, setShowArchiveConfirm] = useState(false);
   const [isArchiving, setIsArchiving] = useState(false);
 
-  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [iaLiveProgress, setIaLiveProgress] = useState<{ progress: number; step: string } | null>(null);
 
   const uploadedDocs = useMemo(() => allDocs.filter(doc => !doc.is_tender_document && doc.document_status !== 'template' && doc.is_active), [allDocs]);
   const tenderDocuments = useMemo(() => allDocs.filter(doc => doc.is_tender_document && doc.is_active), [allDocs]);
@@ -202,22 +204,6 @@ const sortedRequiredDocs = useMemo(() => {
         // necesario: la condición del análisis en curso se evalúa con datos reales.
         setIsOptimisticallyAnalyzing(false);
 
-        const analysisStatus = currentOpportunity.ia_analysis?.analysis_status;
-        const shouldPoll = IA_ANALYSIS_IN_PROGRESS_STATUSES.includes(analysisStatus ?? '');
-
-        if (shouldPoll) {
-            if (!pollingIntervalRef.current) {
-                pollingIntervalRef.current = setInterval(() => {
-                    fetchData(false);
-                }, 15000);
-            }
-        } else {
-            if (pollingIntervalRef.current) {
-                clearInterval(pollingIntervalRef.current);
-                pollingIntervalRef.current = null;
-            }
-        }
-
     } catch (err) {
         const errorMessage = err instanceof Error ? err.message : "Ocurrió un error desconocido.";
         setError(errorMessage);
@@ -231,12 +217,41 @@ const sortedRequiredDocs = useMemo(() => {
     if (customerId && opportunityId) {
       fetchData();
     }
-    return () => {
-        if (pollingIntervalRef.current) {
-            clearInterval(pollingIntervalRef.current);
-        }
-    };
   }, [customerId, opportunityId, fetchData]);
+
+  useEffect(() => {
+    if (!opportunity) return;
+    const analysisStatus = opportunity.ia_analysis?.analysis_status;
+    const isInProgress =
+      isOptimisticallyAnalyzing ||
+      (IA_ANALYSIS_IN_PROGRESS_STATUSES as readonly string[]).includes(analysisStatus ?? '');
+    if (!isInProgress) {
+      setIaLiveProgress(null);
+      return;
+    }
+    const unsubscribe = onSnapshot(
+      firestoreDoc(db, 'opportunities', opportunityId),
+      (snap) => {
+        if (!snap.exists()) return;
+        const data = snap.data();
+        const ia = data?.ia_analysis ?? {};
+        const liveStatus = ia.analysis_status as string | undefined;
+        const progress = typeof ia.analysis_progress === 'number' ? ia.analysis_progress : null;
+        const step = typeof ia.analysis_step === 'string' ? ia.analysis_step : null;
+        if (progress !== null || step !== null) {
+          setIaLiveProgress({ progress: progress ?? 0, step: step ?? 'Analizando...' });
+        }
+        if (liveStatus === 'completed' || liveStatus === 'error' || liveStatus === 'failed') {
+          unsubscribe();
+          fetchData(false);
+        }
+      },
+      (error) => {
+        console.warn('[IaAnalysis] onSnapshot error:', error);
+      }
+    );
+    return () => unsubscribe();
+  }, [opportunity?.ia_analysis?.analysis_status, isOptimisticallyAnalyzing, opportunityId, fetchData]);
   
     useEffect(() => {
     const handleVisibilityChange = () => {
@@ -401,11 +416,6 @@ const sortedRequiredDocs = useMemo(() => {
             title: "Re-análisis iniciado",
             description: "La IA está procesando el pliego definitivo. La página se actualizará automáticamente al terminar.",
           });
-          if (!pollingIntervalRef.current) {
-              pollingIntervalRef.current = setInterval(() => {
-                  fetchData(false);
-              }, 15000);
-          }
       } else {
         await fetchData(false);
       }
@@ -418,7 +428,7 @@ const sortedRequiredDocs = useMemo(() => {
       throw error;
     }
     
-  }, [customerId, opportunityId, fetchData, toast, tenderDocuments, pollingIntervalRef]);
+  }, [customerId, opportunityId, fetchData, toast, tenderDocuments]);
 
 
   const handleDeleteDocument = useCallback(async (documentId: string, kind: 'OpportunityDocuments' | 'ProposalDocuments'): Promise<void> => {
@@ -718,18 +728,35 @@ const sortedRequiredDocs = useMemo(() => {
   }
 
   const analysisStatus = opportunity.ia_analysis?.analysis_status;
-  if (isOptimisticallyAnalyzing || IA_ANALYSIS_IN_PROGRESS_STATUSES.includes(analysisStatus ?? '')) {
+  if (
+    isOptimisticallyAnalyzing ||
+    (IA_ANALYSIS_IN_PROGRESS_STATUSES as readonly string[]).includes(analysisStatus ?? '')
+  ) {
     return (
-        <div className="flex flex-col items-center justify-center min-h-[calc(100vh-theme(spacing.28))] text-center">
-            <div className="relative mb-4">
-                <BidtoryRadarColorIcon className="h-24 w-24" />
-                <Loader2 className="h-8 w-8 animate-spin text-highlight absolute -bottom-2 -right-2" />
-            </div>
-            <h1 className="text-2xl font-headline tracking-tight mb-2">Analizando pliego con IA...</h1>
-            <p className="text-muted-foreground max-w-md">
-                Esto puede tardar unos minutos. La página se actualizará automáticamente cuando el análisis esté completo y el borrador de la oportunidad esté listo para su revisión.
-            </p>
+      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-theme(spacing.28))] text-center px-4">
+        <div className="relative mb-6">
+          <BidtoryRadarColorIcon className="h-24 w-24" />
+          <Loader2 className="h-8 w-8 animate-spin text-highlight absolute -bottom-2 -right-2" />
         </div>
+        <h1 className="text-2xl font-headline tracking-tight mb-2">Analizando pliego con IA...</h1>
+        <p className="text-muted-foreground max-w-md mb-6">
+          {iaLiveProgress?.step ?? 'Iniciando análisis. La página se actualizará automáticamente.'}
+        </p>
+        <div className="w-full max-w-sm space-y-2">
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <span>Progreso</span>
+            {(iaLiveProgress?.progress ?? 0) > 0 && (
+              <span>{iaLiveProgress!.progress}%</span>
+            )}
+          </div>
+          <div className="h-2 rounded-full bg-secondary/30 overflow-hidden">
+            <div
+              className="h-full rounded-full bg-highlight transition-all duration-700 ease-in-out"
+              style={{ width: `${iaLiveProgress?.progress ?? 0}%` }}
+            />
+          </div>
+        </div>
+      </div>
     );
   }
   

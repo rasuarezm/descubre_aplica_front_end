@@ -169,6 +169,8 @@ export interface Opportunity {
   urgency?: 'overdue' | 'urgent' | 'upcoming' | 'normal';
   ia_analysis?: {
     analysis_status: 'pending_upload' | 'pending_analysis' | 'pending' | 'in_progress' | 'completed' | 'failed' | 'error';
+    analysis_progress?: number | null;
+    analysis_step?: string | null;
     error_message?: string;
     analysis_error_message?: string;
     technical_summary?: string;
