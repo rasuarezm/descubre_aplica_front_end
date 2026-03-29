@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import type {
   CustomerDocument,
   CustomerFinancialProfile,
@@ -10,6 +10,7 @@ import type {
   ExperienceSector,
 } from '@/types';
 import apiClient from '@/lib/api-client';
+import { useExtractionProgress } from '@/hooks/useExtractionProgress';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Badge } from '@/components/ui/badge';
@@ -90,32 +91,14 @@ interface FinancialProfileWidgetProps {
   sourceType: 'rup' | 'financial_statements';
 }
 
-const POLL_MS_WHILE_EXTRACTING = 3000;
-const isDev = process.env.NODE_ENV === 'development';
-
 export function FinancialProfileWidget({ customerId, categoryDocuments, sourceType }: FinancialProfileWidgetProps) {
   const [profile, setProfile] = useState<CustomerFinancialProfile | null>(null);
   const [history, setHistory] = useState<CustomerFinancialProfile[]>([]);
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [historyOpen, setHistoryOpen] = useState(false);
-  const [extractionElapsedSec, setExtractionElapsedSec] = useState(0);
-  const extractionStartedAtRef = useRef<number | null>(null);
-
-  // Detectar si hay algún documento en extracción activa
-  const isProcessing = categoryDocuments.some(d => d.financial_extraction_status === 'processing');
 
   const fetchProfile = useCallback(async () => {
-    const processingDocIds = categoryDocuments
-      .filter(d => d.financial_extraction_status === 'processing')
-      .map(d => d.id);
     try {
-      if (isDev) {
-        console.info('[Bidtory][RUP]', 'get_financial_profile fetch', {
-          customerId,
-          sourceType,
-          processingDocIds,
-        });
-      }
       const data = await apiClient.get<CustomerFinancialProfileResponse>(
         `/get_financial_profile?customer_id=${customerId}`
       );
@@ -128,7 +111,37 @@ export function FinancialProfileWidget({ customerId, categoryDocuments, sourceTy
     } finally {
       setLoadingProfile(false);
     }
-  }, [customerId, sourceType, categoryDocuments]);
+  }, [customerId, sourceType]);
+
+  // Hook de progreso en tiempo real (Firestore onSnapshot)
+  const extractionProgress = useExtractionProgress(customerId, categoryDocuments);
+  const isActive =
+    extractionProgress?.status === 'queued' ||
+    extractionProgress?.status === 'processing';
+
+  // Cronómetro basado en startedAt de Firestore — consistente tras navegar
+  const [elapsedSec, setElapsedSec] = useState(0);
+
+  useEffect(() => {
+    if (!isActive || !extractionProgress?.startedAt) {
+      setElapsedSec(0);
+      return;
+    }
+    const tick = () =>
+      setElapsedSec(
+        Math.floor((Date.now() - extractionProgress.startedAt!.getTime()) / 1000)
+      );
+    tick();
+    const t = setInterval(tick, 1000);
+    return () => clearInterval(t);
+  }, [isActive, extractionProgress?.startedAt]);
+
+  // Cuando la extracción termina, recargar el perfil financiero
+  useEffect(() => {
+    if (extractionProgress?.status === 'completed') {
+      fetchProfile();
+    }
+  }, [extractionProgress?.status, fetchProfile]);
 
   // Carga inicial
   useEffect(() => {
@@ -144,60 +157,67 @@ export function FinancialProfileWidget({ customerId, categoryDocuments, sourceTy
     }
   }, [categoryDocuments.length]);
 
-  // Cronómetro visible mientras extraemos y aún no hay perfil en pantalla
-  useEffect(() => {
-    if (!isProcessing || profile) {
-      extractionStartedAtRef.current = null;
-      setExtractionElapsedSec(0);
-      return;
-    }
-    if (extractionStartedAtRef.current === null) {
-      extractionStartedAtRef.current = Date.now();
-    }
-    const tick = () => {
-      if (extractionStartedAtRef.current) {
-        setExtractionElapsedSec(
-          Math.floor((Date.now() - extractionStartedAtRef.current) / 1000)
-        );
-      }
-    };
-    tick();
-    const t = setInterval(tick, 1000);
-    return () => clearInterval(t);
-  }, [isProcessing, profile]);
-
-  // Polling mientras haya extracción en curso
-  useEffect(() => {
-    if (!isProcessing) return;
-    if (isDev) {
-      console.info('[Bidtory][RUP]', `FinancialProfileWidget polling every ${POLL_MS_WHILE_EXTRACTING / 1000}s`, {
-        sourceType,
-        processingDocs: categoryDocuments.filter(d => d.financial_extraction_status === 'processing').map(d => d.id),
-      });
-    }
-    const interval = setInterval(async () => {
-      await fetchProfile();
-    }, POLL_MS_WHILE_EXTRACTING);
-    return () => clearInterval(interval);
-  }, [isProcessing, fetchProfile, sourceType, categoryDocuments]);
-
   // ── Estado: procesando ──
-  if (isProcessing && !profile) {
+  if (isActive && !profile) {
     return (
       <Card className="border-blue-200 bg-blue-950/20 dark:border-blue-800">
-        <CardContent className="flex items-center gap-3 pt-5 pb-5">
-          <Clock className="h-5 w-5 text-blue-400 animate-pulse shrink-0" />
-          <div className="min-w-0">
-            <p className="text-sm font-medium text-blue-300">
-              Extrayendo indicadores con IA…{' '}
-              <span className="tabular-nums text-blue-200/90">
-                ({formatExtractionElapsed(extractionElapsedSec)})
+        <CardContent className="pt-5 pb-5 space-y-3">
+
+          {/* Cabecera: icono + paso actual */}
+          <div className="flex items-center gap-3">
+            <Clock className="h-5 w-5 text-blue-400 animate-pulse shrink-0" />
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium text-blue-300 truncate">
+                {extractionProgress?.step ?? 'Procesando…'}
+              </p>
+              <p className="text-xs text-blue-400/70 mt-0.5">
+                {extractionProgress?.startedAt
+                  ? <>Tiempo transcurrido: <span className="tabular-nums">{formatExtractionElapsed(elapsedSec)}</span></>
+                  : 'En cola, iniciando pronto…'
+                }
+              </p>
+            </div>
+          </div>
+
+          {/* Barra de progreso */}
+          <div className="space-y-1">
+            <div className="flex justify-between items-center">
+              <span className="text-xs text-blue-400/70">Progreso</span>
+              <span className="text-xs font-mono text-blue-300 tabular-nums">
+                {extractionProgress?.progress ?? 0}%
               </span>
+            </div>
+            <div className="w-full bg-blue-950/40 rounded-full h-2 overflow-hidden">
+              <div
+                className="h-2 rounded-full bg-blue-400 transition-all duration-700 ease-out"
+                style={{ width: `${extractionProgress?.progress ?? 0}%` }}
+              />
+            </div>
+          </div>
+
+          {/* Nota informativa */}
+          <p className="text-xs text-blue-400/50">
+            Puedes navegar a otra sección y volver — el progreso se mantiene.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (extractionProgress?.status === 'failed') {
+    return (
+      <Card className="border-red-200 bg-red-950/20 dark:border-red-800">
+        <CardContent className="flex items-start gap-3 pt-5 pb-5">
+          <XCircle className="h-5 w-5 text-red-400 shrink-0 mt-0.5" />
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-red-300">
+              Error en la extracción
             </p>
-            <p className="text-xs text-blue-400/70 mt-0.5">
-              Los RUP grandes se analizan en varias pasadas (indicadores + contratos). Suele tardar{' '}
-              <strong className="font-medium text-blue-300/90">2 a 10 minutos</strong>; en algunos casos un poco más.
-              Puedes dejar esta pestaña abierta: la vista se actualiza sola.
+            <p className="text-xs text-red-400/70 mt-0.5">
+              {extractionProgress.error ?? 'Ocurrió un error inesperado.'}
+            </p>
+            <p className="text-xs text-red-400/50 mt-1">
+              Puedes volver a subir el documento para reintentarlo.
             </p>
           </div>
         </CardContent>
