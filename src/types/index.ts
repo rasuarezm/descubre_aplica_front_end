@@ -220,7 +220,12 @@ export interface CustomerDocument {
   fileName?: string;
   filename?: string;
   uploadedAt?: Date;
-  financial_extraction_status?: 'processing' | 'completed' | 'failed' | null;
+  financial_extraction_status?: 'queued' | 'processing' | 'completed' | 'failed' | null;
+  extraction_progress?: number | null;
+  extraction_step?: string | null;
+  extraction_started_at?: Date | null;
+  extraction_updated_at?: Date | null;
+  extraction_error?: string | null;
   financial_profile_id?: number | null;
 }
 
