@@ -20,7 +20,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import {
-  CheckCircle2, AlertCircle, Link2, Link2Off, ChevronDown, ChevronUp,
+  CheckCircle2, AlertCircle, AlertTriangle, Link2, Link2Off, ChevronDown, ChevronUp,
   Building2, Calendar, DollarSign, Tag,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -116,6 +116,8 @@ function ContractRow({
 }) {
   const [expanded, setExpanded] = useState(false);
   const hasCert = !!contract.certification;
+  const mismatchWarnings = getMismatchWarnings(contract);
+  const hasMismatch = mismatchWarnings.length > 0;
 
   return (
     <div className={cn(
@@ -129,14 +131,22 @@ function ContractRow({
             <span className="text-xs font-mono text-muted-foreground bg-muted/40 px-1.5 py-0.5 rounded">
               #{contract.rup_consecutive}
             </span>
-            {hasCert
-              ? <Badge variant="outline" className="text-green-400 border-green-500/30 text-[10px] gap-1 px-1.5">
+            {hasCert ? (
+              <>
+                <Badge variant="outline" className="text-green-400 border-green-500/30 text-[10px] gap-1 px-1.5">
                   <CheckCircle2 className="h-2.5 w-2.5" /> Certificación vinculada
                 </Badge>
-              : <Badge variant="outline" className="text-amber-400 border-amber-500/30 text-[10px] gap-1 px-1.5">
-                  <AlertCircle className="h-2.5 w-2.5" /> Sin certificación
-                </Badge>
-            }
+                {hasMismatch && (
+                  <span title={mismatchWarnings.join('\n')} className="cursor-help">
+                    <AlertTriangle className="h-3.5 w-3.5 text-amber-400 shrink-0" />
+                  </span>
+                )}
+              </>
+            ) : (
+              <Badge variant="outline" className="text-amber-400 border-amber-500/30 text-[10px] gap-1 px-1.5">
+                <AlertCircle className="h-2.5 w-2.5" /> Sin certificación
+              </Badge>
+            )}
           </div>
           <p className="font-medium text-sm truncate">{contract.contracting_entity || '—'}</p>
           <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground flex-wrap">
@@ -203,6 +213,98 @@ function ContractRow({
 const PAGE_SIZE = 20;
 type FilterType = 'all' | 'with_cert' | 'without_cert';
 
+/** Normaliza nombre de entidad para comparación: mayúsculas, sin tildes, sin sufijos legales */
+function normalizeEntityName(s: string): string {
+  return s
+    .toUpperCase()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/\b(SAS|SA|LTDA|EU|SCA|ESAL|S\.A\.S\.|S\.A\.|LTDA\.|S\.C\.A\.)\b/g, '')
+    .replace(/[^A-Z0-9 ]/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+interface DocMatchResult {
+  score: number;
+  reasons: string[];
+}
+
+function computeMatchScore(contract: RupContract, doc: CustomerDocument): DocMatchResult {
+  const raw = doc.extracted_contract_data;
+  if (!raw) return { score: 0, reasons: [] };
+
+  let extracted: CertificationExtractedData;
+  try {
+    extracted = typeof raw === 'string' ? JSON.parse(raw) : raw as CertificationExtractedData;
+  } catch {
+    return { score: 0, reasons: [] };
+  }
+
+  let score = 0;
+  const reasons: string[] = [];
+
+  const rupEntity = normalizeEntityName(contract.contracting_entity || '');
+  const certEntity = normalizeEntityName(extracted.contracting_entity || '');
+
+  if (rupEntity && certEntity) {
+    if (rupEntity === certEntity) {
+      score += 60;
+      reasons.push('Entidad idéntica');
+    } else if (rupEntity.includes(certEntity) || certEntity.includes(rupEntity)) {
+      score += 40;
+      reasons.push('Entidad similar');
+    } else {
+      const rupWords = new Set(rupEntity.split(' ').filter(w => w.length > 3));
+      const certWords = certEntity.split(' ').filter(w => w.length > 3);
+      const common = certWords.filter(w => rupWords.has(w));
+      if (common.length >= 2) {
+        score += common.length * 8;
+        reasons.push(`${common.length} palabras en común`);
+      }
+    }
+  }
+
+  const rupVal = contract.contract_value_smmlv;
+  const certVal = extracted.contract_value_smmlv;
+  if (rupVal != null && certVal != null && rupVal > 0) {
+    const diff = Math.abs(rupVal - certVal) / rupVal;
+    if (diff <= 0.05)      { score += 40; reasons.push('Valor coincide (±5%)'); }
+    else if (diff <= 0.15) { score += 25; reasons.push('Valor similar (±15%)'); }
+    else if (diff <= 0.35) { score += 10; reasons.push('Valor aproximado (±35%)'); }
+  }
+
+  return { score, reasons };
+}
+
+function getMismatchWarnings(contract: RupContract): string[] {
+  const extracted = contract.certification?.extracted_contract_data;
+  if (!extracted) return [];
+  const warnings: string[] = [];
+
+  const rupEntity = normalizeEntityName(contract.contracting_entity || '');
+  const certEntity = normalizeEntityName(extracted.contracting_entity || '');
+  if (rupEntity && certEntity) {
+    const hasMatch = rupEntity === certEntity
+      || rupEntity.includes(certEntity)
+      || certEntity.includes(rupEntity)
+      || certEntity.split(' ').filter(w => w.length > 3 && new Set(rupEntity.split(' ')).has(w)).length >= 1;
+    if (!hasMatch) {
+      warnings.push(`La entidad del RUP ("${contract.contracting_entity}") no coincide con la certificación ("${extracted.contracting_entity}")`);
+    }
+  }
+
+  const rupVal = contract.contract_value_smmlv;
+  const certVal = extracted.contract_value_smmlv;
+  if (rupVal != null && certVal != null && rupVal > 0) {
+    const diff = Math.abs(rupVal - certVal) / rupVal;
+    if (diff > 0.35) {
+      warnings.push(`Valor diferente: RUP ${rupVal.toLocaleString('es-CO')} SMMLV vs certificación ${certVal.toLocaleString('es-CO')} SMMLV`);
+    }
+  }
+
+  return warnings;
+}
+
 // ─── Componente principal ────────────────────────────────────────────────────
 
 interface RupContractsWidgetProps {
@@ -249,6 +351,13 @@ export function RupContractsWidget({
     [experienceDocs, linkedDocIds, linkTarget]
   );
 
+  const scoredDocs = useMemo(() => {
+    if (!linkTarget) return availableDocs.map(d => ({ doc: d, score: 0, reasons: [] as string[] }));
+    return availableDocs
+      .map(d => ({ doc: d, ...computeMatchScore(linkTarget, d) }))
+      .sort((a, b) => b.score - a.score);
+  }, [availableDocs, linkTarget]);
+
   const fetchContracts = useCallback(async () => {
     try {
       const params = new URLSearchParams({ customer_id: customerId });
@@ -280,16 +389,6 @@ export function RupContractsWidget({
   useEffect(() => {
     fetchContracts();
   }, [fetchContracts, rupDocumentsKey]);
-
-  // Polling: mientras algún documento RUP esté extrayendo, re-consultar con frecuencia
-  const isExtracting = rupDocs.some(d => d.financial_extraction_status === 'processing');
-  useEffect(() => {
-    if (!isExtracting) return;
-    const interval = setInterval(() => {
-      fetchContracts();
-    }, 3000);
-    return () => clearInterval(interval);
-  }, [isExtracting, fetchContracts]);
 
   // Resetear paginación al cambiar filtro
   useEffect(() => { setVisibleCount(PAGE_SIZE); }, [filter]);
@@ -450,7 +549,7 @@ export function RupContractsWidget({
               </p>
             ) : (
               <RadioGroup value={selectedDocId} onValueChange={setSelectedDocId} className="space-y-2">
-                {availableDocs.map(doc => (
+                {scoredDocs.map(({ doc, score, reasons }) => (
                   <div
                     key={doc.id}
                     className={cn(
@@ -463,7 +562,17 @@ export function RupContractsWidget({
                   >
                     <RadioGroupItem value={doc.id} id={`cert-${doc.id}`} className="mt-0.5 shrink-0" />
                     <Label htmlFor={`cert-${doc.id}`} className="cursor-pointer flex-1 space-y-0.5">
-                      <p className="font-medium text-sm">{doc.name}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="font-medium text-sm">{doc.name}</p>
+                        {score >= 50 && (
+                          <Badge variant="outline" className="text-yellow-400 border-yellow-500/30 text-[10px] gap-1 px-1.5">
+                            ★ Sugerida
+                          </Badge>
+                        )}
+                      </div>
+                      {reasons.length > 0 && (
+                        <p className="text-xs text-muted-foreground">{reasons.join(' · ')}</p>
+                      )}
                       <p className="text-xs text-muted-foreground">{doc.fileName || doc.filename || 'Archivo subido'}</p>
                       {doc.financial_extraction_status === 'completed' && (
                         <Badge variant="outline" className="text-green-400 border-green-500/30 text-[10px] gap-1 px-1.5 mt-1">

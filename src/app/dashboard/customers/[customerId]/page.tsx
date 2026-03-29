@@ -508,7 +508,8 @@ export default function CustomerDetailPage() {
       await apiClient.post('/reextract_certification', { document_id: parseInt(docId, 10) });
       toast({
         title: 'Re-extracción iniciada',
-        description: 'La IA está procesando el documento. Los datos se actualizarán en unos segundos.',
+        description:
+          'La certificación está en cola. Los datos se actualizarán cuando la IA la procese.',
       });
       void fetchData(false);
     } catch (err) {
