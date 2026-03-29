@@ -52,9 +52,10 @@ export function AdendaReviewModal({
       // --- CÓDIGO CORREGIDO ---
       // Usamos apiClient para ir a través del Gateway
       await apiClient.post('/apply_adenda_action', {
-        adenda_analysis_id: adendaAnalysis.id, 
-        action_type, 
-        payload 
+        adenda_analysis_id: adendaAnalysis.id,
+        opportunity_id: adendaAnalysis.opportunity_id,
+        action_type,
+        payload,
       });
 
       setAppliedActions(prev => new Set(prev).add(actionId));
@@ -72,8 +73,9 @@ export function AdendaReviewModal({
     try {
         // --- CÓDIGO CORREGIDO ---
         await apiClient.post('/apply_adenda_action', {
-            adenda_analysis_id: adendaAnalysis.id, 
-            action_type: 'mark_as_reviewed' 
+          adenda_analysis_id: adendaAnalysis.id,
+          opportunity_id: adendaAnalysis.opportunity_id,
+          action_type: 'mark_as_reviewed',
         });
         onOpenChange(false);
         onRefreshData();

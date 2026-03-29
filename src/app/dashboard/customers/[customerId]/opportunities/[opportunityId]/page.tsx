@@ -423,7 +423,12 @@ const sortedRequiredDocs = useMemo(() => {
 
   const handleDeleteDocument = useCallback(async (documentId: string, kind: 'OpportunityDocuments' | 'ProposalDocuments'): Promise<void> => {
     try {
-      await apiClient.delete('/delete_document', { document_id: documentId, kind });
+      await apiClient.delete('/delete_document', {
+        document_id: documentId,
+        kind,
+        customer_id: customerId,
+        opportunity_id: opportunityId,
+      });
       toast({ title: "¡Éxito!", description: "El documento ha sido eliminado." });
       await fetchData(false);
     } catch (error) {
@@ -431,7 +436,7 @@ const sortedRequiredDocs = useMemo(() => {
       toast({ title: 'Error al Eliminar', description: errorMessage, variant: 'destructive' });
       throw error;
     }
-  }, [fetchData, toast]);
+  }, [customerId, opportunityId, fetchData, toast]);
   
   const handleStatusChange = async (newStatus: string) => {
     if (!canManageOpportunity) return;

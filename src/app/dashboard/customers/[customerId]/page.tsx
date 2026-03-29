@@ -486,8 +486,9 @@ export default function CustomerDetailPage() {
     setIsDeletingDoc(true);
     try {
       await apiClient.delete('/delete_document', {
-          document_id: docToDelete.id,
-          kind: docToDelete.kind || 'CustomerGeneralDocuments'
+        document_id: docToDelete.id,
+        kind: docToDelete.kind || 'CustomerGeneralDocuments',
+        customer_id: customerId,
       });
       
       toast({
