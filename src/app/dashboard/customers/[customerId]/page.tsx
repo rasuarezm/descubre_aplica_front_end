@@ -74,10 +74,26 @@ function ExperienceDocRow({
             {doc.status !== 'pending' && doc.signedUrl && (
               <div className="mt-1 flex items-center gap-2 flex-wrap">
                 <Badge variant="secondary">{doc.fileName || 'Archivo Subido'}</Badge>
-                {doc.financial_extraction_status === 'processing' && (
-                  <Badge variant="outline" className="text-blue-400 border-blue-400/40 text-xs gap-1">
-                    <Loader2 className="h-3 w-3 animate-spin" /> Extrayendo indicadores…
-                  </Badge>
+                {(doc.financial_extraction_status === 'queued' ||
+                  doc.financial_extraction_status === 'processing') && (
+                  <div className="mt-2 space-y-1 w-full min-w-[200px] max-w-sm">
+                    <div className="flex items-center justify-between text-xs text-muted-foreground">
+                      <span className="flex items-center gap-1">
+                        <Loader2 className="h-3 w-3 animate-spin" />
+                        {doc.extraction_step ??
+                          (doc.financial_extraction_status === 'queued' ? 'En cola…' : 'Procesando…')}
+                      </span>
+                      {(doc.extraction_progress ?? 0) > 0 && (
+                        <span>{doc.extraction_progress}%</span>
+                      )}
+                    </div>
+                    <div className="h-1 rounded-full bg-secondary/30 overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-blue-500 transition-all duration-500"
+                        style={{ width: `${doc.extraction_progress ?? 0}%` }}
+                      />
+                    </div>
+                  </div>
                 )}
                 {doc.financial_extraction_status === 'completed' && (
                   <Badge variant="outline" className="text-green-400 border-green-400/40 text-xs">
@@ -85,8 +101,12 @@ function ExperienceDocRow({
                   </Badge>
                 )}
                 {doc.financial_extraction_status === 'failed' && (
-                  <Badge variant="outline" className="text-destructive border-destructive/40 text-xs">
-                    Error en extracción
+                  <Badge
+                    variant="outline"
+                    className="text-destructive border-destructive/40 text-xs"
+                    title={doc.extraction_error ?? undefined}
+                  >
+                    ⚠ Error en extracción
                   </Badge>
                 )}
                 {isExperience && (
@@ -118,10 +138,16 @@ function ExperienceDocRow({
               variant="ghost" size="sm"
               className="h-7 text-xs text-muted-foreground hover:text-foreground gap-1"
               onClick={handleReextract}
-              disabled={isReextracting || doc.financial_extraction_status === 'processing'}
+              disabled={
+                isReextracting ||
+                doc.financial_extraction_status === 'processing' ||
+                doc.financial_extraction_status === 'queued'
+              }
               title="Re-extraer datos con IA (recalcula SMMLV sin borrar el documento)"
             >
-              {isReextracting || doc.financial_extraction_status === 'processing'
+              {isReextracting ||
+              doc.financial_extraction_status === 'processing' ||
+              doc.financial_extraction_status === 'queued'
                 ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 : <RefreshCw className="h-3.5 w-3.5" />
               }
@@ -399,13 +425,17 @@ export default function CustomerDetailPage() {
   // Polling automático mientras algún documento esté siendo procesado por la IA.
   // Cubre RUP, estados financieros y certificaciones de experiencia.
   const isAnyDocExtracting = customerDocuments.some(
-    d => d.financial_extraction_status === 'processing'
+    d => d.financial_extraction_status === 'queued' || d.financial_extraction_status === 'processing'
   );
   useEffect(() => {
     if (!isAnyDocExtracting) return;
     if (process.env.NODE_ENV === 'development') {
       const processingIds = customerDocuments
-        .filter(d => d.financial_extraction_status === 'processing')
+        .filter(
+          d =>
+            d.financial_extraction_status === 'processing' ||
+            d.financial_extraction_status === 'queued'
+        )
         .map(d => d.id);
       console.info('[Bidtory][RUP]', 'polling get_documents every 3s; processing doc id(s):', processingIds);
     }
@@ -480,8 +510,7 @@ export default function CustomerDetailPage() {
         title: 'Re-extracción iniciada',
         description: 'La IA está procesando el documento. Los datos se actualizarán en unos segundos.',
       });
-      // Esperar un momento y refrescar la lista para reflejar el estado 'processing'
-      setTimeout(() => fetchData(false), 2000);
+      void fetchData(false);
     } catch (err) {
       toast({
         title: 'Error al re-extraer',

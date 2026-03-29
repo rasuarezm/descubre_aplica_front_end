@@ -221,6 +221,7 @@ export interface CustomerDocument {
   filename?: string;
   uploadedAt?: Date;
   financial_extraction_status?: 'queued' | 'processing' | 'completed' | 'failed' | null;
+  extracted_contract_data?: string | CertificationExtractedData | null;
   extraction_progress?: number | null;
   extraction_step?: string | null;
   extraction_started_at?: Date | null;
