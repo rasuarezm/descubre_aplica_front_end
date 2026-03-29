@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import type {
   CustomerDocument,
   CustomerFinancialProfile,
@@ -63,6 +63,12 @@ function formatIndicatorValue(value: number | null | undefined, format: 'ratio' 
   }
 }
 
+function formatExtractionElapsed(totalSeconds: number): string {
+  const m = Math.floor(totalSeconds / 60);
+  const s = totalSeconds % 60;
+  return `${m}:${s.toString().padStart(2, '0')}`;
+}
+
 function TrafficDot({ color }: { color: TrafficLight }) {
   return (
     <span className={cn('inline-block w-2 h-2 rounded-full shrink-0', {
@@ -84,17 +90,32 @@ interface FinancialProfileWidgetProps {
   sourceType: 'rup' | 'financial_statements';
 }
 
+const POLL_MS_WHILE_EXTRACTING = 3000;
+const isDev = process.env.NODE_ENV === 'development';
+
 export function FinancialProfileWidget({ customerId, categoryDocuments, sourceType }: FinancialProfileWidgetProps) {
   const [profile, setProfile] = useState<CustomerFinancialProfile | null>(null);
   const [history, setHistory] = useState<CustomerFinancialProfile[]>([]);
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [historyOpen, setHistoryOpen] = useState(false);
+  const [extractionElapsedSec, setExtractionElapsedSec] = useState(0);
+  const extractionStartedAtRef = useRef<number | null>(null);
 
   // Detectar si hay algún documento en extracción activa
   const isProcessing = categoryDocuments.some(d => d.financial_extraction_status === 'processing');
 
   const fetchProfile = useCallback(async () => {
+    const processingDocIds = categoryDocuments
+      .filter(d => d.financial_extraction_status === 'processing')
+      .map(d => d.id);
     try {
+      if (isDev) {
+        console.info('[Bidtory][RUP]', 'get_financial_profile fetch', {
+          customerId,
+          sourceType,
+          processingDocIds,
+        });
+      }
       const data = await apiClient.get<CustomerFinancialProfileResponse>(
         `/get_financial_profile?customer_id=${customerId}`
       );
@@ -107,23 +128,49 @@ export function FinancialProfileWidget({ customerId, categoryDocuments, sourceTy
     } finally {
       setLoadingProfile(false);
     }
-  }, [customerId, sourceType]);
+  }, [customerId, sourceType, categoryDocuments]);
 
   // Carga inicial
   useEffect(() => {
     fetchProfile();
   }, [fetchProfile]);
 
+  // Cronómetro visible mientras extraemos y aún no hay perfil en pantalla
+  useEffect(() => {
+    if (!isProcessing || profile) {
+      extractionStartedAtRef.current = null;
+      setExtractionElapsedSec(0);
+      return;
+    }
+    if (extractionStartedAtRef.current === null) {
+      extractionStartedAtRef.current = Date.now();
+    }
+    const tick = () => {
+      if (extractionStartedAtRef.current) {
+        setExtractionElapsedSec(
+          Math.floor((Date.now() - extractionStartedAtRef.current) / 1000)
+        );
+      }
+    };
+    tick();
+    const t = setInterval(tick, 1000);
+    return () => clearInterval(t);
+  }, [isProcessing, profile]);
+
   // Polling mientras haya extracción en curso
   useEffect(() => {
     if (!isProcessing) return;
+    if (isDev) {
+      console.info('[Bidtory][RUP]', `FinancialProfileWidget polling every ${POLL_MS_WHILE_EXTRACTING / 1000}s`, {
+        sourceType,
+        processingDocs: categoryDocuments.filter(d => d.financial_extraction_status === 'processing').map(d => d.id),
+      });
+    }
     const interval = setInterval(async () => {
       await fetchProfile();
-      // Si ya hay perfil, el documento pasó a completed — el polling se detiene solo
-      // porque isProcessing depende de categoryDocuments (que la página padre refresca)
-    }, 5000);
+    }, POLL_MS_WHILE_EXTRACTING);
     return () => clearInterval(interval);
-  }, [isProcessing, fetchProfile]);
+  }, [isProcessing, fetchProfile, sourceType, categoryDocuments]);
 
   // ── Estado: procesando ──
   if (isProcessing && !profile) {
@@ -131,10 +178,17 @@ export function FinancialProfileWidget({ customerId, categoryDocuments, sourceTy
       <Card className="border-blue-200 bg-blue-950/20 dark:border-blue-800">
         <CardContent className="flex items-center gap-3 pt-5 pb-5">
           <Clock className="h-5 w-5 text-blue-400 animate-pulse shrink-0" />
-          <div>
-            <p className="text-sm font-medium text-blue-300">Extrayendo indicadores con IA…</p>
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-blue-300">
+              Extrayendo indicadores con IA…{' '}
+              <span className="tabular-nums text-blue-200/90">
+                ({formatExtractionElapsed(extractionElapsedSec)})
+              </span>
+            </p>
             <p className="text-xs text-blue-400/70 mt-0.5">
-              Esto puede tomar entre 20 y 60 segundos. La página se actualizará automáticamente.
+              Los RUP grandes se analizan en varias pasadas (indicadores + contratos). Suele tardar{' '}
+              <strong className="font-medium text-blue-300/90">2 a 10 minutos</strong>; en algunos casos un poco más.
+              Puedes dejar esta pestaña abierta: la vista se actualiza sola.
             </p>
           </div>
         </CardContent>

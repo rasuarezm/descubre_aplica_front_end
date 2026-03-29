@@ -400,9 +400,17 @@ export default function CustomerDetailPage() {
   );
   useEffect(() => {
     if (!isAnyDocExtracting) return;
-    const interval = setInterval(() => { fetchData(false); }, 6000);
+    if (process.env.NODE_ENV === 'development') {
+      const processingIds = customerDocuments
+        .filter(d => d.financial_extraction_status === 'processing')
+        .map(d => d.id);
+      console.info('[Bidtory][RUP]', 'polling get_documents every 3s; processing doc id(s):', processingIds);
+    }
+    const interval = setInterval(() => {
+      fetchData(false);
+    }, 3000);
     return () => clearInterval(interval);
-  }, [isAnyDocExtracting, fetchData]);
+  }, [isAnyDocExtracting, fetchData, customerDocuments]);
 
   const handleLogoUpdate = async () => {
     if (!newLogoFile || !customer) {
@@ -560,16 +568,25 @@ const handleUploadGeneralDocument = async () => {
         category: newDocInfo.category
       };
 
-      const finalizeRes = await apiClient.post<{ financial_extraction_status?: string | null }>(
+      const t0 = performance.now();
+      const finalizeRes = await apiClient.post<{ financial_extraction_status?: string | null; id?: string }>(
         '/finalize_general_document_upload',
         finalizePayload
       );
+      if (process.env.NODE_ENV === 'development') {
+        console.info('[Bidtory][RUP]', 'finalize_general_document_upload OK', {
+          ms: Math.round(performance.now() - t0),
+          financial_extraction_status: finalizeRes?.financial_extraction_status,
+          document_id: finalizeRes?.id,
+          category: newDocInfo.category,
+        });
+      }
 
       if (finalizeRes?.financial_extraction_status === 'processing') {
         toast({
-          title: 'Documento guardado',
+          title: 'Documento guardado — extracción en curso',
           description:
-            'La extracción de indicadores con IA está en curso en segundo plano; puede tardar varios minutos.',
+            'La IA está leyendo el PDF (indicadores y contratos). En RUP grandes suele tardar varios minutos; la pantalla se actualizará sola.',
         });
       } else {
         toast({ title: '¡Éxito!', description: `El documento "${newDocInfo.name}" ha sido guardado.` });

@@ -273,11 +273,13 @@ export function RupContractsWidget({
 
   useEffect(() => { fetchContracts(); }, [fetchContracts]);
 
-  // Polling: mientras algún documento RUP esté extrayendo, re-consultar cada 6 s
+  // Polling: mientras algún documento RUP esté extrayendo, re-consultar con frecuencia
   const isExtracting = rupDocs.some(d => d.financial_extraction_status === 'processing');
   useEffect(() => {
     if (!isExtracting) return;
-    const interval = setInterval(() => { fetchContracts(); }, 6000);
+    const interval = setInterval(() => {
+      fetchContracts();
+    }, 3000);
     return () => clearInterval(interval);
   }, [isExtracting, fetchContracts]);
 
