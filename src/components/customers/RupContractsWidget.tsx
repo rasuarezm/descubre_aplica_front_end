@@ -271,7 +271,15 @@ export function RupContractsWidget({
     }
   }, [customerId, fiscalYear, onLinkedDocIdsChange]);
 
-  useEffect(() => { fetchContracts(); }, [fetchContracts]);
+  /** Cuando cambian los docs RUP (p. ej. borrado), hay que volver a cargar contratos aunque fetchContracts sea estable. */
+  const rupDocumentsKey = useMemo(
+    () => rupDocs.map(d => d.id).sort().join('|'),
+    [rupDocs]
+  );
+
+  useEffect(() => {
+    fetchContracts();
+  }, [fetchContracts, rupDocumentsKey]);
 
   // Polling: mientras algún documento RUP esté extrayendo, re-consultar con frecuencia
   const isExtracting = rupDocs.some(d => d.financial_extraction_status === 'processing');

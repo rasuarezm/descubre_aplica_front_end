@@ -257,6 +257,9 @@ export default function CustomerDetailPage() {
   // IDs de certificaciones que ya están vinculadas a algún contrato del RUP
   const [linkedCertDocIds, setLinkedCertDocIds] = useState<Set<string>>(new Set());
 
+  /** Sube al borrar un documento para remontar widgets de perfil/contratos y limpiar estado local. */
+  const [docLibraryRevision, setDocLibraryRevision] = useState(0);
+
   // State for AI Analysis Modal
   const [isAnalysisModalOpen, setIsAnalysisModalOpen] = useState(false);
   const [isSubmittingAnalysis, setIsSubmittingAnalysis] = useState(false);
@@ -505,6 +508,7 @@ export default function CustomerDetailPage() {
       });
         
       await fetchData(false);
+      setDocLibraryRevision((r) => r + 1);
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Ocurrió un error desconocido';
         toast({ title: 'Error al Eliminar', description: errorMessage, variant: 'destructive' });
@@ -1245,6 +1249,7 @@ const handleUploadGeneralDocument = async () => {
                             {/* Widget de indicadores financieros para RUP y EE.FF. */}
                             {'showFinancialWidget' in category && category.showFinancialWidget && (
                               <FinancialProfileWidget
+                                key={`fin-${customerId}-${key}-${docLibraryRevision}`}
                                 customerId={customerId}
                                 categoryDocuments={category.documents}
                                 sourceType={category.sourceType}
@@ -1254,6 +1259,7 @@ const handleUploadGeneralDocument = async () => {
                             {/* Lista de contratos del RUP con vinculación de certificaciones */}
                             {key === 'rup' && (
                               <RupContractsWidget
+                                key={`rupc-${customerId}-${docLibraryRevision}`}
                                 customerId={customerId}
                                 rupDocs={category.documents}
                                 experienceDocs={customerDocuments.filter(d => d.category === 'experience')}

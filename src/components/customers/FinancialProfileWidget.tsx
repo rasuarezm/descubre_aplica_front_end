@@ -135,6 +135,15 @@ export function FinancialProfileWidget({ customerId, categoryDocuments, sourceTy
     fetchProfile();
   }, [fetchProfile]);
 
+  // Sin documentos en esta categoría (p. ej. borraste el RUP): vaciar indicadores sin esperar otro fetch.
+  useEffect(() => {
+    if (categoryDocuments.length === 0) {
+      setProfile(null);
+      setHistory([]);
+      setLoadingProfile(false);
+    }
+  }, [categoryDocuments.length]);
+
   // Cronómetro visible mientras extraemos y aún no hay perfil en pantalla
   useEffect(() => {
     if (!isProcessing || profile) {
