@@ -560,9 +560,20 @@ const handleUploadGeneralDocument = async () => {
         category: newDocInfo.category
       };
 
-      await apiClient.post('/finalize_general_document_upload', finalizePayload);
-      
-      toast({ title: "¡Éxito!", description: `El documento "${newDocInfo.name}" ha sido guardado.` });
+      const finalizeRes = await apiClient.post<{ financial_extraction_status?: string | null }>(
+        '/finalize_general_document_upload',
+        finalizePayload
+      );
+
+      if (finalizeRes?.financial_extraction_status === 'processing') {
+        toast({
+          title: 'Documento guardado',
+          description:
+            'La extracción de indicadores con IA está en curso en segundo plano; puede tardar varios minutos.',
+        });
+      } else {
+        toast({ title: '¡Éxito!', description: `El documento "${newDocInfo.name}" ha sido guardado.` });
+      }
         
       setIsAddDocDialogOpen(false);
       setNewDocFile(null);
