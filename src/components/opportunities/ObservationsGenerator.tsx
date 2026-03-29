@@ -39,7 +39,7 @@ function ObservationTypeBadge({ type }: { type: string }) {
 
 function DocRow({ doc, selectedDocIds, onChange }: {
   doc: DocumentItem;
-  selectedDocIds: number[];
+  selectedDocIds: string[];
   onChange: (id: string, checked: boolean) => void;
 }) {
   const docName = doc.fileName || (doc as any).filename || doc.name;
@@ -48,7 +48,7 @@ function DocRow({ doc, selectedDocIds, onChange }: {
       <Checkbox
         id={`obs-doc-${doc.id}`}
         onCheckedChange={(checked) => onChange(doc.id, !!checked)}
-        checked={selectedDocIds.includes(parseInt(doc.id, 10))}
+        checked={selectedDocIds.includes(doc.id)}
       />
       <Label htmlFor={`obs-doc-${doc.id}`} className="cursor-pointer flex-1 leading-snug">
         <span className="font-medium text-sm">{docName}</span>
@@ -62,7 +62,7 @@ export function ObservationsGenerator({ opportunityId, tenderDocuments }: Observ
 
   const [isLoading, setIsLoading] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedDocIds, setSelectedDocIds] = useState<number[]>([]);
+  const [selectedDocIds, setSelectedDocIds] = useState<string[]>([]);
   const [result, setResult] = useState<ObservationsResult | null>(null);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
 
@@ -96,10 +96,9 @@ export function ObservationsGenerator({ opportunityId, tenderDocuments }: Observ
   }, [tenderDocuments]);
 
   const handleCheckboxChange = (id: string, checked: boolean) => {
-    const numId = parseInt(id, 10);
-    if (isNaN(numId)) return;
-    setSelectedDocIds(prev =>
-      checked ? [...prev, numId] : prev.filter(docId => docId !== numId)
+    if (!id) return;
+    setSelectedDocIds((prev) =>
+      checked ? [...prev.filter((x) => x !== id), id] : prev.filter((docId) => docId !== id)
     );
   };
 
