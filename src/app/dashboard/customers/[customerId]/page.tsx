@@ -505,7 +505,7 @@ export default function CustomerDetailPage() {
 
   const handleReextractCertification = async (docId: string) => {
     try {
-      await apiClient.post('/reextract_certification', { document_id: parseInt(docId, 10) });
+      await apiClient.post('/reextract_certification', { document_id: docId });
       toast({
         title: 'Re-extracción iniciada',
         description:
