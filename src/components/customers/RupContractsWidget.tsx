@@ -10,6 +10,7 @@ import type {
 } from '@/types';
 import apiClient from '@/lib/api-client';
 import { useToast } from '@/hooks/use-toast';
+import { useExtractionProgress } from '@/hooks/useExtractionProgress';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -358,6 +359,8 @@ export function RupContractsWidget({
       .sort((a, b) => b.score - a.score);
   }, [availableDocs, linkTarget]);
 
+  const extractionProgress = useExtractionProgress(customerId, rupDocs);
+
   const fetchContracts = useCallback(async () => {
     try {
       const params = new URLSearchParams({ customer_id: customerId });
@@ -389,6 +392,13 @@ export function RupContractsWidget({
   useEffect(() => {
     fetchContracts();
   }, [fetchContracts, rupDocumentsKey]);
+
+  // Tras extraer el RUP, los contratos viven en get_rup_contracts; al completar la extracción hay que volver a pedirlos.
+  useEffect(() => {
+    if (extractionProgress?.status === 'completed') {
+      void fetchContracts();
+    }
+  }, [extractionProgress?.status, fetchContracts]);
 
   // Resetear paginación al cambiar filtro
   useEffect(() => { setVisibleCount(PAGE_SIZE); }, [filter]);
