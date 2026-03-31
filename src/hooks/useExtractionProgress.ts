@@ -1,16 +1,32 @@
 "use client";
 
-import { useEffect, useState } from 'react';
-import { doc, onSnapshot, Timestamp } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
-import type { CustomerDocument } from '@/types';
+import { useEffect, useRef, useState } from "react";
+import { doc, onSnapshot, Timestamp } from "firebase/firestore";
+import { db } from "@/lib/firebase";
+import type { CustomerDocument } from "@/types";
 
 export interface ExtractionProgress {
-  status: 'queued' | 'processing' | 'completed' | 'failed';
-  progress: number;       // 0–100
-  step: string;           // texto visible al usuario
+  status: "queued" | "processing" | "completed" | "failed";
+  progress: number; // 0–100
+  step: string; // texto visible al usuario
   startedAt: Date | null; // para calcular tiempo transcurrido
   error: string | null;
+}
+
+/**
+ * Firma estable: solo ids de documentos en cola/proceso (ignora extraction_progress al comparar).
+ * Así el polling del padre no recrea el listener de Firestore en cada tick.
+ */
+function extractingDocIdsKey(docs: CustomerDocument[]): string {
+  return docs
+    .filter(
+      (d) =>
+        d.financial_extraction_status === "queued" ||
+        d.financial_extraction_status === "processing",
+    )
+    .map((d) => d.id)
+    .sort()
+    .join(",");
 }
 
 /**
@@ -24,12 +40,22 @@ export function useExtractionProgress(
   categoryDocuments: CustomerDocument[],
 ): ExtractionProgress | null {
   const [progress, setProgress] = useState<ExtractionProgress | null>(null);
+  const categoryDocumentsRef = useRef(categoryDocuments);
+  categoryDocumentsRef.current = categoryDocuments;
+
+  const idsKey = extractingDocIdsKey(categoryDocuments);
 
   useEffect(() => {
-    const activeDoc = categoryDocuments.find(
-      d =>
-        d.financial_extraction_status === 'queued' ||
-        d.financial_extraction_status === 'processing',
+    if (!idsKey) {
+      setProgress(null);
+      return;
+    }
+
+    const activeDoc = categoryDocumentsRef.current.find(
+      (d) =>
+        (d.financial_extraction_status === "queued" ||
+          d.financial_extraction_status === "processing") &&
+        idsKey.split(",").includes(String(d.id)),
     );
 
     if (!activeDoc) {
@@ -37,7 +63,13 @@ export function useExtractionProgress(
       return;
     }
 
-    const docRef = doc(db, 'customers', customerId, 'general_documents', activeDoc.id);
+    const docRef = doc(
+      db,
+      "customers",
+      customerId,
+      "general_documents",
+      activeDoc.id,
+    );
 
     const unsubscribe = onSnapshot(docRef, (snap) => {
       if (!snap.exists()) return;
@@ -48,20 +80,23 @@ export function useExtractionProgress(
         rawStartedAt instanceof Timestamp
           ? rawStartedAt.toDate()
           : rawStartedAt instanceof Date
-          ? rawStartedAt
-          : null;
+            ? rawStartedAt
+            : null;
 
       setProgress({
-        status: data.financial_extraction_status ?? 'processing',
-        progress: typeof data.extraction_progress === 'number' ? data.extraction_progress : 0,
-        step: data.extraction_step ?? 'Procesando…',
+        status: data.financial_extraction_status ?? "processing",
+        progress:
+          typeof data.extraction_progress === "number"
+            ? data.extraction_progress
+            : 0,
+        step: data.extraction_step ?? "Procesando…",
         startedAt,
         error: data.extraction_error ?? null,
       });
     });
 
     return () => unsubscribe();
-  }, [customerId, categoryDocuments]);
+  }, [customerId, idsKey]);
 
   return progress;
 }
