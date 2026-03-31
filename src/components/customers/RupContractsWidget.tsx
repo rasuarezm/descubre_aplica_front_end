@@ -8,6 +8,8 @@ import type {
   CustomerDocument,
   CertificationExtractedData,
 } from '@/types';
+
+export type { RupContract } from '@/types';
 import apiClient from '@/lib/api-client';
 import { useToast } from '@/hooks/use-toast';
 import { useExtractionProgress } from '@/hooks/useExtractionProgress';
@@ -317,10 +319,17 @@ interface RupContractsWidgetProps {
   rupDocs?: CustomerDocument[];
   /** Callback con el Set de IDs de certificaciones ya vinculadas */
   onLinkedDocIdsChange?: (ids: Set<string>) => void;
+  /** Mejor contrato RUP sugerido por certificación (score ≥ 50), según computeMatchScore */
+  onSuggestionsChange?: (suggestions: Map<string, RupContract>) => void;
 }
 
 export function RupContractsWidget({
-  customerId, fiscalYear, experienceDocs, rupDocs = [], onLinkedDocIdsChange,
+  customerId,
+  fiscalYear,
+  experienceDocs,
+  rupDocs = [],
+  onLinkedDocIdsChange,
+  onSuggestionsChange,
 }: RupContractsWidgetProps) {
   const { toast } = useToast();
   const [contracts, setContracts] = useState<RupContract[]>([]);
@@ -399,6 +408,32 @@ export function RupContractsWidget({
       void fetchContracts();
     }
   }, [extractionProgress?.status, fetchContracts]);
+
+  useEffect(() => {
+    if (!onSuggestionsChange) return;
+    if (contracts.length === 0) {
+      onSuggestionsChange(new Map());
+      return;
+    }
+    const suggestions = new Map<string, RupContract>();
+    for (const doc of experienceDocs) {
+      if (doc.extracted_contract_data == null) continue;
+
+      let bestContract: RupContract | null = null;
+      let bestScore = 0;
+      for (const contract of contracts) {
+        const { score } = computeMatchScore(contract, doc);
+        if (score > bestScore) {
+          bestScore = score;
+          bestContract = contract;
+        }
+      }
+      if (bestContract && bestScore >= 50) {
+        suggestions.set(String(doc.id), bestContract);
+      }
+    }
+    onSuggestionsChange(suggestions);
+  }, [contracts, experienceDocs, onSuggestionsChange]);
 
   // Resetear paginación al cambiar filtro
   useEffect(() => { setVisibleCount(PAGE_SIZE); }, [filter]);

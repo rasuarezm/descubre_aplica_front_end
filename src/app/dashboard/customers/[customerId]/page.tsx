@@ -11,8 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import type { Customer, Opportunity, CustomerDocument, OpportunityStatusInfo, CertificationExtractedData } from "@/types";
-import { Briefcase, PlusCircle, ArrowRight, ImagePlus, FileBadge, Landmark, FolderArchive, UploadCloud, CheckCircle, AlertCircle, Download, Trash2, CalendarIcon, Loader2, FileUp, FileCheck, Clock, Target, CalendarClock, AlertTriangle, ListFilter, DollarSign, LayoutDashboard, MoreVertical, Archive, ArchiveRestore, Trophy, XCircle, Trash, Send, Award, ChevronDown, ChevronUp, Building2, Calendar, Tag, Link2, RefreshCw } from "lucide-react";
+import type { Customer, Opportunity, CustomerDocument, OpportunityStatusInfo, CertificationExtractedData, RupContract } from "@/types";
+import { Briefcase, PlusCircle, ArrowRight, ImagePlus, FileBadge, Landmark, FolderArchive, UploadCloud, CheckCircle, AlertCircle, Download, Trash2, CalendarIcon, Loader2, FileUp, FileCheck, Clock, Target, CalendarClock, AlertTriangle, ListFilter, DollarSign, LayoutDashboard, MoreVertical, Archive, ArchiveRestore, Trophy, XCircle, Trash, Send, Award, ChevronDown, ChevronUp, Building2, Calendar, Tag, Link2, RefreshCw, Sparkles } from "lucide-react";
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -33,7 +33,7 @@ const FINAL_OPPORTUNITY_STATUSES = ['Ganada', 'Perdida', 'Descartada'];
 // ─── Fila de documento (genérica para todas las categorías) ──────────────────
 
 function ExperienceDocRow({
-  doc, isExperience, isLinked, extractedData,
+  doc, isExperience, isLinked, extractedData, suggestedContract,
   canCreateAndEdit, canDelete,
   getStatusIcon, onDelete, onFileChange, onReextract, fmtCOP, fmtDate,
 }: {
@@ -41,6 +41,7 @@ function ExperienceDocRow({
   isExperience: boolean;
   isLinked: boolean;
   extractedData: import('@/types').CertificationExtractedData | null;
+  suggestedContract?: RupContract | null;
   canCreateAndEdit: boolean;
   canDelete: boolean;
   getStatusIcon: (s: CustomerDocument['status']) => React.ReactNode;
@@ -112,13 +113,23 @@ function ExperienceDocRow({
                   </Badge>
                 )}
                 {isExperience && (
-                  isLinked
-                    ? <Badge variant="outline" className="text-green-400 border-green-500/30 text-xs gap-1">
+                  <>
+                    {isLinked ? (
+                      <Badge variant="outline" className="text-green-400 border-green-500/30 text-xs gap-1">
                         <Link2 className="h-2.5 w-2.5" /> Vinculada al RUP
                       </Badge>
-                    : <Badge variant="outline" className="text-amber-400 border-amber-500/30 text-xs gap-1">
+                    ) : (
+                      <Badge variant="outline" className="text-amber-400 border-amber-500/30 text-xs gap-1">
                         Sin vincular al RUP
                       </Badge>
+                    )}
+                    {!isLinked && suggestedContract && (
+                      <Badge variant="outline" className="text-blue-400 border-blue-500/30 text-xs gap-1">
+                        <Sparkles className="h-2.5 w-2.5" />
+                        Posible contrato: #{suggestedContract.rup_consecutive} · {suggestedContract.contracting_entity}
+                      </Badge>
+                    )}
+                  </>
                 )}
               </div>
             )}
@@ -284,6 +295,7 @@ export default function CustomerDetailPage() {
   
   // IDs de certificaciones que ya están vinculadas a algún contrato del RUP
   const [linkedCertDocIds, setLinkedCertDocIds] = useState<Set<string>>(new Set());
+  const [rupSuggestions, setRupSuggestions] = useState<Map<string, RupContract>>(new Map());
 
   /** Sube al borrar un documento para remontar widgets de perfil/contratos y limpiar estado local. */
   const [docLibraryRevision, setDocLibraryRevision] = useState(0);
@@ -1280,6 +1292,7 @@ const handleUploadGeneralDocument = async () => {
                                 rupDocs={category.documents}
                                 experienceDocs={customerDocuments.filter(d => d.category === 'experience')}
                                 onLinkedDocIdsChange={setLinkedCertDocIds}
+                                onSuggestionsChange={setRupSuggestions}
                               />
                             )}
 
@@ -1304,6 +1317,7 @@ const handleUploadGeneralDocument = async () => {
                                       isExperience={isExperience}
                                       isLinked={isLinked}
                                       extractedData={extractedData}
+                                      suggestedContract={rupSuggestions.get(String(doc.id)) ?? null}
                                       canCreateAndEdit={canCreateAndEdit}
                                       canDelete={canDelete}
                                       getStatusIcon={getStatusIcon}
