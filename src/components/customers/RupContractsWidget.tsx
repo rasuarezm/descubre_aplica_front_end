@@ -409,7 +409,8 @@ export function RupContractsWidget({
     try {
       await apiClient.post('/link_certification_to_contract', {
         rup_contract_id: linkTarget.id,
-        certification_doc_id: parseInt(selectedDocId, 10),
+        certification_doc_id: selectedDocId,
+        customer_id: customerId,
       });
       toast({ title: 'Certificación vinculada', description: `Contrato #${linkTarget.rup_consecutive} actualizado.` });
       setLinkTarget(null);
@@ -427,6 +428,7 @@ export function RupContractsWidget({
       await apiClient.post('/link_certification_to_contract', {
         rup_contract_id: contract.id,
         certification_doc_id: null,
+        customer_id: customerId,
       });
       toast({ title: 'Certificación desvinculada', description: `Contrato #${contract.rup_consecutive} actualizado.` });
       await fetchContracts();
