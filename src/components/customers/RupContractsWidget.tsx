@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import type {
   RupContract,
   RupContractsResponse,
@@ -370,6 +370,9 @@ export function RupContractsWidget({
 
   const extractionProgress = useExtractionProgress(customerId, rupDocs);
 
+  /** Evita setState en el padre si las sugerencias no cambiaron (referencias inestables). */
+  const lastSuggestionsSigRef = useRef<string | null>(null);
+
   const fetchContracts = useCallback(async () => {
     try {
       const params = new URLSearchParams({ customer_id: customerId });
@@ -411,8 +414,15 @@ export function RupContractsWidget({
 
   useEffect(() => {
     if (!onSuggestionsChange) return;
+
+    const emit = (suggestions: Map<string, RupContract>, sig: string) => {
+      if (sig === lastSuggestionsSigRef.current) return;
+      lastSuggestionsSigRef.current = sig;
+      onSuggestionsChange(suggestions);
+    };
+
     if (contracts.length === 0) {
-      onSuggestionsChange(new Map());
+      emit(new Map(), '__empty_contracts__');
       return;
     }
     const suggestions = new Map<string, RupContract>();
@@ -432,7 +442,11 @@ export function RupContractsWidget({
         suggestions.set(String(doc.id), bestContract);
       }
     }
-    onSuggestionsChange(suggestions);
+    const sig = [...suggestions.entries()]
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([docId, c]) => `${docId}:${c.id}`)
+      .join('|');
+    emit(suggestions, sig || '__no_suggestions__');
   }, [contracts, experienceDocs, onSuggestionsChange]);
 
   // Resetear paginación al cambiar filtro

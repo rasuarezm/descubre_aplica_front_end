@@ -724,30 +724,47 @@ const handleUploadGeneralDocument = async () => {
     }
   };
   
+  const experienceDocuments = useMemo(
+    () => customerDocuments.filter(d => d.category === 'experience'),
+    [customerDocuments],
+  );
+  const rupDocuments = useMemo(
+    () => customerDocuments.filter(d => d.category === 'rup'),
+    [customerDocuments],
+  );
+  const financialStatementsDocuments = useMemo(
+    () => customerDocuments.filter(d => d.category === 'financial_statements'),
+    [customerDocuments],
+  );
+  const otherDocuments = useMemo(
+    () => customerDocuments.filter(d => d.category === 'other'),
+    [customerDocuments],
+  );
+
   const documentCategories = {
     experience: {
         title: "Documentos de Experiencia",
         icon: FileBadge,
-        documents: customerDocuments.filter(d => d.category === 'experience'),
+        documents: experienceDocuments,
     },
     rup: {
         title: "Registro Único de Proponentes (RUP)",
         icon: Award,
-        documents: customerDocuments.filter(d => d.category === 'rup'),
+        documents: rupDocuments,
         showFinancialWidget: true,
         sourceType: 'rup' as const,
     },
     financial_statements: {
         title: "Estados Financieros",
         icon: Landmark,
-        documents: customerDocuments.filter(d => d.category === 'financial_statements'),
+        documents: financialStatementsDocuments,
         showFinancialWidget: true,
         sourceType: 'financial_statements' as const,
     },
     other: {
         title: "Otros Documentos",
         icon: FolderArchive,
-        documents: customerDocuments.filter(d => d.category === 'other'),
+        documents: otherDocuments,
     },
   };
 
@@ -1290,7 +1307,7 @@ const handleUploadGeneralDocument = async () => {
                                 key={`rupc-${customerId}-${docLibraryRevision}`}
                                 customerId={customerId}
                                 rupDocs={category.documents}
-                                experienceDocs={customerDocuments.filter(d => d.category === 'experience')}
+                                experienceDocs={experienceDocuments}
                                 onLinkedDocIdsChange={setLinkedCertDocIds}
                                 onSuggestionsChange={setRupSuggestions}
                               />
