@@ -429,16 +429,6 @@ export default function CustomerDetailPage() {
   );
   useEffect(() => {
     if (!isAnyDocExtracting) return;
-    if (process.env.NODE_ENV === 'development') {
-      const processingIds = customerDocuments
-        .filter(
-          d =>
-            d.financial_extraction_status === 'processing' ||
-            d.financial_extraction_status === 'queued'
-        )
-        .map(d => d.id);
-      console.info('[Bidtory][RUP]', 'polling get_documents every 3s; processing doc id(s):', processingIds);
-    }
     const interval = setInterval(() => {
       fetchData(false);
     }, 3000);
@@ -605,19 +595,10 @@ const handleUploadGeneralDocument = async () => {
         category: newDocInfo.category
       };
 
-      const t0 = performance.now();
       const finalizeRes = await apiClient.post<{ financial_extraction_status?: string | null; id?: string }>(
         '/finalize_general_document_upload',
         finalizePayload
       );
-      if (process.env.NODE_ENV === 'development') {
-        console.info('[Bidtory][RUP]', 'finalize_general_document_upload OK', {
-          ms: Math.round(performance.now() - t0),
-          financial_extraction_status: finalizeRes?.financial_extraction_status,
-          document_id: finalizeRes?.id,
-          category: newDocInfo.category,
-        });
-      }
 
       if (finalizeRes?.financial_extraction_status === 'processing') {
         toast({
