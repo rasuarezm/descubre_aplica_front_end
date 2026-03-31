@@ -160,14 +160,14 @@ export function FinancialProfileWidget({ customerId, categoryDocuments, sourceTy
   // ── Estado: procesando ──
   if (isActive && !profile) {
     return (
-      <Card className="border-blue-200 bg-blue-950/20 dark:border-blue-800">
+      <Card className="border-blue-200 bg-blue-950/20 dark:border-blue-800 min-h-[13rem] [contain:layout]">
         <CardContent className="pt-5 pb-5 space-y-3">
 
-          {/* Cabecera: icono + paso actual */}
-          <div className="flex items-center gap-3">
-            <Clock className="h-5 w-5 text-blue-400 animate-pulse shrink-0" />
+          {/* Cabecera: icono + paso actual — altura reservada para evitar saltos al cambiar el texto */}
+          <div className="flex items-start gap-3 min-h-[3.25rem]">
+            <Clock className="h-5 w-5 text-blue-400 animate-pulse shrink-0 mt-0.5" />
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-medium text-blue-300 truncate">
+              <p className="text-sm font-medium text-blue-300 line-clamp-2 min-h-[2.5rem] leading-snug">
                 {extractionProgress?.step ?? 'Procesando…'}
               </p>
               <p className="text-xs text-blue-400/70 mt-0.5">
@@ -187,9 +187,9 @@ export function FinancialProfileWidget({ customerId, categoryDocuments, sourceTy
                 {extractionProgress?.progress ?? 0}%
               </span>
             </div>
-            <div className="w-full bg-blue-950/40 rounded-full h-2 overflow-hidden">
+            <div className="w-full bg-blue-950/40 rounded-full h-2 overflow-hidden shrink-0">
               <div
-                className="h-2 rounded-full bg-blue-400 transition-all duration-700 ease-out"
+                className="h-2 rounded-full bg-blue-400 transition-[width] duration-200 ease-linear"
                 style={{ width: `${extractionProgress?.progress ?? 0}%` }}
               />
             </div>

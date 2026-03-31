@@ -76,20 +76,22 @@ function ExperienceDocRow({
                 <Badge variant="secondary">{doc.fileName || 'Archivo Subido'}</Badge>
                 {(doc.financial_extraction_status === 'queued' ||
                   doc.financial_extraction_status === 'processing') && (
-                  <div className="mt-2 space-y-1 w-full min-w-[200px] max-w-sm">
-                    <div className="flex items-center justify-between text-xs text-muted-foreground">
-                      <span className="flex items-center gap-1">
-                        <Loader2 className="h-3 w-3 animate-spin" />
-                        {doc.extraction_step ??
-                          (doc.financial_extraction_status === 'queued' ? 'En cola…' : 'Procesando…')}
+                  <div className="mt-2 space-y-1 w-full min-w-[200px] max-w-sm min-h-[3.25rem] [contain:layout]">
+                    <div className="flex items-start justify-between gap-2 text-xs text-muted-foreground">
+                      <span className="flex items-start gap-1 min-w-0 flex-1">
+                        <Loader2 className="h-3 w-3 animate-spin shrink-0 mt-0.5" />
+                        <span className="line-clamp-2 leading-snug">
+                          {doc.extraction_step ??
+                            (doc.financial_extraction_status === 'queued' ? 'En cola…' : 'Procesando…')}
+                        </span>
                       </span>
                       {(doc.extraction_progress ?? 0) > 0 && (
-                        <span>{doc.extraction_progress}%</span>
+                        <span className="tabular-nums shrink-0">{doc.extraction_progress}%</span>
                       )}
                     </div>
-                    <div className="h-1 rounded-full bg-secondary/30 overflow-hidden">
+                    <div className="h-1 rounded-full bg-secondary/30 overflow-hidden shrink-0">
                       <div
-                        className="h-full rounded-full bg-blue-500 transition-all duration-500"
+                        className="h-full rounded-full bg-blue-500 transition-[width] duration-200 ease-linear"
                         style={{ width: `${doc.extraction_progress ?? 0}%` }}
                       />
                     </div>
@@ -431,7 +433,7 @@ export default function CustomerDetailPage() {
     if (!isAnyDocExtracting) return;
     const interval = setInterval(() => {
       fetchData(false);
-    }, 3000);
+    }, 6000);
     return () => clearInterval(interval);
   }, [isAnyDocExtracting, fetchData, customerDocuments]);
 

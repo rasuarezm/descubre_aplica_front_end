@@ -110,6 +110,7 @@ export function FeatureScroll() {
               key={f.step}
               src={f.image}
               fill
+              sizes="(max-width: 1023px) 100vw, min(720px, 50vw)"
               alt={f.title}
               className={cn('object-cover transition-opacity duration-500', i === activeIndex ? 'opacity-100' : 'opacity-0')}
               priority={i === 0}
@@ -131,8 +132,8 @@ export function FeatureScroll() {
               src={activeFeature.logo}
               alt={`${activeFeature.title} logo`}
               width={192}
-              height={0}
-              className="w-44 h-auto"
+              height={48}
+              className="h-auto w-44"
             />
             <h3 className="text-2xl md:text-3xl font-bold font-headline leading-snug">
               {activeFeature.title}
