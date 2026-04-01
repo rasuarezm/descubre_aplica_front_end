@@ -14,14 +14,16 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSkeleton,
 } from "@/components/ui/sidebar";
-import { Home, Users, Briefcase, FileText, Settings, ChevronDown, ChevronUp, UserSquare } from "lucide-react";
+import { Home, Users, Briefcase, FileText, Settings, ChevronDown, ChevronUp, UserSquare, Search, SlidersHorizontal, Rss } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/auth-context";
-import type { Customer, Opportunity, UrgencyInfo } from "@/types";
-import { getUrgencyInfo } from "@/lib/date-utils";
+import { useDescubre } from "@/contexts/descubre-context";
+import { Badge } from "@/components/ui/badge";
+import type { Customer, Opportunity } from "@/types";
+import { getUrgencyInfo, type UrgencyInfo } from "@/lib/date-utils";
 import { cn } from "@/lib/utils";
 import apiClient from "@/lib/api-client";
 
@@ -40,6 +42,7 @@ interface OpportunityWithUrgency extends Opportunity {
 export function AppSidebar() {
   const pathname = usePathname();
   const { userProfile } = useAuth();
+  const { tieneAplica, tieneDescubre, nivelSuscripcion } = useDescubre();
   const [openSubmenus, setOpenSubmenus] = useState<Record<string, boolean>>({ "Clientes": true, "Oportunidades": true });
   const [customerSubItems, setCustomerSubItems] = useState<{href: string, label: string}[]>([]);
   const [opportunitySubItems, setOpportunitySubItems] = useState<OpportunityWithUrgency[]>([]);
@@ -193,7 +196,13 @@ export function AppSidebar() {
   
   const renderCustomerNav = () => {
     const customerZoneHref = `/dashboard/customers/${userProfile?.customer_id}`;
-    return (
+    const isDescubreOportunidadesActive =
+      pathname === "/dashboard/descubre" ||
+      (pathname.startsWith("/dashboard/descubre/") &&
+        !pathname.startsWith("/dashboard/descubre/perfil") &&
+        !pathname.startsWith("/dashboard/descubre/fuentes"));
+
+    const renderAplicaFullNav = () => (
       <>
         <SidebarMenuItem>
           <Link href={customerZoneHref} passHref>
@@ -250,7 +259,13 @@ export function AppSidebar() {
                     })
                   ) : (
                     <SidebarMenuSubItem>
-                      <SidebarMenuSubButton asChild disabled>
+                      <SidebarMenuSubButton
+                        href="#"
+                        aria-disabled
+                        tabIndex={-1}
+                        className="pointer-events-none cursor-default opacity-50"
+                        onClick={(e) => e.preventDefault()}
+                      >
                         <span className="text-xs italic">No hay oportunidades</span>
                       </SidebarMenuSubButton>
                     </SidebarMenuSubItem>
@@ -270,6 +285,64 @@ export function AppSidebar() {
             </SidebarMenuButton>
           </Link>
         </SidebarMenuItem>
+      </>
+    );
+
+    return (
+      <>
+        <SidebarMenuItem>
+          <Link href="/dashboard/descubre" passHref>
+            <SidebarMenuButton
+              isActive={isDescubreOportunidadesActive}
+              tooltip={{ content: "Oportunidades", side: "right" }}
+            >
+              <Search className="h-5 w-5" />
+              <span className="group-data-[collapsible=icon]:hidden">Oportunidades</span>
+            </SidebarMenuButton>
+          </Link>
+        </SidebarMenuItem>
+        <SidebarMenuItem>
+          <Link href="/dashboard/descubre/perfil" passHref>
+            <SidebarMenuButton
+              isActive={pathname.startsWith("/dashboard/descubre/perfil")}
+              tooltip={{ content: "Mi Perfil de Búsqueda", side: "right" }}
+            >
+              <SlidersHorizontal className="h-5 w-5" />
+              <span className="group-data-[collapsible=icon]:hidden">Mi Perfil de Búsqueda</span>
+            </SidebarMenuButton>
+          </Link>
+        </SidebarMenuItem>
+        <SidebarMenuItem>
+          <Link href="/dashboard/descubre/fuentes" passHref>
+            <SidebarMenuButton
+              isActive={pathname.startsWith("/dashboard/descubre/fuentes")}
+              tooltip={{ content: "Mis Fuentes", side: "right" }}
+            >
+              <Rss className="h-5 w-5" />
+              <span className="group-data-[collapsible=icon]:hidden">Mis Fuentes</span>
+            </SidebarMenuButton>
+          </Link>
+        </SidebarMenuItem>
+
+        {tieneAplica || !tieneDescubre ? renderAplicaFullNav() : (
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              disabled
+              tooltip={{ content: "Aplica — Plan Profesional", side: "right" }}
+              className="justify-between gap-2 opacity-70"
+            >
+              <div className="flex min-w-0 items-center gap-2">
+                <Briefcase className="h-5 w-5 shrink-0" />
+                <span className="group-data-[collapsible=icon]:hidden truncate">
+                  Aplica — Plan Profesional
+                </span>
+              </div>
+              <Badge variant="secondary" className="group-data-[collapsible=icon]:hidden shrink-0 text-[10px] px-2 py-0">
+                Upgrade
+              </Badge>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        )}
       </>
     );
   };

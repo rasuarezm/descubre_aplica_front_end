@@ -425,3 +425,82 @@ export interface EligibilityAnalysis {
   financial_block: FinancialEligibilityBlock | null;
   experience_block: ExperienceEligibilityBlock | null;
 }
+
+export type NivelSuscripcion = 'esencial' | 'profesional' | 'experto';
+
+export interface PlanConfig {
+  nombre_visible: string;
+  descripcion_corta?: string;
+  precio_mensual_cop?: string;
+  limites: {
+    max_fuentes_secop_rss?: number;
+    max_palabras_clave_positivas?: number;
+    max_palabras_clave_negativas?: number;
+    max_destinatarios_correo?: number;
+    max_palabras_clave_doradas?: number;
+    max_tipos_servicio_items?: number;
+    max_ubicaciones_preferidas_items?: number;
+    max_entidades_interes_items?: number;
+    max_areas_fortaleza_colaboracion?: number;
+  };
+  features_habilitadas: {
+    dashboard_oportunidades?: boolean;
+    analisis_gemini_completo?: boolean;
+    alertas_inmediatas_urgentes?: boolean;
+    permite_fuentes_adicionales_no_secop?: boolean;
+    filtrado_por_valor_configurable?: boolean;
+    palabra_clave_dorada_config?: boolean;
+    snooze_oportunidades?: boolean;
+  };
+}
+
+export interface DescubreClienteProfile {
+  nombre_empresa: string;
+  nombre_persona_contacto?: string;
+  cargo_persona_contacto?: string;
+  email_contacto_principal?: string;
+  nivel_suscripcion: NivelSuscripcion;
+  tipos_servicio?: string[];
+  palabras_clave_positivas?: string[];
+  palabras_clave_negativas?: string[];
+  palabras_clave_doradas?: string[];
+  valor_minimo_interes?: number;
+  ubicaciones_preferidas?: string[];
+  entidades_interes?: string[];
+  send_notifications?: string[];
+  modalidades_preferidas?: string[];
+  perfil_partnership?: {
+    dispuesto_a_ser_partner: boolean;
+    areas_fortaleza_partner: string[];
+    descripcion_oferta_partner: string;
+  };
+  fecha_inicio_suscripcion?: string;
+  fecha_proximo_pago?: string | null;
+}
+
+export interface FuenteSecop {
+  id_fuente: string;
+  url?: string;
+  nombre_descriptivo_fuente: string;
+}
+
+export interface EstadoBidtoryInfo {
+  code: string;
+  message: string;
+  sugerencias: string[];
+}
+
+export interface DescubreDashboardData {
+  cliente: DescubreClienteProfile;
+  plan_actual: PlanConfig;
+  fuentes_suscritas: FuenteSecop[];
+  fuentes_secop_disponibles_para_suscripcion: FuenteSecop[];
+  categorias_colaboracion_disponibles: { id: string; nombre: string }[];
+  tipos_documento_identificacion_disponibles: { id: string; nombre_visible: string }[];
+  modalidades_secop_disponibles: {
+    id: string;
+    nombre_visible: string;
+    descripcion_corta: string;
+  }[];
+  estado_bidtory_info: EstadoBidtoryInfo;
+}

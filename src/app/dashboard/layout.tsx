@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/auth-context";
 import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { AcceptTermsModal } from "@/components/auth/AcceptTermsModal";
+import { DescubreProvider } from "@/contexts/descubre-context";
 
 export default function DashboardLayout({
   children,
@@ -33,16 +34,18 @@ export default function DashboardLayout({
 
   return (
     <SidebarProvider defaultOpen>
-      <AppSidebar />
-      <SidebarInset>
-        <AppHeader />
-        <main className="flex-1 overflow-auto p-6">
-          {children}
-        </main>
-        {user && needsToAcceptTerms && (
-          <AcceptTermsModal />
-        )}
-      </SidebarInset>
+      <DescubreProvider>
+        <AppSidebar />
+        <SidebarInset>
+          <AppHeader />
+          <main className="flex-1 overflow-auto p-6">
+            {children}
+          </main>
+          {user && needsToAcceptTerms && (
+            <AcceptTermsModal />
+          )}
+        </SidebarInset>
+      </DescubreProvider>
     </SidebarProvider>
   );
 }
