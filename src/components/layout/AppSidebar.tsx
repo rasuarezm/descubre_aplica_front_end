@@ -351,7 +351,13 @@ export function AppSidebar() {
     <Sidebar collapsible="icon" variant="sidebar" side="left">
       <SidebarHeader className="p-4 items-center justify-center h-[6rem]">
         <Link href="/dashboard" className="flex items-center justify-center text-sidebar-foreground h-full">
-          <Image src="/logo-bidtory-aplica-neg.svg" alt="Bidtory Aplica Logo" width={128} height={40} className="w-auto h-full max-h-10 group-data-[collapsible=icon]:w-full group-data-[collapsible=icon]:h-auto" />
+          <Image
+            src="/logo-bidtory-aplica-neg.svg"
+            alt="Bidtory Aplica Logo"
+            width={128}
+            height={40}
+            className="w-auto h-full max-h-10 group-data-[collapsible=icon]:w-full group-data-[collapsible=icon]:h-auto"
+          />
         </Link>
       </SidebarHeader>
       <SidebarContent className="p-2">

@@ -7,6 +7,12 @@ if (!API_BASE_URL) {
   throw new Error("Missing NEXT_PUBLIC_DESCUBRE_API_URL environment variable");
 }
 
+function buildDescubreUrl(endpoint: string): string {
+  const base = API_BASE_URL.replace(/\/$/, '');
+  const path = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
+  return `${base}${path}`;
+}
+
 class ApiError extends Error {
   constructor(message: string, public status: number, public data: any = null) {
     super(message);
@@ -32,7 +38,7 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     cache: 'no-store', // Ensures fresh data from the API
   };
 
-  const response = await fetch(`${API_BASE_URL}${endpoint}`, config);
+  const response = await fetch(buildDescubreUrl(endpoint), config);
 
   if (response.status === 401) {
     // This can be enhanced later to trigger a global logout

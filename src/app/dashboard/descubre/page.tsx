@@ -28,16 +28,35 @@ function formatCurrency(value: number | undefined): string {
   }).format(value);
 }
 
+/** Id estable para comparar suscrito/disponible (el API puede usar id_documento_fuente o id_fuente). */
+function fuenteId(f: FuenteSecop, index?: number): string {
+  return f.id_documento_fuente || f.id_fuente || f.id || (index !== undefined ? `idx-${index}` : '');
+}
+
+function fuenteEtiqueta(f: FuenteSecop, index?: number): string {
+  const id = fuenteId(f, index);
+  return (
+    f.nombre_visible ||
+    f.nombre_descriptivo_fuente ||
+    f.descripcion_corta ||
+    f.descripcion_fuente ||
+    f.url ||
+    id ||
+    'Fuente'
+  );
+}
+
 export default function DescubreDashboardPage() {
   const { descubreData, loading, tieneDescubre, refreshDescubreProfile } = useDescubre();
   const { toast } = useToast();
   const [actionInProgress, setActionInProgress] = useState<string | null>(null);
 
   const handleSubscribe = async (fuente: FuenteSecop) => {
-    setActionInProgress(fuente.id_fuente);
+    const docId = fuente.id_documento_fuente || fuente.id_fuente || fuente.id;
+    setActionInProgress(docId ?? null);
     try {
       const res = await descubreApiClient.post('/v1/subscribe_feed', {
-        id_documento_fuente: fuente.id_fuente,
+        id_documento_fuente: docId,
       });
       toast({ title: 'Suscripción exitosa', description: (res as { message?: string }).message || 'Suscrito correctamente.' });
       await refreshDescubreProfile();
@@ -53,10 +72,11 @@ export default function DescubreDashboardPage() {
   };
 
   const handleUnsubscribe = async (fuente: FuenteSecop) => {
-    setActionInProgress(fuente.id_fuente);
+    const docId = fuente.id_documento_fuente || fuente.id_fuente || fuente.id;
+    setActionInProgress(docId ?? null);
     try {
       const res = await descubreApiClient.post('/v1/unsubscribe_feed', {
-        id_documento_fuente: fuente.id_fuente,
+        id_documento_fuente: docId,
       });
       toast({ title: 'Desuscripción exitosa', description: (res as { message?: string }).message || 'Desuscrito correctamente.' });
       await refreshDescubreProfile();
@@ -109,9 +129,10 @@ export default function DescubreDashboardPage() {
   const isActive = estado_bidtory_info?.code === 'ACTIVO_BUSCANDO';
   const maxFuentes = plan_actual?.limites?.max_fuentes_secop_rss ?? 0;
   const limiteAlcanzado = (fuentes_suscritas?.length ?? 0) >= maxFuentes;
-  const fuentesNoSuscritas = fuentes_secop_disponibles_para_suscripcion?.filter(
-    (f) => !fuentes_suscritas?.some((s) => s.id_fuente === f.id_fuente)
-  ) ?? [];
+  const fuentesNoSuscritas = fuentes_secop_disponibles_para_suscripcion?.filter((f) => {
+    const fid = fuenteId(f);
+    return !fuentes_suscritas?.some((s) => fuenteId(s) === fid);
+  }) ?? [];
 
   return (
     <div className="space-y-6">
@@ -121,10 +142,10 @@ export default function DescubreDashboardPage() {
           <h1 className="text-2xl font-semibold">
             Bienvenido, {cliente?.nombre_empresa || 'Bidtory'}
           </h1>
-          <p className="text-muted-foreground mt-1 flex items-center gap-2">
+          <div className="text-muted-foreground mt-1 flex items-center gap-2">
             Bidtory Descubre
             <Badge variant="secondary">{plan_actual?.nombre_visible ?? cliente.nivel_suscripcion}</Badge>
-          </p>
+          </div>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" size="sm" asChild>
@@ -160,7 +181,9 @@ export default function DescubreDashboardPage() {
             <div>
               <p className="text-sm font-medium text-muted-foreground mb-2">Sugerencias:</p>
               <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
-                {estado_bidtory_info.sugerencias.map((s, i) => <li key={i}>{s}</li>)}
+                {estado_bidtory_info.sugerencias.map((s, i) => (
+                  <li key={`sug-${i}-${s}`}>{s}</li>
+                ))}
               </ul>
             </div>
           )}
@@ -228,13 +251,14 @@ export default function DescubreDashboardPage() {
         <CardContent className="space-y-4">
           {fuentes_suscritas && fuentes_suscritas.length > 0 ? (
             <ul className="space-y-2">
-              {fuentes_suscritas.map((f) => {
-                const isProcessing = actionInProgress === f.id_fuente;
+              {fuentes_suscritas.map((f, i) => {
+                const fid = fuenteId(f, i);
+                const isProcessing = actionInProgress === fid;
                 return (
-                  <li key={f.id_fuente} className="flex items-center justify-between gap-2 py-2 border-b border-border last:border-0">
+                  <li key={`suscrita-${fid}`} className="flex items-center justify-between gap-2 py-2 border-b border-border last:border-0">
                     <div className="flex items-center gap-2 text-sm min-w-0">
                       <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
-                      <span className="truncate">{f.nombre_descriptivo_fuente || f.id_fuente}</span>
+                      <span className="truncate">{fuenteEtiqueta(f, i)}</span>
                     </div>
                     <Button
                       variant="outline"
@@ -258,11 +282,12 @@ export default function DescubreDashboardPage() {
             <div className="pt-4 border-t border-border">
               <p className="text-sm font-medium mb-3">Fuentes disponibles</p>
               <ul className="space-y-2">
-                {fuentesNoSuscritas.map((f) => {
-                  const isProcessing = actionInProgress === f.id_fuente;
+                {fuentesNoSuscritas.map((f, i) => {
+                  const fid = fuenteId(f, i);
+                  const isProcessing = actionInProgress === fid;
                   return (
-                    <li key={f.id_fuente} className="flex items-center justify-between gap-2 py-2 px-3 rounded-md bg-muted/50">
-                      <span className="text-sm truncate flex-1">{f.nombre_descriptivo_fuente || f.id_fuente}</span>
+                    <li key={`disponible-${fid}`} className="flex items-center justify-between gap-2 py-2 px-3 rounded-md bg-muted/50">
+                      <span className="text-sm truncate flex-1 min-w-0">{fuenteEtiqueta(f, i)}</span>
                       <Button
                         variant="default"
                         size="sm"

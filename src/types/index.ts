@@ -478,10 +478,16 @@ export interface DescubreClienteProfile {
   fecha_proximo_pago?: string | null;
 }
 
+/** Alineado con la respuesta del API (mismo criterio que monitoring_portal). */
 export interface FuenteSecop {
-  id_fuente: string;
+  id_fuente?: string;
+  id_documento_fuente?: string;
+  id?: string;
   url?: string;
-  nombre_descriptivo_fuente: string;
+  nombre_descriptivo_fuente?: string;
+  nombre_visible?: string;
+  descripcion_corta?: string;
+  descripcion_fuente?: string;
 }
 
 export interface EstadoBidtoryInfo {
