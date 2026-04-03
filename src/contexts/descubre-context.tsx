@@ -41,7 +41,7 @@ export function DescubreProvider({ children }: { children: ReactNode }) {
     setError(null);
     try {
       const data = await descubreApiClient.get<DescubreDashboardData>(
-        '/get_client_dashboard_data'
+        '/v1/dashboard_data'
       );
       setDescubreData(data);
       setNivelSuscripcion(data.cliente.nivel_suscripcion);

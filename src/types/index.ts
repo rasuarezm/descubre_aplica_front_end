@@ -504,3 +504,24 @@ export interface DescubreDashboardData {
   }[];
   estado_bidtory_info: EstadoBidtoryInfo;
 }
+
+export interface OportunidadDescubre {
+  titulo?: string;
+  fecha_procesamiento?: string;
+  modalidad_contratacion?: string;
+  fecha_limite_ofertas?: string;
+  ubicacion_entidad?: string;
+  entidad_contratante?: string;
+  valor_estimado?: string;
+  ranking_interes?: string | number;
+  resumen_relevancia?: string;
+  link_directo?: string;
+  is_fallback_url?: boolean;
+  fallback_reference_process?: string;
+  fallback_search_url?: string;
+}
+
+export interface OportunidadesDescubreResponse {
+  oportunidades: OportunidadDescubre[];
+  message?: string;
+}
