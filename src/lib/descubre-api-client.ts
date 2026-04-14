@@ -55,7 +55,12 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
       if (raw) {
         const parsed = JSON.parse(raw) as Record<string, unknown>;
         errorData = { ...errorData, ...parsed };
+        const detailsMsg =
+          Array.isArray(parsed.details) && parsed.details.length > 0
+            ? (parsed.details as string[]).join('. ')
+            : null;
         const msg =
+          detailsMsg ||
           (typeof parsed.message === 'string' && parsed.message) ||
           (typeof parsed.error === 'string' && parsed.error);
         if (msg) errorData.message = msg;
