@@ -20,8 +20,14 @@ function arrayToLines(arr: string[] | undefined): string {
   return arr.join('\n');
 }
 
+/** Normalización para enviar al API (sin líneas vacías ni ruido). */
 function linesToArray(text: string): string[] {
   return text.split('\n').map((s) => s.trim()).filter(Boolean);
+}
+
+/** Mientras el usuario edita el textarea: conserva saltos de línea y espacios por línea. */
+function splitLinesRaw(text: string): string[] {
+  return text.split('\n');
 }
 
 const MODALIDADES_SECOP = [
@@ -182,15 +188,15 @@ export default function DescubrePerfilPage() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label>Tipos de servicio (máx. {maxTipos})</Label>
-              <Textarea value={arrayToLines(form.tipos_servicio)} onChange={(e) => updateField('tipos_servicio', linesToArray(e.target.value))} placeholder={'Consultoría TI\nDesarrollo Web'} rows={3} />
+              <Textarea value={arrayToLines(form.tipos_servicio)} onChange={(e) => updateField('tipos_servicio', splitLinesRaw(e.target.value))} placeholder={'Consultoría TI\nDesarrollo Web'} rows={3} />
             </div>
             <div className="space-y-2">
               <Label>Palabras clave positivas (máx. {maxPos})</Label>
-              <Textarea value={arrayToLines(form.palabras_clave_positivas)} onChange={(e) => updateField('palabras_clave_positivas', linesToArray(e.target.value))} placeholder={'IA\nBig Data'} rows={3} />
+              <Textarea value={arrayToLines(form.palabras_clave_positivas)} onChange={(e) => updateField('palabras_clave_positivas', splitLinesRaw(e.target.value))} placeholder={'IA\nBig Data'} rows={3} />
             </div>
             <div className="space-y-2">
               <Label>Palabras clave negativas (máx. {maxNeg})</Label>
-              <Textarea value={arrayToLines(form.palabras_clave_negativas)} onChange={(e) => updateField('palabras_clave_negativas', linesToArray(e.target.value))} placeholder={'Manual\nObsoleto'} rows={2} />
+              <Textarea value={arrayToLines(form.palabras_clave_negativas)} onChange={(e) => updateField('palabras_clave_negativas', splitLinesRaw(e.target.value))} placeholder={'Manual\nObsoleto'} rows={2} />
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
@@ -200,16 +206,16 @@ export default function DescubrePerfilPage() {
             </div>
             <div className="space-y-2">
               <Label>Ubicaciones preferidas</Label>
-              <Textarea value={arrayToLines(form.ubicaciones_preferidas)} onChange={(e) => updateField('ubicaciones_preferidas', linesToArray(e.target.value))} placeholder={'Bogotá D.C.\nNacional'} rows={2} />
+              <Textarea value={arrayToLines(form.ubicaciones_preferidas)} onChange={(e) => updateField('ubicaciones_preferidas', splitLinesRaw(e.target.value))} placeholder={'Bogotá D.C.\nNacional'} rows={2} />
             </div>
             <div className="space-y-2">
               <Label>Entidades de interés</Label>
-              <Textarea value={arrayToLines(form.entidades_interes)} onChange={(e) => updateField('entidades_interes', linesToArray(e.target.value))} placeholder={'Ministerio TIC\nColpensiones'} rows={2} />
+              <Textarea value={arrayToLines(form.entidades_interes)} onChange={(e) => updateField('entidades_interes', splitLinesRaw(e.target.value))} placeholder={'Ministerio TIC\nColpensiones'} rows={2} />
             </div>
             {descubreData?.plan_actual?.features_habilitadas?.palabra_clave_dorada_config && (
               <div className="space-y-2">
                 <Label>Palabras clave doradas</Label>
-                <Textarea value={arrayToLines(form.palabras_clave_doradas)} onChange={(e) => updateField('palabras_clave_doradas', linesToArray(e.target.value))} placeholder="Urgencia Manifiesta" rows={2} />
+                <Textarea value={arrayToLines(form.palabras_clave_doradas)} onChange={(e) => updateField('palabras_clave_doradas', splitLinesRaw(e.target.value))} placeholder="Urgencia Manifiesta" rows={2} />
               </div>
             )}
             <div className="space-y-2">
@@ -244,7 +250,7 @@ export default function DescubrePerfilPage() {
             <CardDescription>Emails que recibirán las alertas de nuevas oportunidades (máx. {maxEmails})</CardDescription>
           </CardHeader>
           <CardContent>
-            <Textarea value={arrayToLines(form.send_notifications)} onChange={(e) => updateField('send_notifications', linesToArray(e.target.value))} placeholder={'alerta1@empresa.com\nalerta2@empresa.com'} rows={3} />
+            <Textarea value={arrayToLines(form.send_notifications)} onChange={(e) => updateField('send_notifications', splitLinesRaw(e.target.value))} placeholder={'alerta1@empresa.com\nalerta2@empresa.com'} rows={3} />
           </CardContent>
         </Card>
 
