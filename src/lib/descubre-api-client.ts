@@ -1,11 +1,11 @@
 
 import { auth } from '@/lib/firebase';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_DESCUBRE_API_URL;
-
-if (!API_BASE_URL) {
-  throw new Error("Missing NEXT_PUBLIC_DESCUBRE_API_URL environment variable");
+const _rawDescubreApiUrl = process.env.NEXT_PUBLIC_DESCUBRE_API_URL;
+if (!_rawDescubreApiUrl) {
+  throw new Error('Missing NEXT_PUBLIC_DESCUBRE_API_URL environment variable');
 }
+const API_BASE_URL = _rawDescubreApiUrl;
 
 function buildDescubreUrl(endpoint: string): string {
   const base = API_BASE_URL.replace(/\/$/, '');
