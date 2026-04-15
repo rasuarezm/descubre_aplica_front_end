@@ -26,7 +26,7 @@ interface DescubreContextType {
 const DescubreContext = createContext<DescubreContextType | undefined>(undefined);
 
 export function DescubreProvider({ children }: { children: ReactNode }) {
-  const { user, loading: authLoading } = useAuth();
+  const { user, userProfile, loading: authLoading } = useAuth();
   const [descubreData, setDescubreData] = useState<DescubreDashboardData | null>(null);
   const [nivelSuscripcion, setNivelSuscripcion] = useState<NivelSuscripcion | null>(null);
   const [tieneDescubre, setTieneDescubre] = useState(false);
@@ -76,8 +76,17 @@ export function DescubreProvider({ children }: { children: ReactNode }) {
       setFetchLoading(false);
       return;
     }
+    // Only customer users should load Descubre dashboard data.
+    if (!userProfile || userProfile.role !== 'customer') {
+      setDescubreData(null);
+      setNivelSuscripcion(null);
+      setTieneDescubre(false);
+      setError(null);
+      setFetchLoading(false);
+      return;
+    }
     void loadDashboard();
-  }, [user, authLoading, loadDashboard]);
+  }, [user, userProfile, authLoading, loadDashboard]);
 
   const refreshDescubreProfile = useCallback(async () => {
     await loadDashboard();
