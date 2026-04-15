@@ -292,38 +292,42 @@ export function AppSidebar() {
 
     return (
       <>
-        {/* DESCUBRE */}
-        <SidebarGroup>
-          <SidebarGroupLabel className="group-data-[collapsible=icon]:hidden text-xs font-semibold tracking-widest text-sidebar-foreground/50 uppercase px-2 pb-1">
-            Descubre
-          </SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              <SidebarMenuItem>
-                <Link href="/dashboard/descubre" passHref>
-                  <SidebarMenuButton
-                    isActive={isDescubreOportunidadesActive}
-                    tooltip={{ content: "Alertas de Negocios", side: "right" }}
-                  >
-                    <Search className="h-5 w-5" />
-                    <span className="group-data-[collapsible=icon]:hidden">Alertas de Negocios</span>
-                  </SidebarMenuButton>
-                </Link>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <Link href="/dashboard/descubre/perfil" passHref>
-                  <SidebarMenuButton
-                    isActive={pathname.startsWith("/dashboard/descubre/perfil")}
-                    tooltip={{ content: "Mis Preferencias", side: "right" }}
-                  >
-                    <SlidersHorizontal className="h-5 w-5" />
-                    <span className="group-data-[collapsible=icon]:hidden">Mis Preferencias</span>
-                  </SidebarMenuButton>
-                </Link>
-              </SidebarMenuItem>
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {!descubreLoading && tieneDescubre ? (
+          <>
+            {/* DESCUBRE */}
+            <SidebarGroup>
+              <SidebarGroupLabel className="group-data-[collapsible=icon]:hidden text-xs font-semibold tracking-widest text-sidebar-foreground/50 uppercase px-2 pb-1">
+                Descubre
+              </SidebarGroupLabel>
+              <SidebarGroupContent>
+                <SidebarMenu>
+                  <SidebarMenuItem>
+                    <Link href="/dashboard/descubre" passHref>
+                      <SidebarMenuButton
+                        isActive={isDescubreOportunidadesActive}
+                        tooltip={{ content: "Alertas de Negocios", side: "right" }}
+                      >
+                        <Search className="h-5 w-5" />
+                        <span className="group-data-[collapsible=icon]:hidden">Alertas de Negocios</span>
+                      </SidebarMenuButton>
+                    </Link>
+                  </SidebarMenuItem>
+                  <SidebarMenuItem>
+                    <Link href="/dashboard/descubre/perfil" passHref>
+                      <SidebarMenuButton
+                        isActive={pathname.startsWith("/dashboard/descubre/perfil")}
+                        tooltip={{ content: "Mis Preferencias", side: "right" }}
+                      >
+                        <SlidersHorizontal className="h-5 w-5" />
+                        <span className="group-data-[collapsible=icon]:hidden">Mis Preferencias</span>
+                      </SidebarMenuButton>
+                    </Link>
+                  </SidebarMenuItem>
+                </SidebarMenu>
+              </SidebarGroupContent>
+            </SidebarGroup>
+          </>
+        ) : null}
 
         {/* APLICA */}
         <SidebarGroup>

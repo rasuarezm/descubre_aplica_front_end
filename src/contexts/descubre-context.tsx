@@ -34,7 +34,12 @@ export function DescubreProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
 
   const loadDashboard = useCallback(async () => {
-    if (!user) {
+    if (!user || !userProfile || userProfile.role !== 'customer') {
+      setDescubreData(null);
+      setNivelSuscripcion(null);
+      setTieneDescubre(false);
+      setError(null);
+      setFetchLoading(false);
       return;
     }
     setFetchLoading(true);
@@ -62,7 +67,7 @@ export function DescubreProvider({ children }: { children: ReactNode }) {
     } finally {
       setFetchLoading(false);
     }
-  }, [user]);
+  }, [user, userProfile]);
 
   useEffect(() => {
     if (authLoading) {
