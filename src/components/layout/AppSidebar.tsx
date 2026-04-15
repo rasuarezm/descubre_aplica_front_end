@@ -45,7 +45,7 @@ interface OpportunityWithUrgency extends Opportunity {
 export function AppSidebar() {
   const pathname = usePathname();
   const { userProfile } = useAuth();
-  const { tieneAplica, tieneDescubre, nivelSuscripcion } = useDescubre();
+  const { tieneAplica, tieneDescubre, loading: descubreLoading } = useDescubre();
   const [openSubmenus, setOpenSubmenus] = useState<Record<string, boolean>>({ "Clientes": true, "Oportunidades": true });
   const [customerSubItems, setCustomerSubItems] = useState<{href: string, label: string}[]>([]);
   const [opportunitySubItems, setOpportunitySubItems] = useState<OpportunityWithUrgency[]>([]);
@@ -332,7 +332,7 @@ export function AppSidebar() {
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {tieneAplica || !tieneDescubre ? renderAplicaFullNav() : (
+              {descubreLoading ? null : (tieneAplica || !tieneDescubre ? renderAplicaFullNav() : (
                 <SidebarMenuItem>
                   <SidebarMenuButton
                     disabled
@@ -350,7 +350,7 @@ export function AppSidebar() {
                     </Badge>
                   </SidebarMenuButton>
                 </SidebarMenuItem>
-              )}
+              ))}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
