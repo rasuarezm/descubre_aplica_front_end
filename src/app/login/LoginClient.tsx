@@ -59,7 +59,7 @@ export default function LoginClient() {
         </div>
       </header>
 
-       <main className="flex-1 flex items-center justify-center p-4 bg-background/40">
+       <main className="flex-1 flex items-center justify-center p-4 bg-background/30">
         <LoginForm />
        </main>
 

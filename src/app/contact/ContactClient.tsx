@@ -14,15 +14,14 @@ export default function ContactClient() {
     <GoogleReCaptchaProvider reCaptchaKey={recaptchaSiteKey || 'do-not-use-this-key'}>
       {/* ... (Todo tu JSX original va aquí: header, main, footer) ... */}
       <div className="flex flex-col min-h-screen bg-background text-foreground">
-          <header className="sticky top-0 z-50 w-full backdrop-blur-md bg-background/50 border-b border-white/10">
+          <header className="sticky top-0 z-50 w-full bg-card/95 backdrop-blur-sm border-b border-border">
               <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
               <Link href="/" className="flex items-center justify-center">
                   <Image src="/logo-bidtory-color.svg" alt="Bidtory Logo" width={130} height={36} className="h-8 w-auto" />
               </Link>
               <nav className="hidden md:flex items-center gap-6">
-                  <Link href="/methodology" className="text-sm font-medium hover:text-accent transition-colors">Nuestra Metodología</Link>
+                  <Link href="/suscripciones" className="text-sm font-medium hover:text-accent transition-colors">Planes</Link>
                   <Link href="/#bidtory" className="text-sm font-medium hover:text-accent transition-colors">Bidtory</Link>
-                  <Link href="/#clients" className="text-sm font-medium hover:text-accent transition-colors">Clientes</Link>
               </nav>
               <div className="flex items-center gap-4">
                   <Button variant="outline" asChild>
@@ -79,19 +78,19 @@ export default function ContactClient() {
               </div>
           </main>
           
-          <footer className="w-full border-t border-white/10 py-6">
+          <footer className="w-full py-6 bg-card/95 backdrop-blur-sm border-t border-border">
             <div className="container mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 px-4 md:px-6">
               <div className="flex flex-col items-center md:items-start">
                 <div className="flex items-center gap-3">
                   <Image src="/logo-bidtory-color.svg" alt="Bidtory Logo" width={120} height={34} className="h-8 w-auto" />
-                  <p className="text-sm text-foreground/70 tracking-wide">&copy; {new Date().getFullYear()} Puro Contenido.</p>
+                  <p className="text-sm text-muted-foreground tracking-wide">&copy; {new Date().getFullYear()} Puro Contenido.</p>
                 </div>
-                <p className="text-xs text-foreground/50 mt-2 text-center md:text-left">Todos los derechos reservados.</p>
+                <p className="text-xs text-muted-foreground mt-2 text-center md:text-left">Todos los derechos reservados.</p>
               </div>
               <div className="text-center md:text-left">
                 <h4 className="font-semibold text-sm mb-2">Navegación</h4>
                 <div className="flex flex-col gap-1">
-                  <Link href="/methodology" className="text-sm hover:text-accent">Nuestra Metodología</Link>
+                  <Link href="/suscripciones" className="text-sm hover:text-accent">Planes</Link>
                   <Link href="/#bidtory" className="text-sm hover:text-accent">Suite Bidtory</Link>
                   <Link href="/contact" className="text-sm text-accent">Contacto</Link>
                 </div>

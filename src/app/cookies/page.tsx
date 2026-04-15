@@ -22,7 +22,7 @@ export default function CookiesPolicyPage() {
             <Image src="/logo-bidtory-color.svg" alt="Bidtory Logo" width={130} height={36} className="h-8 w-auto" />
           </Link>
           <nav className="hidden md:flex items-center gap-6">
-            <Link href="/methodology" className="text-sm font-medium hover:text-accent transition-colors">Nuestra Metodología</Link>
+            <Link href="/suscripciones" className="text-sm font-medium hover:text-accent transition-colors">Planes</Link>
             <Link href="/#bidtory" className="text-sm font-medium hover:text-accent transition-colors">Suite Bidtory</Link>
           </nav>
           <div className="flex items-center gap-4">
@@ -113,7 +113,7 @@ export default function CookiesPolicyPage() {
           <div className="text-center md:text-left">
             <h4 className="font-semibold text-sm mb-2">Navegación</h4>
             <div className="flex flex-col gap-1">
-              <Link href="/methodology" className="text-sm hover:text-accent">Nuestra Metodología</Link>
+              <Link href="/suscripciones" className="text-sm hover:text-accent">Planes</Link>
               <Link href="/#bidtory" className="text-sm hover:text-accent">Suite Bidtory</Link>
               <Link href="/contact" className="text-sm hover:text-accent">Contacto</Link>
             </div>
