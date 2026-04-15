@@ -133,19 +133,19 @@ export default function DescubreDashboardPage() {
       )}
 
       <div className="grid gap-3 md:grid-cols-3">
-        <Card className="bg-muted/40">
+        <Card className="border-l-4 border-accent shadow-sm">
           <CardContent className="py-3 text-sm">
             <div className="text-muted-foreground">Oportunidades encontradas</div>
             <div className="text-lg font-semibold">{oportunidades.length}</div>
           </CardContent>
         </Card>
-        <Card className="bg-muted/40">
+        <Card className="border-l-4 border-accent shadow-sm">
           <CardContent className="py-3 text-sm">
             <div className="text-muted-foreground">Fuentes activas</div>
             <div className="text-lg font-semibold">{totalFuentes}</div>
           </CardContent>
         </Card>
-        <Card className="bg-muted/40">
+        <Card className="border-l-4 border-accent shadow-sm">
           <CardContent className="py-3 text-sm">
             <Link href="/dashboard/descubre/perfil" className="inline-flex items-center gap-2 text-primary hover:underline">
               <Settings className="h-4 w-4" />
@@ -202,7 +202,7 @@ function OportunidadCard({ op }: { op: OportunidadDescubre }) {
   const isFallback = op.is_fallback_url === true && !!op.fallback_search_url;
 
   return (
-    <Card className={cn('flex flex-col hover:shadow-lg transition-shadow duration-300 border-l-4 border-primary')}>
+    <Card className={cn('flex flex-col shadow-sm hover:shadow-lg transition-shadow duration-300 border-l-4 border-accent')}>
       <CardHeader>
         <CardTitle className="text-lg font-semibold line-clamp-2">
           {op.titulo || 'Oportunidad sin título'}
