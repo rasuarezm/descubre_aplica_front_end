@@ -1032,7 +1032,7 @@ const handleUploadGeneralDocument = async () => {
       
       {/* Summary Panel */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-        <Card>
+        <Card className="shadow-sm border-l-4 border-accent">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Próximo Vencimiento</CardTitle>
             <CalendarClock className="h-4 w-4 text-muted-foreground" />
@@ -1048,7 +1048,7 @@ const handleUploadGeneralDocument = async () => {
             )}
           </CardContent>
         </Card>
-        <Card>
+        <Card className="shadow-sm border-l-4 border-accent">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Oportunidades Activas</CardTitle>
             <Target className="h-4 w-4 text-muted-foreground" />
@@ -1058,7 +1058,7 @@ const handleUploadGeneralDocument = async () => {
             <p className="text-xs text-muted-foreground">Total de oportunidades en curso</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="shadow-sm border-l-4 border-highlight">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Próximas a Vencer</CardTitle>
             <AlertTriangle className="h-4 w-4 text-muted-foreground" />
@@ -1068,7 +1068,7 @@ const handleUploadGeneralDocument = async () => {
             <p className="text-xs text-muted-foreground">Vencen en 8-14 días</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="shadow-sm border-l-4 border-destructive">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Urgentes</CardTitle>
             <Clock className="h-4 w-4 text-muted-foreground" />
@@ -1078,7 +1078,7 @@ const handleUploadGeneralDocument = async () => {
             <p className="text-xs text-muted-foreground">Vencen en &lt; 8 días</p>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="shadow-sm border-l-4 border-accent">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Valor en Juego</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
@@ -1145,7 +1145,7 @@ const handleUploadGeneralDocument = async () => {
                 <Card 
                   key={opportunity.id} 
                   className={cn(
-                      "flex flex-col hover:shadow-lg transition-shadow duration-300 border-l-4",
+                      "flex flex-col shadow-sm hover:shadow-lg transition-shadow duration-300 border-l-4",
                       isArchivedView 
                         ? "border-muted-foreground bg-muted/30"
                         : {

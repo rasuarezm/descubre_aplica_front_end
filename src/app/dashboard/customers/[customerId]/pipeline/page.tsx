@@ -146,7 +146,7 @@ function KanbanColumn({ status, opportunities, canManage }: { status: string; op
     const columnValue = useMemo(() => opportunities.reduce((sum, opp) => sum + (opp.amount || 0), 0), [opportunities]);
 
     return (
-        <div ref={setNodeRef} className="rounded-lg bg-muted/50 p-2 flex flex-col h-full">
+        <div ref={setNodeRef} className="rounded-lg bg-card border border-border shadow-sm p-2 flex flex-col h-full">
             <h2 className="p-2 font-semibold text-foreground flex justify-between items-center">
                 <span>{status}</span>
                 <span className="text-sm font-normal text-secondary-foreground bg-secondary rounded-full px-2 py-0.5">
