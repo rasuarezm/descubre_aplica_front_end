@@ -367,8 +367,8 @@ export function AppSidebar() {
       <SidebarHeader className="p-4 items-center justify-center h-[6rem]">
         <Link href="/dashboard" className="flex items-center justify-center text-sidebar-foreground h-full">
           <Image
-            src="/logo-bidtory-500wneg.svg"
-            alt="Bidtory Aplica Logo"
+            src="/logo-bidtory-color.svg"
+            alt="Bidtory Logo"
             width={128}
             height={40}
             className="w-auto h-full max-h-10 group-data-[collapsible=icon]:w-full group-data-[collapsible=icon]:h-auto"

@@ -4,48 +4,53 @@
 
 @layer base {
   :root {
-    --background: 30 14% 17%; /* #2a2220 - Dark Gray */
-    --foreground: 36 43% 95%; /* #f5f0ea - Soft Complementary */
+    --background: 210 20% 98%; /* #F9FAFB - Blanco grisaceo */
+    --foreground: 206 41% 39%; /* #3a6d8c - Azul Sobrio */
 
-    --card: 30 14% 20%;
-    --card-foreground: 36 43% 95%;
+    --card: 0 0% 100%; /* #FFFFFF - Blanco */
+    --card-foreground: 206 41% 39%;
 
-    --popover: 30 14% 17%;
-    --popover-foreground: 36 43% 95%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 206 41% 39%;
 
-    --primary: 36 43% 95%; 
-    --primary-foreground: 30 14% 10%;
+    --primary: 206 41% 39%;
+    --primary-foreground: 0 0% 100%;
 
     --secondary: 206 40% 38%; /* #3a6d8c - Sober Blue */
-    --secondary-foreground: 36 43% 95%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 206 40% 28%;
-    --muted-foreground: 36 43% 85%;
+    --muted: 220 13% 96%; /* #F3F4F6 - Gris muy claro */
+    --muted-foreground: 215 28% 27%; /* #374151 - Gris oscuro para parrafos */
 
-    --accent: 175 100% 33%; /* #00A99D - Emerald Green */
-    --accent-foreground: 36 43% 98%;
+    --accent: 175 100% 33%; /* #00A99D - Verde Esmeralda */
+    --accent-foreground: 0 0% 100%;
+
+    --accent-cta: 175 100% 24%;
+    --accent-cta-foreground: 0 0% 100%;
 
     --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 36 43% 98%;
-    
+    --destructive-foreground: 0 0% 100%;
+
+    --popular: 24 81% 55%; /* #E8772E - Naranja Quemado */
+
     --highlight: 39 59% 65%; /* #dab26f - Mustard */
 
-    --border: 206 40% 24%;
-    --input: 206 40% 24%;
+    --border: 220 13% 91%; /* #E5E7EB */
+    --input: 220 13% 91%;
     --ring: 175 100% 33%;
 
     --radius: 0.5rem;
 
-    /* Sidebar specific theme */
-    --sidebar-background: 30 14% 14%;
-    --sidebar-foreground: 36 43% 95%;
+    /* Sidebar - tema claro */
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 206 41% 39%;
     --sidebar-primary: 175 100% 33%;
-    --sidebar-primary-foreground: 36 43% 98%;
-    --sidebar-accent: 175 100% 28%;
-    --sidebar-accent-foreground: 36 43% 98%;
-    --sidebar-border: 30 14% 10%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 220 13% 96%;
+    --sidebar-accent-foreground: 206 41% 39%;
+    --sidebar-border: 220 13% 91%;
     --sidebar-ring: 175 100% 33%;
-    
+
     --chart-1: 175 100% 33%;
     --chart-2: 39 59% 65%;
     --chart-3: 206 40% 38%;
@@ -54,9 +59,8 @@
   }
 
   .dark {
-    /* Keeping dark theme consistent with root for now */
-    --background: 30 14% 17%; /* #2a2220 - Dark Gray */
-    --foreground: 36 43% 95%; /* #f5f0ea - Soft Complementary */
+    --background: 30 14% 17%;
+    --foreground: 36 43% 95%;
 
     --card: 30 14% 20%;
     --card-foreground: 36 43% 95%;
@@ -64,7 +68,7 @@
     --popover: 30 14% 17%;
     --popover-foreground: 36 43% 95%;
 
-    --primary: 36 43% 95%; 
+    --primary: 36 43% 95%;
     --primary-foreground: 30 14% 10%;
 
     --secondary: 206 40% 38%; /* #3a6d8c - Sober Blue */
@@ -73,19 +77,23 @@
     --muted: 206 40% 28%;
     --muted-foreground: 36 43% 85%;
 
-    --accent: 175 100% 33%; /* #00A99D - Emerald Green */
+    --accent: 175 100% 33%;
     --accent-foreground: 36 43% 98%;
+
+    --accent-cta: 175 100% 26%;
+    --accent-cta-foreground: 0 0% 100%;
 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 36 43% 98%;
-    
+
+    --popular: 24 81% 55%;
+
     --highlight: 39 59% 65%; /* #dab26f - Mustard */
 
     --border: 206 40% 24%;
     --input: 206 40% 24%;
     --ring: 175 100% 33%;
     
-    /* Sidebar specific theme */
     --sidebar-background: 30 14% 14%;
     --sidebar-foreground: 36 43% 95%;
     --sidebar-primary: 175 100% 33%;

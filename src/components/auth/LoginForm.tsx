@@ -107,7 +107,7 @@ export function LoginForm() {
     <AlertDialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen}>
       <Card className="w-full max-w-md bg-card/80 backdrop-blur-sm border-white/20 shadow-2xl shadow-black/50">
         <CardHeader className="text-center space-y-4">
-          <Image src="/logo-bidtory-aplica-pos.svg" alt="Bidtory Aplica Logo" width={192} height={60} className="mx-auto h-20 w-auto" />
+          <Image src="/logo-bidtory-color.svg" alt="Bidtory Logo" width={192} height={60} className="mx-auto h-20 w-auto" />
           <CardDescription className="text-foreground/80 pt-2">Inicie sesión para gestionar sus oportunidades y proyectos.</CardDescription>
         </CardHeader>
         <CardContent>
