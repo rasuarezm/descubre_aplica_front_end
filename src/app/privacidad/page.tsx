@@ -5,8 +5,8 @@ import { Button } from '@/components/ui/button';
 import type { Metadata } from 'next';
 export const dynamic = "force-dynamic";
 export const metadata: Metadata = {
-  title: 'Política de Privacidad - Puro Contenido',
-  description: 'Conozca cómo Puro Contenido SAS recopila, usa, almacena y protege su información personal al utilizar nuestro sitio web y la Zona de Clientes.',
+  title: 'Política de Privacidad - Bidtory',
+  description: 'Conozca cómo Bidtory, operado por Puro Contenido SAS, recopila, usa, almacena y protege su información personal.',
   robots: {
     index: false,
     follow: false,
@@ -18,9 +18,8 @@ export default function PrivacyPolicyPage() {
     <div className="flex flex-col min-h-screen bg-background text-foreground">
       <header className="sticky top-0 z-50 w-full backdrop-blur-md bg-background/50 border-b border-white/10">
         <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
-          <Link href="/" className="flex items-center justify-center gap-3">
-            <Image src="/LogoPuroContenido.svg" alt="Puro Contenido Logo" width={28} height={28} className="h-auto w-7" />
-            <span className="font-headline font-bold text-xl tracking-wide ml-2">Puro Contenido</span>
+          <Link href="/" className="flex items-center justify-center">
+            <Image src="/logo-bidtory-color.svg" alt="Bidtory Logo" width={130} height={36} className="h-8 w-auto" />
           </Link>
           <nav className="hidden md:flex items-center gap-6">
             <Link href="/methodology" className="text-sm font-medium hover:text-accent transition-colors">Nuestra Metodología</Link>
@@ -189,7 +188,7 @@ export default function PrivacyPolicyPage() {
         <div className="container mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 px-4 md:px-6">
           <div className="flex flex-col items-center md:items-start">
             <div className="flex items-center gap-3">
-              <Image src="/LogoPuroContenido.svg" alt="Puro Contenido Logo" width={24} height={24} className="h-auto w-6" />
+              <Image src="/logo-bidtory-color.svg" alt="Bidtory Logo" width={120} height={34} className="h-8 w-auto" />
               <p className="text-sm text-foreground/70 tracking-wide">&copy; {new Date().getFullYear()} Puro Contenido.</p>
             </div>
              <p className="text-xs text-foreground/50 mt-2 text-center md:text-left">Todos los derechos reservados.</p>

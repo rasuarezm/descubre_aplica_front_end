@@ -20,8 +20,8 @@ const playfairDisplay = Playfair_Display({
 
 
 export const metadata: Metadata = {
-  title: 'Puro Contenido - Estrategia y Tecnología para Licitaciones',
-  description: 'Transformamos datos en oportunidades ganadoras a través de consultoría experta y productos tecnológicos de vanguardia como Bidtory.',
+  title: 'Bidtory - Estrategia y Tecnología para Licitaciones',
+  description: 'Transformamos datos en oportunidades ganadoras con consultoría experta y tecnología Bidtory para licitaciones.',
 };
 
 export default function RootLayout({
