@@ -17,7 +17,7 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSkeleton,
 } from "@/components/ui/sidebar";
-import { Home, Users, Briefcase, FileText, Settings, ChevronDown, ChevronUp, UserSquare, Search, SlidersHorizontal, Rss } from "lucide-react";
+import { Home, Users, Briefcase, FileText, Settings, ChevronDown, ChevronUp, UserSquare, Search, SlidersHorizontal } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -202,8 +202,7 @@ export function AppSidebar() {
     const isDescubreOportunidadesActive =
       pathname === "/dashboard/descubre" ||
       (pathname.startsWith("/dashboard/descubre/") &&
-        !pathname.startsWith("/dashboard/descubre/perfil") &&
-        !pathname.startsWith("/dashboard/descubre/fuentes"));
+        !pathname.startsWith("/dashboard/descubre/perfil"));
 
     const renderAplicaFullNav = () => (
       <>
@@ -319,17 +318,6 @@ export function AppSidebar() {
                   >
                     <SlidersHorizontal className="h-5 w-5" />
                     <span className="group-data-[collapsible=icon]:hidden">Mis Preferencias</span>
-                  </SidebarMenuButton>
-                </Link>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <Link href="/dashboard/descubre/fuentes" passHref>
-                  <SidebarMenuButton
-                    isActive={pathname.startsWith("/dashboard/descubre/fuentes")}
-                    tooltip={{ content: "Fuentes de Búsqueda", side: "right" }}
-                  >
-                    <Rss className="h-5 w-5" />
-                    <span className="group-data-[collapsible=icon]:hidden">Fuentes de Búsqueda</span>
                   </SidebarMenuButton>
                 </Link>
               </SidebarMenuItem>
