@@ -6,6 +6,9 @@ import {
   SidebarHeader,
   SidebarContent,
   SidebarFooter,
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarGroupContent,
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
@@ -208,10 +211,10 @@ export function AppSidebar() {
           <Link href={customerZoneHref} passHref>
             <SidebarMenuButton 
               isActive={pathname === customerZoneHref}
-              tooltip={{content: "Mi Zona de Cliente", side: "right"}}
+              tooltip={{content: "Mi Empresa", side: "right"}}
             >
               <UserSquare className="h-5 w-5" />
-              <span className="group-data-[collapsible=icon]:hidden">Mi Zona de Cliente</span>
+              <span className="group-data-[collapsible=icon]:hidden">Mi Empresa</span>
             </SidebarMenuButton>
           </Link>
         </SidebarMenuItem>
@@ -290,59 +293,79 @@ export function AppSidebar() {
 
     return (
       <>
-        <SidebarMenuItem>
-          <Link href="/dashboard/descubre" passHref>
-            <SidebarMenuButton
-              isActive={isDescubreOportunidadesActive}
-              tooltip={{ content: "Oportunidades", side: "right" }}
-            >
-              <Search className="h-5 w-5" />
-              <span className="group-data-[collapsible=icon]:hidden">Oportunidades</span>
-            </SidebarMenuButton>
-          </Link>
-        </SidebarMenuItem>
-        <SidebarMenuItem>
-          <Link href="/dashboard/descubre/perfil" passHref>
-            <SidebarMenuButton
-              isActive={pathname.startsWith("/dashboard/descubre/perfil")}
-              tooltip={{ content: "Mi Perfil de Búsqueda", side: "right" }}
-            >
-              <SlidersHorizontal className="h-5 w-5" />
-              <span className="group-data-[collapsible=icon]:hidden">Mi Perfil de Búsqueda</span>
-            </SidebarMenuButton>
-          </Link>
-        </SidebarMenuItem>
-        <SidebarMenuItem>
-          <Link href="/dashboard/descubre/fuentes" passHref>
-            <SidebarMenuButton
-              isActive={pathname.startsWith("/dashboard/descubre/fuentes")}
-              tooltip={{ content: "Mis Fuentes", side: "right" }}
-            >
-              <Rss className="h-5 w-5" />
-              <span className="group-data-[collapsible=icon]:hidden">Mis Fuentes</span>
-            </SidebarMenuButton>
-          </Link>
-        </SidebarMenuItem>
+        {/* DESCUBRE */}
+        <SidebarGroup>
+          <SidebarGroupLabel className="group-data-[collapsible=icon]:hidden text-xs font-semibold tracking-widest text-sidebar-foreground/50 uppercase px-2 pb-1">
+            Descubre
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <Link href="/dashboard/descubre" passHref>
+                  <SidebarMenuButton
+                    isActive={isDescubreOportunidadesActive}
+                    tooltip={{ content: "Alertas de Negocios", side: "right" }}
+                  >
+                    <Search className="h-5 w-5" />
+                    <span className="group-data-[collapsible=icon]:hidden">Alertas de Negocios</span>
+                  </SidebarMenuButton>
+                </Link>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <Link href="/dashboard/descubre/perfil" passHref>
+                  <SidebarMenuButton
+                    isActive={pathname.startsWith("/dashboard/descubre/perfil")}
+                    tooltip={{ content: "Mis Preferencias", side: "right" }}
+                  >
+                    <SlidersHorizontal className="h-5 w-5" />
+                    <span className="group-data-[collapsible=icon]:hidden">Mis Preferencias</span>
+                  </SidebarMenuButton>
+                </Link>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <Link href="/dashboard/descubre/fuentes" passHref>
+                  <SidebarMenuButton
+                    isActive={pathname.startsWith("/dashboard/descubre/fuentes")}
+                    tooltip={{ content: "Fuentes de Búsqueda", side: "right" }}
+                  >
+                    <Rss className="h-5 w-5" />
+                    <span className="group-data-[collapsible=icon]:hidden">Fuentes de Búsqueda</span>
+                  </SidebarMenuButton>
+                </Link>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
 
-        {tieneAplica || !tieneDescubre ? renderAplicaFullNav() : (
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              disabled
-              tooltip={{ content: "Aplica — Plan Profesional", side: "right" }}
-              className="justify-between gap-2 opacity-70"
-            >
-              <div className="flex min-w-0 items-center gap-2">
-                <Briefcase className="h-5 w-5 shrink-0" />
-                <span className="group-data-[collapsible=icon]:hidden truncate">
-                  Aplica — Plan Profesional
-                </span>
-              </div>
-              <Badge variant="secondary" className="group-data-[collapsible=icon]:hidden shrink-0 text-[10px] px-2 py-0">
-                Upgrade
-              </Badge>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        )}
+        {/* APLICA */}
+        <SidebarGroup>
+          <SidebarGroupLabel className="group-data-[collapsible=icon]:hidden text-xs font-semibold tracking-widest text-sidebar-foreground/50 uppercase px-2 pb-1">
+            Aplica
+          </SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {tieneAplica || !tieneDescubre ? renderAplicaFullNav() : (
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    disabled
+                    tooltip={{ content: "Aplica — Plan Profesional", side: "right" }}
+                    className="justify-between gap-2 opacity-70"
+                  >
+                    <div className="flex min-w-0 items-center gap-2">
+                      <Briefcase className="h-5 w-5 shrink-0" />
+                      <span className="group-data-[collapsible=icon]:hidden truncate">
+                        Aplica — Plan Profesional
+                      </span>
+                    </div>
+                    <Badge variant="secondary" className="group-data-[collapsible=icon]:hidden shrink-0 text-[10px] px-2 py-0">
+                      Upgrade
+                    </Badge>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
       </>
     );
   };
@@ -352,7 +375,7 @@ export function AppSidebar() {
       <SidebarHeader className="p-4 items-center justify-center h-[6rem]">
         <Link href="/dashboard" className="flex items-center justify-center text-sidebar-foreground h-full">
           <Image
-            src="/logo-bidtory-aplica-neg.svg"
+            src="/logo-bidtory-500wneg.svg"
             alt="Bidtory Aplica Logo"
             width={128}
             height={40}
@@ -361,9 +384,13 @@ export function AppSidebar() {
         </Link>
       </SidebarHeader>
       <SidebarContent className="p-2">
-        <SidebarMenu>
-          {userProfile?.role === 'admin' ? renderAdminNav() : userProfile?.role === 'customer' ? renderCustomerNav() : null}
-        </SidebarMenu>
+        {userProfile?.role === 'admin' ? (
+          <SidebarMenu>
+            {renderAdminNav()}
+          </SidebarMenu>
+        ) : userProfile?.role === 'customer' ? (
+          renderCustomerNav()
+        ) : null}
       </SidebarContent>
       <SidebarFooter className="p-4">
         {/* Can add elements to footer, like user info or a logout button, if not in header */}
