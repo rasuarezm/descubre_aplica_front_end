@@ -15,10 +15,12 @@ import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
 import apiClient from '@/lib/api-client';
 import { customerLogoImgSrc } from '@/lib/gcs-display';
+import { useDescubre } from '@/contexts/descubre-context';
 
 export default function DashboardClient() {
   // ... (Todo el código de tu componente original va aquí: hooks, handlers, JSX) ...
   const { userProfile, getIdToken, loading: authLoading } = useAuth();
+  const { tieneDescubre, loading: descubreLoading } = useDescubre();
   const router = useRouter();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
@@ -62,11 +64,13 @@ export default function DashboardClient() {
         fetchCustomers();
       } else if (userProfile?.role === 'customer' && userProfile.customer_id) {
         router.replace(`/dashboard/customers/${userProfile.customer_id}`);
+      } else if (userProfile?.role === 'customer' && tieneDescubre) {
+        router.replace('/dashboard/descubre');
       } else {
         setLoading(false);
       }
     }
-  }, [userProfile, authLoading, router, fetchCustomers]);
+  }, [userProfile, authLoading, tieneDescubre, descubreLoading, router, fetchCustomers]);
 
   const handleCreateCustomer = async () => {
     if (!newCustomerData.name.trim()) {
@@ -102,7 +106,7 @@ export default function DashboardClient() {
   };
 
 
-  if (authLoading || loading) {
+  if (authLoading || descubreLoading || loading) {
      return (
         <div className="flex items-center justify-center min-h-[calc(100vh-theme(spacing.28))]">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
