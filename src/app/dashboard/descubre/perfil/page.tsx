@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useDescubre } from '@/contexts/descubre-context';
 import descubreApiClient, { ApiError } from '@/lib/descubre-api-client';
-import type { DescubreClienteProfile } from '@/types';
+import type { DescubreClienteProfile, FuenteSecop } from '@/types';
 import {
   Card, CardContent, CardDescription, CardHeader, CardTitle,
 } from '@/components/ui/card';
@@ -12,8 +12,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, AlertCircle, ArrowLeft, Building2, Search, Bell } from 'lucide-react';
+import { Loader2, AlertCircle, ArrowLeft, Building2, Search, Bell, Rss, CheckCircle2, Plus, Minus } from 'lucide-react';
 
 function arrayToLines(arr: string[] | undefined): string {
   if (!arr || arr.length === 0) return '';
@@ -30,6 +31,23 @@ function splitLinesRaw(text: string): string[] {
   return text.split('\n');
 }
 
+function fuenteId(f: FuenteSecop, index?: number): string {
+  return f.id_documento_fuente || f.id_fuente || f.id || (index !== undefined ? `idx-${index}` : '');
+}
+
+function fuenteEtiqueta(f: FuenteSecop, index?: number): string {
+  const id = fuenteId(f, index);
+  return (
+    f.nombre_visible ||
+    f.nombre_descriptivo_fuente ||
+    f.descripcion_corta ||
+    f.descripcion_fuente ||
+    f.url ||
+    id ||
+    'Fuente'
+  );
+}
+
 const MODALIDADES_SECOP = [
   'Licitación Pública',
   'Selección Abreviada',
@@ -44,6 +62,7 @@ export default function DescubrePerfilPage() {
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState<Partial<DescubreClienteProfile> | null>(null);
+  const [actionInProgress, setActionInProgress] = useState<string | null>(null);
 
   useEffect(() => {
     if (descubreData?.cliente && !form) {
@@ -93,6 +112,46 @@ export default function DescubrePerfilPage() {
     }
   };
 
+  const handleSubscribe = async (fuente: FuenteSecop) => {
+    const docId = fuente.id_documento_fuente || fuente.id_fuente || fuente.id;
+    setActionInProgress(docId ?? null);
+    try {
+      const res = await descubreApiClient.post('/v1/subscribe_feed', {
+        id_documento_fuente: docId,
+      });
+      toast({ title: 'Suscripción exitosa', description: (res as { message?: string }).message || 'Suscrito correctamente.' });
+      await refreshDescubreProfile();
+    } catch (e) {
+      toast({
+        title: 'Error al suscribirse',
+        description: e instanceof ApiError ? e.message : 'Error desconocido',
+        variant: 'destructive',
+      });
+    } finally {
+      setActionInProgress(null);
+    }
+  };
+
+  const handleUnsubscribe = async (fuente: FuenteSecop) => {
+    const docId = fuente.id_documento_fuente || fuente.id_fuente || fuente.id;
+    setActionInProgress(docId ?? null);
+    try {
+      const res = await descubreApiClient.post('/v1/unsubscribe_feed', {
+        id_documento_fuente: docId,
+      });
+      toast({ title: 'Desuscripción exitosa', description: (res as { message?: string }).message || 'Desuscrito correctamente.' });
+      await refreshDescubreProfile();
+    } catch (e) {
+      toast({
+        title: 'Error al desuscribirse',
+        description: e instanceof ApiError ? e.message : 'Error desconocido',
+        variant: 'destructive',
+      });
+    } finally {
+      setActionInProgress(null);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -138,6 +197,14 @@ export default function DescubrePerfilPage() {
   const maxPos = limites.max_palabras_clave_positivas ?? 20;
   const maxNeg = limites.max_palabras_clave_negativas ?? 20;
   const maxEmails = limites.max_destinatarios_correo ?? 3;
+  const maxFuentes = limites.max_fuentes_secop_rss ?? 0;
+  const fuentesSuscritas = descubreData?.fuentes_suscritas ?? [];
+  const fuentesDisponibles = descubreData?.fuentes_secop_disponibles_para_suscripcion ?? [];
+  const limiteAlcanzado = fuentesSuscritas.length >= maxFuentes;
+  const fuentesNoSuscritas = fuentesDisponibles.filter((f) => {
+    const fid = fuenteId(f);
+    return !fuentesSuscritas.some((s) => fuenteId(s) === fid);
+  });
 
   return (
     <div className="space-y-6">
@@ -260,6 +327,77 @@ export default function DescubrePerfilPage() {
             {saving ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Guardando...</> : 'Guardar cambios'}
           </Button>
         </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Rss className="h-5 w-5" />
+              Fuentes SECOP
+            </CardTitle>
+            <CardDescription>
+              <Badge variant="secondary" className="mr-2">{fuentesSuscritas.length}</Badge>
+              de {maxFuentes} fuente(s) activa(s) en tu plan
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {fuentesSuscritas.length > 0 ? (
+              <ul className="space-y-2">
+                {fuentesSuscritas.map((f, i) => {
+                  const fid = fuenteId(f, i);
+                  const isProcessing = actionInProgress === fid;
+                  return (
+                    <li key={`suscrita-${fid}`} className="flex items-center justify-between gap-2 py-2 border-b border-border last:border-0">
+                      <div className="flex items-center gap-2 text-sm min-w-0">
+                        <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
+                        <span className="truncate">{fuenteEtiqueta(f, i)}</span>
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="shrink-0 gap-1 border-red-500 text-red-600 hover:bg-red-50"
+                        onClick={() => handleUnsubscribe(f)}
+                        disabled={!!actionInProgress}
+                      >
+                        {isProcessing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Minus className="h-3 w-3" />}
+                        Desuscribirse
+                      </Button>
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : (
+              <p className="text-muted-foreground text-sm">No tienes fuentes activas. Suscríbete para recibir oportunidades.</p>
+            )}
+
+            {fuentesNoSuscritas.length > 0 && (
+              <div className="pt-4 border-t border-border">
+                <p className="text-sm font-medium mb-3">Fuentes disponibles</p>
+                <ul className="space-y-2">
+                  {fuentesNoSuscritas.map((f, i) => {
+                    const fid = fuenteId(f, i);
+                    const isProcessing = actionInProgress === fid;
+                    return (
+                      <li key={`disponible-${fid}`} className="flex items-center justify-between gap-2 py-2 px-3 rounded-md bg-muted/50">
+                        <span className="text-sm truncate flex-1 min-w-0">{fuenteEtiqueta(f, i)}</span>
+                        <Button
+                          variant="default"
+                          size="sm"
+                          className="shrink-0 gap-1"
+                          onClick={() => handleSubscribe(f)}
+                          disabled={limiteAlcanzado || !!actionInProgress}
+                          title={limiteAlcanzado ? 'Límite de fuentes alcanzado en tu plan' : undefined}
+                        >
+                          {isProcessing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Plus className="h-3 w-3" />}
+                          Suscribirse
+                        </Button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </form>
     </div>
   );

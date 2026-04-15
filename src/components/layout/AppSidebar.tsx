@@ -305,10 +305,10 @@ export function AppSidebar() {
                     <Link href="/dashboard/descubre" passHref>
                       <SidebarMenuButton
                         isActive={isDescubreOportunidadesActive}
-                        tooltip={{ content: "Alertas de Negocios", side: "right" }}
+                    tooltip={{ content: "Mis Oportunidades", side: "right" }}
                       >
                         <Search className="h-5 w-5" />
-                        <span className="group-data-[collapsible=icon]:hidden">Alertas de Negocios</span>
+                    <span className="group-data-[collapsible=icon]:hidden">Mis Oportunidades</span>
                       </SidebarMenuButton>
                     </Link>
                   </SidebarMenuItem>
