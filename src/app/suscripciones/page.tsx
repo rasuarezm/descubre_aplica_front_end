@@ -13,7 +13,7 @@ export const metadata: Metadata = {
 
 const PLANS = [
   {
-    id: "basico",
+    id: "esencial",
     name: "Esencial",
     price: "Consultar",
     description: "Ideal para iniciar",
@@ -28,7 +28,7 @@ const PLANS = [
     popular: false,
   },
   {
-    id: "estandar",
+    id: "profesional",
     name: "Profesional",
     price: "Consultar",
     description: "Más popular",
@@ -45,7 +45,7 @@ const PLANS = [
     popular: true,
   },
   {
-    id: "premium",
+    id: "experto",
     name: "Experto",
     price: "Consultar",
     description: "Soporte Prioritario",
