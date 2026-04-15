@@ -143,7 +143,7 @@ export default function SuscripcionesPage() {
               className={`relative ${plan.popular ? "md:-mt-2 md:mb-2" : ""}`}
             >
               {plan.popular && (
-                <span className="absolute -top-3 right-4 px-3 py-1 rounded-full text-xs font-medium bg-popular text-white z-10">
+                <span className="absolute top-3 right-4 px-3 py-1 rounded-full text-xs font-semibold bg-foreground text-background shadow-sm z-20">
                   Más Popular
                 </span>
               )}
@@ -227,35 +227,47 @@ export default function SuscripcionesPage() {
                     key={i}
                     className="border-b border-border last:border-0 hover:bg-muted/10"
                   >
-                    <td className="p-4 text-left">{row.feature}</td>
-                    <td className="p-4 text-center">
+                    <td className="p-4 text-left align-middle">{row.feature}</td>
+                    <td className="p-4 text-center align-middle">
                       {typeof row.esencial === "boolean" ? (
                         row.esencial ? (
-                          <CheckIcon />
+                          <div className="flex justify-center">
+                            <CheckIcon />
+                          </div>
                         ) : (
-                          <XIcon />
+                          <div className="flex justify-center">
+                            <XIcon />
+                          </div>
                         )
                       ) : (
                         row.esencial
                       )}
                     </td>
-                    <td className="p-4 text-center">
+                    <td className="p-4 text-center align-middle">
                       {typeof row.profesional === "boolean" ? (
                         row.profesional ? (
-                          <CheckIcon />
+                          <div className="flex justify-center">
+                            <CheckIcon />
+                          </div>
                         ) : (
-                          <XIcon />
+                          <div className="flex justify-center">
+                            <XIcon />
+                          </div>
                         )
                       ) : (
                         row.profesional
                       )}
                     </td>
-                    <td className="p-4 text-center">
+                    <td className="p-4 text-center align-middle">
                       {typeof row.experto === "boolean" ? (
                         row.experto ? (
-                          <CheckIcon />
+                          <div className="flex justify-center">
+                            <CheckIcon />
+                          </div>
                         ) : (
-                          <XIcon />
+                          <div className="flex justify-center">
+                            <XIcon />
+                          </div>
                         )
                       ) : (
                         row.experto
