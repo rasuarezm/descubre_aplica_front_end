@@ -16,6 +16,9 @@ import {
   Bell,
   Search,
   ChevronRight,
+  MessageCircle,
+  ExternalLink,
+  Star,
 } from "lucide-react";
 
 export function HomeClient() {
@@ -153,7 +156,7 @@ export function HomeClient() {
 
       <main className="flex-1">
         {/* Hero */}
-        <section className="w-full bg-background py-20 md:py-28">
+        <section className="w-full bg-background pt-20 pb-12 md:pt-28 md:pb-16">
           <div className="container mx-auto px-4 md:px-6">
             <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
               <div className="order-1 flex flex-col lg:order-none">
@@ -195,35 +198,109 @@ export function HomeClient() {
               </div>
 
               <div className="relative order-2 w-full lg:order-none">
-                <div className="relative w-full pb-6 pt-4">
-                  <div className="absolute right-0 top-0 w-[88%] translate-x-3 -translate-y-3 rotate-[0.8deg] overflow-hidden rounded-xl border border-border bg-white shadow-sm">
-                    <Image
-                      src="/5-Bidtory Aplica-Dashboard.webp"
-                      alt="Bidtory Aplica — gestión de licitaciones"
-                      width={600}
-                      height={380}
-                      className="h-auto w-full object-cover"
-                    />
-                  </div>
-                  <div className="relative w-[88%] -translate-x-3 translate-y-3 -rotate-[0.8deg] overflow-hidden rounded-xl border border-border bg-white shadow-md">
-                    <Image
-                      src="/1-Bidtory Descubre.webp"
-                      alt="Bidtory Descubre — monitoreo con IA"
-                      width={600}
-                      height={380}
-                      className="h-auto w-full object-cover"
-                      priority
-                    />
-                  </div>
-                  <div className="absolute bottom-6 left-2 z-10">
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-accent px-2.5 py-1 text-[11px] font-semibold text-accent-foreground shadow-sm">
-                      Bidtory Descubre
-                    </span>
-                  </div>
-                  <div className="absolute right-4 top-2 z-10">
-                    <span className="inline-flex items-center gap-1.5 rounded-full bg-foreground px-2.5 py-1 text-[11px] font-semibold text-white shadow-sm">
-                      Bidtory Aplica
-                    </span>
+                <div className="relative flex w-full justify-center lg:justify-end">
+                  <div className="relative w-full max-w-md">
+                    <div
+                      className="pointer-events-none absolute bottom-0 left-4 right-0 z-0 origin-bottom-right scale-[0.97] translate-x-3 translate-y-3 overflow-hidden rounded-xl border border-border border-l-4 border-l-accent bg-white opacity-60 shadow-sm"
+                      aria-hidden
+                    >
+                      <div className="p-4">
+                        <div className="mb-2 flex items-start justify-between gap-2">
+                          <p className="line-clamp-2 text-sm font-semibold leading-snug text-foreground">
+                            Consultoría para implementación de sistema de
+                            información territorial — IGAC 2025
+                          </p>
+                        </div>
+                        <div className="mt-3 flex flex-wrap gap-2">
+                          <span className="inline-flex items-center rounded-md border border-border px-2 py-0.5 text-xs text-muted-foreground">
+                            IGAC
+                          </span>
+                          <span className="inline-flex items-center rounded-md border border-border px-2 py-0.5 text-xs text-muted-foreground">
+                            $1.200.000.000
+                          </span>
+                          <span className="inline-flex items-center rounded-md border border-border px-2 py-0.5 text-xs text-muted-foreground">
+                            Ranking: 8/10
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="relative z-10 rounded-xl border border-border border-l-4 border-l-accent bg-white shadow-md">
+                      <div className="border-b border-border/50 px-5 pb-3 pt-5">
+                        <p className="mb-1.5 text-xs text-muted-foreground">
+                          Procesado: 14 abr 2025
+                        </p>
+                        <h3 className="line-clamp-2 text-sm font-semibold leading-snug text-foreground">
+                          Suministro e implementación de plataforma de gestión
+                          documental para entidades del sector público nacional
+                        </h3>
+                      </div>
+
+                      <div className="space-y-3 px-5 py-4">
+                        <p className="text-xs italic leading-relaxed text-muted-foreground">
+                          &ldquo;Alta compatibilidad con el perfil. Requiere
+                          experiencia en software para sector público — cumple
+                          todos los criterios.&rdquo;
+                        </p>
+
+                        <div className="space-y-1.5 text-xs text-foreground/70">
+                          <p>
+                            <span className="font-medium text-foreground/85">
+                              Modalidad:
+                            </span>{" "}
+                            Licitación Pública
+                          </p>
+                          <p>
+                            <span className="font-medium text-foreground/85">
+                              Fecha límite:
+                            </span>{" "}
+                            28 may 2025
+                          </p>
+                          <p>
+                            <span className="font-medium text-foreground/85">
+                              Ubicación:
+                            </span>{" "}
+                            Bogotá D.C.
+                          </p>
+                        </div>
+
+                        <div className="flex flex-wrap gap-1.5 pt-0.5">
+                          <span className="inline-flex items-center rounded-md bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+                            Ministerio de TIC
+                          </span>
+                          <span className="inline-flex items-center rounded-md border border-border px-2 py-0.5 text-xs text-muted-foreground">
+                            $850.000.000
+                          </span>
+                          <span className="inline-flex items-center gap-1 rounded-md border border-accent/30 bg-accent/8 px-2 py-0.5 text-xs font-semibold text-accent">
+                            <Star className="h-3 w-3 fill-accent" />
+                            9 / 10
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col gap-2 px-5 pb-5">
+                        <button
+                          type="button"
+                          className="flex w-full items-center justify-center gap-2 rounded-lg border border-accent/40 px-3 py-2 text-xs font-medium text-accent transition-colors hover:bg-accent/10"
+                        >
+                          <ExternalLink className="h-3.5 w-3.5" />
+                          Ver detalle en SECOP II
+                        </button>
+                        <button
+                          type="button"
+                          className="flex w-full items-center justify-center gap-2 rounded-lg bg-accent px-3 py-2 text-xs font-medium text-accent-foreground transition-colors hover:bg-accent/90"
+                        >
+                          <MessageCircle className="h-3.5 w-3.5" />
+                          ¿Te interesa aplicar? Habla con un experto
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="pointer-events-none absolute -bottom-6 left-0 right-0 flex items-center justify-center gap-1.5">
+                      <span className="h-1.5 w-4 rounded-full bg-accent/70" />
+                      <span className="h-1.5 w-1.5 rounded-full bg-border" />
+                      <span className="h-1.5 w-1.5 rounded-full bg-border" />
+                    </div>
                   </div>
                 </div>
               </div>
