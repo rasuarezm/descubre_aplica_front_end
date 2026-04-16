@@ -1,27 +1,27 @@
 "use client";
 
 import { useEffect, useState, useCallback } from 'react';
+import Image from "next/image";
 import Link from "next/link";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/auth-context";
 import type { Customer } from "@/types";
-import { Users, PlusCircle, ArrowRight, Loader2, AlertCircle } from "lucide-react";
+import { Users, PlusCircle, ArrowRight, Loader2, AlertCircle, Search, Briefcase } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from '@/hooks/use-toast';
-import { useRouter } from 'next/navigation';
 import apiClient from '@/lib/api-client';
 import { customerLogoImgSrc } from '@/lib/gcs-display';
+import { cn } from '@/lib/utils';
 import { useDescubre } from '@/contexts/descubre-context';
 
 export default function DashboardClient() {
-  // ... (Todo el código de tu componente original va aquí: hooks, handlers, JSX) ...
   const { userProfile, getIdToken, loading: authLoading } = useAuth();
-  const { tieneDescubre, loading: descubreLoading } = useDescubre();
-  const router = useRouter();
+  const { tieneDescubre, tieneAplica, loading: descubreLoading } = useDescubre();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -59,18 +59,14 @@ export default function DashboardClient() {
   }, [toast]);
   
   useEffect(() => {
-    if (!authLoading) {
+    if (!authLoading && !descubreLoading) {
       if (userProfile?.role === 'admin') {
         fetchCustomers();
-      } else if (userProfile?.role === 'customer' && userProfile.customer_id) {
-        router.replace(`/dashboard/customers/${userProfile.customer_id}`);
-      } else if (userProfile?.role === 'customer' && tieneDescubre) {
-        router.replace('/dashboard/descubre');
       } else {
         setLoading(false);
       }
     }
-  }, [userProfile, authLoading, tieneDescubre, descubreLoading, router, fetchCustomers]);
+  }, [userProfile, authLoading, descubreLoading, fetchCustomers]);
 
   const handleCreateCustomer = async () => {
     if (!newCustomerData.name.trim()) {
@@ -126,11 +122,129 @@ export default function DashboardClient() {
   }
   
   if (userProfile?.role === 'customer') {
+    if (!tieneDescubre && !tieneAplica) {
+      return (
+        <div className="flex flex-col items-center justify-center min-h-[calc(100vh-theme(spacing.28))] text-center">
+          <Users className="h-12 w-12 text-muted-foreground" />
+          <h1 className="mt-4 text-2xl font-headline">¡Bienvenido!</h1>
+          <p className="text-muted-foreground">
+            Tu zona de cliente está siendo preparada. Por favor, contacta a un administrador.
+          </p>
+        </div>
+      );
+    }
+
     return (
-      <div className="flex flex-col items-center justify-center min-h-[calc(100vh-theme(spacing.28))] text-center">
-        <Users className="h-12 w-12 text-muted-foreground" />
-        <h1 className="mt-4 text-2xl font-headline">¡Bienvenido!</h1>
-        <p className="text-muted-foreground">Tu zona de cliente está siendo preparada. Por favor, contacta a un administrador.</p>
+      <div className="space-y-8">
+        <div>
+          <h1 className="text-3xl font-headline tracking-tight">
+            Bienvenido{userProfile.displayName ? `, ${userProfile.displayName.split(' ')[0]}` : ''}
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            {new Date().toLocaleDateString('es-CO', {
+              weekday: 'long',
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+            })}
+          </p>
+        </div>
+
+        <div
+          className={cn(
+            'grid gap-6',
+            tieneAplica ? 'md:grid-cols-2' : 'md:grid-cols-1 max-w-lg'
+          )}
+        >
+          {tieneDescubre && (
+            <Link href="/dashboard/descubre">
+              <Card className="group hover:shadow-lg hover:border-accent/50 transition-all duration-300 cursor-pointer h-full">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <Image
+                      src="/logo-bidtory-descubre-pos.svg"
+                      alt="Bidtory Descubre"
+                      width={120}
+                      height={32}
+                      className="h-7 w-auto"
+                    />
+                    <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-accent transition-colors" />
+                  </div>
+                  <CardDescription className="pt-2">
+                    Convocatorias del SECOP II puntuadas por IA según el perfil de tu empresa.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Search className="h-4 w-4" />
+                    <span>Ver mis oportunidades</span>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+          )}
+
+          {tieneAplica && userProfile.customer_id && (
+            <Link href={`/dashboard/customers/${userProfile.customer_id}`}>
+              <Card className="group hover:shadow-lg hover:border-accent/50 transition-all duration-300 cursor-pointer h-full">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <Image
+                      src="/logo-bidtory-aplica-pos.svg"
+                      alt="Bidtory Aplica"
+                      width={120}
+                      height={32}
+                      className="h-7 w-auto"
+                    />
+                    <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-accent transition-colors" />
+                  </div>
+                  <CardDescription className="pt-2">
+                    Tu pipeline de licitaciones: análisis de pliegos, bitácora y seguimiento de propuestas.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Briefcase className="h-4 w-4" />
+                    <span>Ver mis licitaciones activas</span>
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+          )}
+
+          {tieneDescubre && !tieneAplica && (
+            <Card className="border-dashed border-2 border-muted h-full">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <Image
+                    src="/logo-bidtory-aplica-pos.svg"
+                    alt="Bidtory Aplica"
+                    width={120}
+                    height={32}
+                    className="h-7 w-auto opacity-50"
+                  />
+                  <Badge className="border-0 bg-popular text-popular-foreground text-[10px] font-semibold px-2">
+                    Plan Profesional
+                  </Badge>
+                </div>
+                <CardDescription className="pt-2">
+                  Lleva tus oportunidades a un pipeline Kanban. Analiza pliegos con IA y gestiona propuestas en equipo.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Link href="/suscripciones">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="border-popular/50 text-popular hover:bg-popular/10"
+                  >
+                    Conocer Aplica <ArrowRight className="ml-2 h-3 w-3" />
+                  </Button>
+                </Link>
+              </CardContent>
+            </Card>
+          )}
+        </div>
       </div>
     );
   }

@@ -65,22 +65,26 @@ function OpportunityCard({ opportunity, canManage }: { opportunity: Opportunity 
             {...attributes} 
             {...(canManage ? listeners : {})}
             className={cn(
-                "p-3 bg-card shadow-sm touch-none border-l-4",
+                "touch-none rounded-lg border border-border bg-white p-3 shadow-[0_2px_4px_rgba(0,0,0,0.05)] border-l-4 transition-shadow",
                 canManage && "cursor-grab active:cursor-grabbing hover:shadow-md",
-                isDragging && "shadow-2xl",
-                isFinalStatus 
+                isDragging && "z-10 shadow-md ring-2 ring-primary/15",
+                isFinalStatus
                     ? {
-                        'border-accent': opportunity.status === 'Ganada',
-                        'border-destructive': opportunity.status === 'Perdida',
-                        'border-muted-foreground': opportunity.status === 'Descartada',
-                    }
+                        "border-l-accent": opportunity.status === "Ganada",
+                        "border-l-destructive": opportunity.status === "Perdida",
+                        "border-l-[#9b9b9b]": opportunity.status === "Descartada",
+                      }
                     : isEnviada
-                    ? 'border-secondary'
-                    : {
-                        'border-destructive': urgencyInfo?.status === 'overdue' || urgencyInfo?.status === 'urgent',
-                        'border-highlight': urgencyInfo?.status === 'upcoming',
-                        'border-transparent': urgencyInfo?.status === 'normal'
-                    }
+                      ? "border-l-primary"
+                      : {
+                          "border-l-destructive":
+                            urgencyInfo?.status === "overdue",
+                          "border-l-highlight":
+                            urgencyInfo?.status === "urgent" ||
+                            urgencyInfo?.status === "upcoming",
+                          "border-l-primary":
+                            !urgencyInfo || urgencyInfo.status === "normal",
+                        },
             )}
         >
             <div>
@@ -94,9 +98,12 @@ function OpportunityCard({ opportunity, canManage }: { opportunity: Opportunity 
                         className={cn(
                             'capitalize px-1.5 py-0.5 text-[10px]',
                             {
-                              'bg-accent text-accent-foreground': opportunity.status === 'Ganada',
-                              'bg-destructive text-destructive-foreground': opportunity.status === 'Perdida',
-                              'bg-muted-foreground/80 text-background': opportunity.status === 'Descartada',
+                              "bg-accent text-accent-foreground":
+                                opportunity.status === "Ganada",
+                              "bg-destructive text-destructive-foreground":
+                                opportunity.status === "Perdida",
+                              "bg-[#9b9b9b] text-white hover:bg-[#8a8a8a]":
+                                opportunity.status === "Descartada",
                             }
                         )}
                     >
@@ -108,26 +115,35 @@ function OpportunityCard({ opportunity, canManage }: { opportunity: Opportunity 
                   ) : isEnviada ? (
                     <Badge 
                         variant='secondary'
-                        className='capitalize bg-secondary text-secondary-foreground hover:bg-secondary/90 px-1.5 py-0.5 text-[10px]'
+                        className='capitalize border border-primary/30 bg-primary/10 px-1.5 py-0.5 text-[10px] text-primary hover:bg-primary/15'
                     >
                         <Send className="mr-1 h-2.5 w-2.5" />
                         Enviada
                     </Badge>
                   ) : (
                     <>
-                      {urgencyInfo?.status === 'overdue' && (
-                        <Badge variant="destructive" className="px-1.5 py-0.5 text-[10px]">
+                      {urgencyInfo?.status === "overdue" && (
+                        <Badge
+                          variant="destructive"
+                          className="px-1.5 py-0.5 text-[10px]"
+                        >
                           <Clock className="mr-1 h-2.5 w-2.5" /> Vencida
                         </Badge>
                       )}
-                      {urgencyInfo?.status === 'urgent' && (
-                        <Badge variant="destructive" className="px-1.5 py-0.5 text-[10px]">
+                      {urgencyInfo?.status === "urgent" && (
+                        <Badge
+                          variant="secondary"
+                          className="border border-highlight/60 bg-highlight px-1.5 py-0.5 text-[10px] text-highlight-foreground hover:bg-highlight/90"
+                        >
                           <Clock className="mr-1 h-2.5 w-2.5" /> Urgente
                         </Badge>
                       )}
-                       {urgencyInfo?.status === 'upcoming' && (
-                        <Badge variant="secondary" className="bg-highlight/80 text-black px-1.5 py-0.5 text-[10px]">
-                          <Clock className="mr-1 h-2.5 w-2.5" /> Próxima
+                      {urgencyInfo?.status === "upcoming" && (
+                        <Badge
+                          variant="secondary"
+                          className="border border-highlight/60 bg-highlight px-1.5 py-0.5 text-[10px] text-highlight-foreground hover:bg-highlight/90"
+                        >
+                          <Clock className="mr-1 h-2.5 w-2.5" /> Próxima a vencer
                         </Badge>
                       )}
                     </>
@@ -146,7 +162,10 @@ function KanbanColumn({ status, opportunities, canManage }: { status: string; op
     const columnValue = useMemo(() => opportunities.reduce((sum, opp) => sum + (opp.amount || 0), 0), [opportunities]);
 
     return (
-        <div ref={setNodeRef} className="rounded-lg bg-card border border-border shadow-sm p-2 flex flex-col h-full">
+        <div
+            ref={setNodeRef}
+            className="flex h-full flex-col rounded-lg border border-border/80 bg-primary/[0.045] p-2 shadow-sm"
+        >
             <h2 className="p-2 font-semibold text-foreground flex justify-between items-center">
                 <span>{status}</span>
                 <span className="text-sm font-normal text-secondary-foreground bg-secondary rounded-full px-2 py-0.5">

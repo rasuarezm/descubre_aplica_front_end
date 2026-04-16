@@ -44,13 +44,13 @@ function opportunityCardLeftBorderClass(
   if (isArchivedView) return 'border-l-muted-foreground';
   if (status === 'Ganada') return 'border-l-accent';
   if (status === 'Perdida') return 'border-l-destructive';
-  if (status === 'Descartada') return 'border-l-muted-foreground';
+  if (status === 'Descartada') return 'border-l-[#9b9b9b]';
   if (isEnviada) return 'border-l-primary';
   if (!isFinalStatus && !isEnviada) {
     if (urgencyStatus === 'overdue') return 'border-l-urgency';
     if (urgencyStatus === 'urgent' || urgencyStatus === 'upcoming') return 'border-l-highlight';
   }
-  return 'border-l-border';
+  return 'border-l-primary';
 }
 
 // ─── Fila de documento (genérica para todas las categorías) ──────────────────
@@ -1241,7 +1241,7 @@ const handleUploadGeneralDocument = async () => {
                                     {
                                       'bg-accent text-accent-foreground hover:bg-accent/90': opportunity.status === 'Ganada',
                                       'bg-destructive text-destructive-foreground hover:bg-destructive/90': opportunity.status === 'Perdida',
-                                      'bg-muted-foreground/80 text-background hover:bg-muted-foreground': opportunity.status === 'Descartada'
+                                      'bg-[#9b9b9b] text-white hover:bg-[#8a8a8a]': opportunity.status === 'Descartada'
                                     }
                                 )}
                             >

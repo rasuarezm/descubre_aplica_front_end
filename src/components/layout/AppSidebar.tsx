@@ -292,6 +292,24 @@ export function AppSidebar() {
 
     return (
       <>
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              <SidebarMenuItem>
+                <Link href="/dashboard" passHref>
+                  <SidebarMenuButton
+                    isActive={pathname === "/dashboard"}
+                    tooltip={{ content: "Panel Principal", side: "right" }}
+                  >
+                    <Home className="h-5 w-5" />
+                    <span className="group-data-[collapsible=icon]:hidden">Panel Principal</span>
+                  </SidebarMenuButton>
+                </Link>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
         {!descubreLoading && tieneDescubre ? (
           <>
             {/* DESCUBRE */}
