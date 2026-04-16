@@ -18,13 +18,72 @@ import apiClient from '@/lib/api-client';
 import { customerLogoImgSrc } from '@/lib/gcs-display';
 import { cn } from '@/lib/utils';
 import { useDescubre } from '@/contexts/descubre-context';
+import descubreApiClient from '@/lib/descubre-api-client';
+import { getUrgencyInfo } from '@/lib/date-utils';
+import type { OportunidadesDescubreResponse, Opportunity } from '@/types';
+import { Skeleton } from '@/components/ui/skeleton';
+
+function StatChip({
+  value,
+  label,
+  loading,
+  danger = false,
+  highlight = false,
+}: {
+  value: number | undefined;
+  label: string;
+  loading: boolean;
+  danger?: boolean;
+  highlight?: boolean;
+}) {
+  return (
+    <div
+      className="flex flex-col items-center text-center"
+      aria-label={`${value ?? '–'} ${label}`}
+    >
+      {loading || value === undefined ? (
+        <Skeleton className="h-6 w-8 mb-1" />
+      ) : (
+        <span
+          className={cn(
+            'text-xl font-bold font-headline leading-none',
+            danger && value > 0
+              ? 'text-destructive'
+              : highlight && value > 0
+                ? 'text-[hsl(var(--accent))]'
+                : 'text-foreground'
+          )}
+        >
+          {value}
+        </span>
+      )}
+      <span className="text-[11px] text-muted-foreground leading-tight mt-1">{label}</span>
+    </div>
+  );
+}
+
+interface DescubreSummary {
+  total: number;
+  highRanking: number;
+}
+
+interface AplicaSummary {
+  total: number;
+  urgent: number;
+  overdue: number;
+}
 
 export default function DashboardClient() {
   const { userProfile, getIdToken, loading: authLoading } = useAuth();
-  const { tieneDescubre, tieneAplica, loading: descubreLoading } = useDescubre();
+  const { tieneDescubre, tieneAplica, loading: descubreLoading, descubreData } = useDescubre();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const [descubreSummary, setDescubreSummary] = useState<DescubreSummary | null>(null);
+  const [descubreSummaryLoading, setDescubreSummaryLoading] = useState(false);
+  const [aplicaSummary, setAplicaSummary] = useState<AplicaSummary | null>(null);
+  const [aplicaSummaryLoading, setAplicaSummaryLoading] = useState(false);
 
   const { toast } = useToast();
   const [isCreateZoneDialogOpen, setIsCreateZoneDialogOpen] = useState(false);
@@ -67,6 +126,59 @@ export default function DashboardClient() {
       }
     }
   }, [userProfile, authLoading, descubreLoading, fetchCustomers]);
+
+  useEffect(() => {
+    if (authLoading || descubreLoading) return;
+    if (userProfile?.role !== 'customer') return;
+
+    if (!tieneDescubre) setDescubreSummary(null);
+    if (!tieneAplica) setAplicaSummary(null);
+
+    if (tieneDescubre) {
+      setDescubreSummaryLoading(true);
+      // TODO: centralizar con React Query o contexto compartido para evitar
+      // duplicar la llamada que ya hace AppSidebar en /get_opportunities
+      descubreApiClient
+        .get<OportunidadesDescubreResponse>('/v1/opportunities')
+        .then((data) => {
+          const ops = data.oportunidades ?? [];
+          setDescubreSummary({
+            total: ops.length,
+            highRanking: ops.filter((op) => Number(op.ranking_interes) >= 7).length,
+          });
+        })
+        .catch(() => setDescubreSummary({ total: 0, highRanking: 0 }))
+        .finally(() => setDescubreSummaryLoading(false));
+    }
+
+    if (tieneAplica && userProfile?.customer_id) {
+      setAplicaSummaryLoading(true);
+      apiClient
+        .get<Opportunity[]>(`/get_opportunities?customer_id=${userProfile.customer_id}`)
+        .then((data) => {
+          const active = data.filter((opp) => !opp.is_archived);
+          let urgent = 0;
+          let overdue = 0;
+          active.forEach((opp) => {
+            if (opp.deadline) {
+              const info = getUrgencyInfo(new Date(opp.deadline));
+              if (info.status === 'overdue') overdue++;
+              else if (info.status === 'urgent') urgent++;
+            }
+          });
+          setAplicaSummary({ total: active.length, urgent, overdue });
+        })
+        .catch(() => setAplicaSummary({ total: 0, urgent: 0, overdue: 0 }))
+        .finally(() => setAplicaSummaryLoading(false));
+    }
+  }, [
+    tieneDescubre,
+    tieneAplica,
+    authLoading,
+    descubreLoading,
+    userProfile?.role,
+    userProfile?.customer_id,
+  ]);
 
   const handleCreateCustomer = async () => {
     if (!newCustomerData.name.trim()) {
@@ -150,6 +262,24 @@ export default function DashboardClient() {
           </p>
         </div>
 
+        {descubreData?.estado_bidtory_info &&
+          (descubreData.estado_bidtory_info.message ||
+            (descubreData.estado_bidtory_info.sugerencias?.length ?? 0) > 0) && (
+            <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
+              <AlertCircle className="h-4 w-4 mt-0.5 shrink-0 text-amber-500" />
+              <div>
+                {descubreData.estado_bidtory_info.message && (
+                  <p className="font-medium">{descubreData.estado_bidtory_info.message}</p>
+                )}
+                {descubreData.estado_bidtory_info.sugerencias?.map((s, i) => (
+                  <p key={i} className="mt-0.5 text-amber-700">
+                    {s}
+                  </p>
+                ))}
+              </div>
+            </div>
+          )}
+
         <div
           className={cn(
             'grid gap-6',
@@ -174,8 +304,30 @@ export default function DashboardClient() {
                     Convocatorias del SECOP II puntuadas por IA según el perfil de tu empresa.
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <CardContent className="pt-0">
+                  <div
+                    className="grid grid-cols-3 gap-2 py-3 border-t border-border/50"
+                    role="group"
+                    aria-label="Indicadores Descubre"
+                  >
+                    <StatChip
+                      value={descubreSummary?.total}
+                      label="nuevas"
+                      loading={descubreSummaryLoading}
+                    />
+                    <StatChip
+                      value={descubreSummary?.highRanking}
+                      label="alta puntuación"
+                      loading={descubreSummaryLoading}
+                      highlight
+                    />
+                    <StatChip
+                      value={descubreData?.fuentes_suscritas?.length ?? 0}
+                      label="fuentes"
+                      loading={!descubreData}
+                    />
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground pt-1">
                     <Search className="h-4 w-4" />
                     <span>Ver mis oportunidades</span>
                   </div>
@@ -202,8 +354,31 @@ export default function DashboardClient() {
                     Tu pipeline de licitaciones: análisis de pliegos, bitácora y seguimiento de propuestas.
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <CardContent className="pt-0">
+                  <div
+                    className="grid grid-cols-3 gap-2 py-3 border-t border-border/50"
+                    role="group"
+                    aria-label="Indicadores Aplica"
+                  >
+                    <StatChip
+                      value={aplicaSummary?.total}
+                      label="activas"
+                      loading={aplicaSummaryLoading}
+                    />
+                    <StatChip
+                      value={aplicaSummary?.urgent}
+                      label="próximas a vencer"
+                      loading={aplicaSummaryLoading}
+                      highlight
+                    />
+                    <StatChip
+                      value={aplicaSummary?.overdue}
+                      label="vencidas"
+                      loading={aplicaSummaryLoading}
+                      danger
+                    />
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground pt-1">
                     <Briefcase className="h-4 w-4" />
                     <span>Ver mis licitaciones activas</span>
                   </div>
