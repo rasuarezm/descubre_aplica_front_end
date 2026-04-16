@@ -525,6 +525,7 @@ export interface OportunidadDescubre {
   is_fallback_url?: boolean;
   fallback_reference_process?: string;
   fallback_search_url?: string;
+  cta_eligible?: boolean;
 }
 
 export interface OportunidadesDescubreResponse {

@@ -11,7 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
-  Loader2, Info, Search, ExternalLink, Settings, AlertCircle,
+  Loader2, Info, Search, ExternalLink, Settings, AlertCircle, MessageCircle,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -201,6 +201,8 @@ function OportunidadCard({ op }: { op: OportunidadDescubre }) {
     : op.link_directo;
   const isFallback = op.is_fallback_url === true && !!op.fallback_search_url;
 
+  const isHighValue = op.cta_eligible === true;
+
   return (
     <Card className={cn('flex flex-col shadow-sm hover:shadow-lg transition-shadow duration-300 border-l-4 border-accent')}>
       <CardHeader>
@@ -237,7 +239,7 @@ function OportunidadCard({ op }: { op: OportunidadDescubre }) {
           <p className="text-xs text-muted-foreground">Referencia: <strong>{op.fallback_reference_process}</strong></p>
         )}
       </CardContent>
-      <CardFooter>
+      <CardFooter className="flex flex-col gap-2">
         {actionUrl ? (
           <a href={actionUrl} target="_blank" rel="noopener noreferrer" className="w-full">
             <Button variant="outline" className="w-full gap-2">
@@ -250,6 +252,19 @@ function OportunidadCard({ op }: { op: OportunidadDescubre }) {
           </a>
         ) : (
           <p className="text-sm text-muted-foreground italic">Enlace no disponible.</p>
+        )}
+        {isHighValue && (
+          <a
+            href="https://wa.me/573208691817?text=Hola%2C%20encontré%20una%20licitación%20relevante%20en%20Bidtory%20y%20me%20interesa%20apoyo%20para%20aplicar."
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full"
+          >
+            <Button className="w-full gap-2 bg-accent hover:bg-accent/90 text-accent-foreground text-xs">
+              <MessageCircle className="h-4 w-4" />
+              ¿Te interesa aplicar? Habla con un experto
+            </Button>
+          </a>
         )}
       </CardFooter>
     </Card>
