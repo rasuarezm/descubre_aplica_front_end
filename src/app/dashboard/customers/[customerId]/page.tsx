@@ -922,16 +922,16 @@ const handleUploadGeneralDocument = async () => {
             <p className="text-muted-foreground mt-1">{customer.profileInfo}</p>
           </div>
         </div>
-        <div className="flex gap-2">
-           <Link href={`/dashboard/customers/${customerId}/pipeline`} passHref>
-              <Button className="bg-accent text-accent-foreground hover:bg-accent/90 shadow-sm">
-                <LayoutDashboard className="mr-2 h-4 w-4" /> Ver Pipeline
-              </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" asChild className="border-primary/40 bg-background text-primary shadow-sm hover:!bg-primary/10 hover:!text-primary">
+            <Link href={`/dashboard/customers/${customerId}/pipeline`}>
+              <LayoutDashboard className="mr-2 h-4 w-4" /> Ver Pipeline
             </Link>
+          </Button>
           {canCreateAndEdit && (
             <Dialog open={isLogoDialogOpen} onOpenChange={setIsLogoDialogOpen}>
               <DialogTrigger asChild>
-                <Button variant="outline" className="border-primary/35 text-primary hover:bg-primary/10">
+                <Button variant="ghost" className="text-primary hover:!bg-primary/10 hover:!text-primary">
                   <ImagePlus className="mr-2 h-4 w-4" /> Actualizar Logo
                 </Button>
               </DialogTrigger>
@@ -979,7 +979,7 @@ const handleUploadGeneralDocument = async () => {
                 <DialogTrigger asChild>
                     <Button
                       onClick={handleOpenAnalysisModal}
-                      className="bg-accent text-accent-foreground shadow-sm hover:bg-accent/90"
+                      className="bg-accent text-accent-foreground shadow-sm hover:bg-accent/90 focus-visible:ring-accent"
                     >
                         <BidtoryRadarIcon className="mr-2 h-4 w-4" /> Analizar Nuevo Pliego
                     </Button>
@@ -1154,7 +1154,7 @@ const handleUploadGeneralDocument = async () => {
               
               {canAnalyzeTender && statusFilter !== 'archived' && (
                 <Button
-                  className="mt-6 bg-accent text-accent-foreground shadow-sm hover:bg-accent/90"
+                  className="mt-6 bg-accent text-accent-foreground shadow-sm hover:bg-accent/90 focus-visible:ring-accent"
                   onClick={handleOpenAnalysisModal}
                 >
                   <BidtoryRadarIcon className="mr-2 h-4 w-4" /> Analizar Nuevo Pliego
