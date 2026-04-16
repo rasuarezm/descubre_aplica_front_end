@@ -28,7 +28,7 @@ export const getUrgencyInfo = (deadline: Date): UrgencyInfo => {
       timeValue: 0,
       timeUnit: null,
       deadlineFormatted,
-      cssClass: 'text-destructive',
+      cssClass: 'text-urgency',
     };
   }
 
@@ -42,7 +42,7 @@ export const getUrgencyInfo = (deadline: Date): UrgencyInfo => {
       timeValue: minutesRemaining,
       timeUnit: 'minutos',
       deadlineFormatted,
-      cssClass: 'text-destructive',
+      cssClass: 'text-highlight',
     };
   }
   
@@ -53,7 +53,7 @@ export const getUrgencyInfo = (deadline: Date): UrgencyInfo => {
       timeValue: hoursRemaining,
       timeUnit: 'horas',
       deadlineFormatted,
-      cssClass: 'text-destructive',
+      cssClass: 'text-highlight',
     };
   }
   
@@ -66,7 +66,7 @@ export const getUrgencyInfo = (deadline: Date): UrgencyInfo => {
       timeValue: daysRemaining,
       timeUnit: 'días',
       deadlineFormatted,
-      cssClass: 'text-destructive',
+      cssClass: 'text-highlight',
     };
   }
 

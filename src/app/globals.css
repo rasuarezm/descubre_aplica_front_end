@@ -32,8 +32,14 @@
     --destructive-foreground: 0 0% 100%;
 
     --popular: 24 81% 55%; /* #E8772E - Naranja Quemado */
+    --popular-foreground: 0 0% 100%;
 
     --highlight: 39 59% 65%; /* #dab26f - Mustard */
+    --highlight-foreground: 206 41% 22%; /* texto legible sobre mostaza */
+
+    /* Vencido / plazo crítico en pipeline Aplica (#D9534F) */
+    --urgency: 2 64% 58%;
+    --urgency-foreground: 0 0% 100%;
 
     --border: 220 13% 91%; /* #E5E7EB */
     --input: 220 13% 91%;
@@ -41,8 +47,8 @@
 
     --radius: 0.5rem;
 
-    /* Sidebar - tema claro */
-    --sidebar-background: 220 13% 96%;
+    /* Sidebar - tema claro (#E5E7EB), panel claramente distinto del área principal (#F9FAFB) */
+    --sidebar-background: 220 14% 90%;
     --sidebar-foreground: 206 41% 39%;
     --sidebar-primary: 175 100% 33%;
     --sidebar-primary-foreground: 0 0% 100%;
@@ -87,8 +93,13 @@
     --destructive-foreground: 36 43% 98%;
 
     --popular: 24 81% 55%;
+    --popular-foreground: 0 0% 100%;
 
     --highlight: 39 59% 65%; /* #dab26f - Mustard */
+    --highlight-foreground: 30 14% 12%;
+
+    --urgency: 2 64% 58%;
+    --urgency-foreground: 0 0% 100%;
 
     --border: 206 40% 24%;
     --input: 206 40% 24%;

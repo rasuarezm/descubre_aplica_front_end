@@ -94,15 +94,19 @@ export default function DescubreDashboardPage() {
     <div className="space-y-6">
       <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
         <div className="space-y-1">
-          <h1 className="text-2xl font-semibold">Bienvenido, {cliente?.nombre_empresa || 'Bidtory'}</h1>
-          <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Bienvenido, {cliente?.nombre_empresa || 'Bidtory'}</h1>
+          <div className="flex flex-wrap items-center gap-2 text-sm text-foreground/65">
             <Badge variant="secondary">{plan_actual?.nombre_visible ?? cliente.nivel_suscripcion}</Badge>
-            <span className={cn('inline-flex h-2.5 w-2.5 rounded-full', isActive ? 'bg-green-500' : 'bg-amber-500')} />
+            <span className={cn('inline-flex h-2.5 w-2.5 rounded-full', isActive ? 'bg-accent' : 'bg-amber-500')} />
             <span>{isActive ? 'Activo buscando' : 'Requiere ajustes'}</span>
           </div>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" size="sm" asChild>
+          <Button
+            size="sm"
+            asChild
+            className="bg-accent text-accent-foreground shadow-sm hover:bg-accent/90"
+          >
             <Link href="/dashboard/descubre/perfil">
               <Settings className="h-4 w-4 mr-2" />
               Editar perfil
@@ -133,21 +137,21 @@ export default function DescubreDashboardPage() {
       )}
 
       <div className="grid gap-3 md:grid-cols-3">
-        <Card className="border-l-4 border-accent shadow-sm">
+        <Card className="border-l-4 border-accent shadow-md transition-shadow hover:shadow-lg">
           <CardContent className="py-3 text-sm">
-            <div className="text-muted-foreground">Oportunidades encontradas</div>
+            <div className="text-foreground/60">Oportunidades encontradas</div>
             <div className="text-lg font-semibold">{oportunidades.length}</div>
           </CardContent>
         </Card>
-        <Card className="border-l-4 border-accent shadow-sm">
+        <Card className="border-l-4 border-accent shadow-md transition-shadow hover:shadow-lg">
           <CardContent className="py-3 text-sm">
-            <div className="text-muted-foreground">Fuentes activas</div>
+            <div className="text-foreground/60">Fuentes activas</div>
             <div className="text-lg font-semibold">{totalFuentes}</div>
           </CardContent>
         </Card>
-        <Card className="border-l-4 border-accent shadow-sm">
+        <Card className="border-l-4 border-accent shadow-md transition-shadow hover:shadow-lg">
           <CardContent className="py-3 text-sm">
-            <Link href="/dashboard/descubre/perfil" className="inline-flex items-center gap-2 text-primary hover:underline">
+            <Link href="/dashboard/descubre/perfil" className="inline-flex items-center gap-2 font-medium text-foreground hover:text-accent hover:underline">
               <Settings className="h-4 w-4" />
               Editar preferencias
             </Link>
@@ -169,7 +173,7 @@ export default function DescubreDashboardPage() {
         </Card>
       ) : oportunidades.length > 0 ? (
         <>
-          <div className="rounded-lg border border-border bg-muted/30 px-4 py-3 text-sm text-muted-foreground">
+          <div className="rounded-lg border border-border bg-muted/40 px-4 py-3 text-sm text-foreground/60">
             Se muestran las últimas <strong>30</strong> oportunidades. Para anteriores consulta el correo.
           </div>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -204,30 +208,34 @@ function OportunidadCard({ op }: { op: OportunidadDescubre }) {
   const isHighValue = op.cta_eligible === true;
 
   return (
-    <Card className={cn('flex flex-col shadow-sm hover:shadow-lg transition-shadow duration-300 border-l-4 border-accent')}>
-      <CardHeader>
-        <CardTitle className="text-lg font-semibold line-clamp-2">
+    <Card
+      className={cn(
+        'flex flex-col border-l-4 border-accent shadow-md transition-shadow duration-300 hover:shadow-xl',
+      )}
+    >
+      <CardHeader className="space-y-1.5 pb-2">
+        <CardTitle className="text-xl font-semibold leading-snug tracking-tight text-foreground line-clamp-2">
           {op.titulo || 'Oportunidad sin título'}
         </CardTitle>
         {op.fecha_procesamiento && (
-          <CardDescription>Procesado: {op.fecha_procesamiento}</CardDescription>
+          <CardDescription className="text-foreground/55">Procesado: {op.fecha_procesamiento}</CardDescription>
         )}
       </CardHeader>
       <CardContent className="flex-grow space-y-3">
         {op.resumen_relevancia && isPremiumValue(op.resumen_relevancia) && (
-          <p className="text-sm italic text-muted-foreground line-clamp-2">
+          <p className="text-sm italic text-foreground/55 line-clamp-2">
             &quot;{op.resumen_relevancia}&quot;
           </p>
         )}
-        <div className="space-y-1.5 text-sm">
+        <div className="space-y-1.5 text-sm text-foreground/60">
           {op.modalidad_contratacion && op.modalidad_contratacion !== 'No especificada' && (
-            <p className="text-muted-foreground"><strong>Modalidad:</strong> {op.modalidad_contratacion}</p>
+            <p><strong className="text-foreground/75">Modalidad:</strong> {op.modalidad_contratacion}</p>
           )}
           {op.fecha_limite_ofertas && op.fecha_limite_ofertas !== 'No especificada' && (
-            <p className="text-muted-foreground"><strong>Fecha límite:</strong> {op.fecha_limite_ofertas}</p>
+            <p><strong className="text-foreground/75">Fecha límite:</strong> {op.fecha_limite_ofertas}</p>
           )}
           {op.ubicacion_entidad && op.ubicacion_entidad !== 'No especificada' && (
-            <p className="text-muted-foreground"><strong>Ubicación:</strong> {op.ubicacion_entidad}</p>
+            <p><strong className="text-foreground/75">Ubicación:</strong> {op.ubicacion_entidad}</p>
           )}
         </div>
         <div className="flex gap-2 flex-wrap">
@@ -236,13 +244,16 @@ function OportunidadCard({ op }: { op: OportunidadDescubre }) {
           {showRanking && <Badge variant="outline">Ranking: {op.ranking_interes}/10</Badge>}
         </div>
         {isFallback && op.fallback_reference_process && (
-          <p className="text-xs text-muted-foreground">Referencia: <strong>{op.fallback_reference_process}</strong></p>
+          <p className="text-xs text-foreground/55">Referencia: <strong className="text-foreground/75">{op.fallback_reference_process}</strong></p>
         )}
       </CardContent>
       <CardFooter className="flex flex-col gap-2">
         {actionUrl ? (
           <a href={actionUrl} target="_blank" rel="noopener noreferrer" className="w-full">
-            <Button variant="outline" className="w-full gap-2">
+            <Button
+              variant="outline"
+              className="w-full gap-2 border-accent/40 text-accent hover:bg-accent/10 hover:text-accent"
+            >
               {isFallback ? (
                 <><Search className="h-4 w-4" />Buscar en SECOP II</>
               ) : (
@@ -251,7 +262,7 @@ function OportunidadCard({ op }: { op: OportunidadDescubre }) {
             </Button>
           </a>
         ) : (
-          <p className="text-sm text-muted-foreground italic">Enlace no disponible.</p>
+          <p className="text-sm italic text-foreground/55">Enlace no disponible.</p>
         )}
         {isHighValue && (
           <a

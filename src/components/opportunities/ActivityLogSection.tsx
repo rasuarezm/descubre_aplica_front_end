@@ -187,7 +187,7 @@ function CommentThread({ comment, onReply, onRefreshData, currentUserId }: Comme
                   {isEditing ? (
                     <div className="text-xs text-muted-foreground mt-2 flex gap-2 justify-end">
                         <Button size="sm" variant="ghost" onClick={() => setIsEditing(false)} disabled={isUpdating}>Cancelar</Button>
-                        <Button size="sm" variant="secondary" onClick={handleUpdateSubmit} disabled={isUpdating}>
+                        <Button size="sm" onClick={handleUpdateSubmit} disabled={isUpdating}>
                             {isUpdating && <Loader2 className="mr-2 h-3 w-3 animate-spin" />}
                             Guardar
                         </Button>
@@ -229,7 +229,7 @@ function CommentThread({ comment, onReply, onRefreshData, currentUserId }: Comme
                         placeholder={`Respondiendo a ${authorDisplayName}...`}
                       />
                       <div className="mt-2 flex justify-end">
-                      <Button size="sm" onClick={handleReplySubmit} disabled={isSubmittingReply} variant="secondary">
+                      <Button size="sm" onClick={handleReplySubmit} disabled={isSubmittingReply}>
                           {isSubmittingReply && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                           Publicar Respuesta
                       </Button>
@@ -327,7 +327,7 @@ export function ActivityLogSection({ userProfile, comments, onPostComment, onRef
                   placeholder="Escribe un nuevo comentario..."
                 />
               <div className="flex justify-end">
-                <Button onClick={handleCommentSubmit} disabled={isSubmitting} variant="secondary">
+                <Button onClick={handleCommentSubmit} disabled={isSubmitting}>
                   {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                   Publicar Comentario
                 </Button>

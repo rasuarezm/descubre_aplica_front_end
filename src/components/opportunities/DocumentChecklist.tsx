@@ -94,7 +94,7 @@ export function DocumentChecklist({ userProfile, requiredDocuments, uploadedDocu
               {canCollaborate && (
                 <>
                   <Label htmlFor={`file-upload-${docId}`} className="cursor-pointer">
-                    <Button asChild variant="secondary" size="sm" disabled={uploadingId === req.name}>
+                    <Button asChild size="sm" disabled={uploadingId === req.name}>
                       <div>
                         {uploadingId === req.name ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <UploadCloud className="mr-2 h-4 w-4" />}
                         Subir
@@ -187,7 +187,7 @@ export function DocumentChecklist({ userProfile, requiredDocuments, uploadedDocu
             {canCollaborate && (
               <>
                  <Label htmlFor={`file-upload-${docId}`} className="cursor-pointer">
-                  <Button asChild variant="secondary" size="sm" disabled={uploadingId === req.name}>
+                  <Button asChild size="sm" disabled={uploadingId === req.name}>
                     <div>
                       {uploadingId === req.name ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <UploadCloud className="mr-2 h-4 w-4" />}
                       Subir Firmado
@@ -211,7 +211,7 @@ export function DocumentChecklist({ userProfile, requiredDocuments, uploadedDocu
     return (
        <li key={docId} className="p-4 border rounded-lg shadow-sm bg-muted/30 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div className="flex items-start gap-3 flex-1">
-          <CircleAlert className="h-5 w-5 text-muted-foreground mt-1" />
+          <CircleAlert className="h-5 w-5 text-highlight mt-1" />
           <div>
             <h4 className="font-semibold">{req.name}</h4>
             <p className="text-sm text-muted-foreground">{req.description}</p>
@@ -224,7 +224,7 @@ export function DocumentChecklist({ userProfile, requiredDocuments, uploadedDocu
           {canManageOpportunity && (
              <>
               <Label htmlFor={`file-upload-${docId}`} className="cursor-pointer">
-                <Button asChild variant="secondary" size="sm" disabled={uploadingId === req.name}>
+                <Button asChild size="sm" disabled={uploadingId === req.name}>
                   <div>
                     {uploadingId === req.name ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <PenSquare className="mr-2 h-4 w-4" />}
                     Subir Formato

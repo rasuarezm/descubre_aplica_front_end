@@ -251,7 +251,11 @@ export function IaAnalysisTabContent({ ia_analysis, officialChecklist, onAddDocu
             </CardContent>
             {newSuggestedDocs.length > 0 && (
                 <CardFooter>
-                     <Button onClick={handleAddDocuments} disabled={selectedDocs.length === 0 || isSubmitting}>
+                     <Button
+                        onClick={handleAddDocuments}
+                        disabled={selectedDocs.length === 0 || isSubmitting}
+                        className="bg-accent text-accent-foreground hover:bg-accent/90 shadow-sm"
+                      >
                         {isSubmitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Plus className="mr-2 h-4 w-4" />}
                         Añadir {selectedDocs.length} Documento(s) al Checklist Oficial
                     </Button>

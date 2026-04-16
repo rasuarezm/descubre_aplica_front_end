@@ -349,7 +349,9 @@ export function AppSidebar() {
                         Aplica — Plan Profesional
                       </span>
                     </div>
-                    <Badge variant="secondary" className="group-data-[collapsible=icon]:hidden shrink-0 text-[10px] px-2 py-0">
+                    <Badge
+                      className="group-data-[collapsible=icon]:hidden shrink-0 border-0 bg-popular px-2 py-0 text-[10px] font-semibold text-popular-foreground shadow-sm hover:bg-popular/90"
+                    >
                       Upgrade
                     </Badge>
                   </SidebarMenuButton>

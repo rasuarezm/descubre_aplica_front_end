@@ -30,6 +30,29 @@ import { RupContractsWidget } from '@/components/customers/RupContractsWidget';
 
 const FINAL_OPPORTUNITY_STATUSES = ['Ganada', 'Perdida', 'Descartada'];
 
+/** Borde izquierdo de tarjeta de oportunidad (una sola clase `border-l-*`). */
+function opportunityCardLeftBorderClass(
+  status: string,
+  opts: {
+    isArchivedView: boolean;
+    isFinalStatus: boolean;
+    isEnviada: boolean;
+    urgencyStatus?: 'overdue' | 'urgent' | 'upcoming' | 'normal' | null;
+  },
+): string {
+  const { isArchivedView, isFinalStatus, isEnviada, urgencyStatus } = opts;
+  if (isArchivedView) return 'border-l-muted-foreground';
+  if (status === 'Ganada') return 'border-l-accent';
+  if (status === 'Perdida') return 'border-l-destructive';
+  if (status === 'Descartada') return 'border-l-muted-foreground';
+  if (isEnviada) return 'border-l-primary';
+  if (!isFinalStatus && !isEnviada) {
+    if (urgencyStatus === 'overdue') return 'border-l-urgency';
+    if (urgencyStatus === 'urgent' || urgencyStatus === 'upcoming') return 'border-l-highlight';
+  }
+  return 'border-l-border';
+}
+
 // ─── Fila de documento (genérica para todas las categorías) ──────────────────
 
 function ExperienceDocRow({
@@ -901,14 +924,14 @@ const handleUploadGeneralDocument = async () => {
         </div>
         <div className="flex gap-2">
            <Link href={`/dashboard/customers/${customerId}/pipeline`} passHref>
-              <Button variant="secondary">
+              <Button className="bg-accent text-accent-foreground hover:bg-accent/90 shadow-sm">
                 <LayoutDashboard className="mr-2 h-4 w-4" /> Ver Pipeline
               </Button>
             </Link>
           {canCreateAndEdit && (
             <Dialog open={isLogoDialogOpen} onOpenChange={setIsLogoDialogOpen}>
               <DialogTrigger asChild>
-                <Button variant="outline">
+                <Button variant="outline" className="border-primary/35 text-primary hover:bg-primary/10">
                   <ImagePlus className="mr-2 h-4 w-4" /> Actualizar Logo
                 </Button>
               </DialogTrigger>
@@ -954,7 +977,10 @@ const handleUploadGeneralDocument = async () => {
           {canAnalyzeTender && (
             <Dialog open={isAnalysisModalOpen} onOpenChange={setIsAnalysisModalOpen}>
                 <DialogTrigger asChild>
-                    <Button onClick={handleOpenAnalysisModal}>
+                    <Button
+                      onClick={handleOpenAnalysisModal}
+                      className="bg-accent text-accent-foreground shadow-sm hover:bg-accent/90"
+                    >
                         <BidtoryRadarIcon className="mr-2 h-4 w-4" /> Analizar Nuevo Pliego
                     </Button>
                 </DialogTrigger>
@@ -1019,6 +1045,7 @@ const handleUploadGeneralDocument = async () => {
                         <Button 
                             onClick={handleInitiateAnalysis} 
                             disabled={isSubmittingAnalysis || !analysisData.file || !analysisData.category || !analysisData.name}
+                            className="bg-accent text-accent-foreground hover:bg-accent/90"
                         >
                             {isSubmittingAnalysis && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                             {isSubmittingAnalysis ? 'Analizando...' : 'Iniciar Análisis'}
@@ -1032,7 +1059,7 @@ const handleUploadGeneralDocument = async () => {
       
       {/* Summary Panel */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-        <Card className="shadow-sm border-l-4 border-accent">
+        <Card className="shadow-sm border border-border border-l-4 border-l-border">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Próximo Vencimiento</CardTitle>
             <CalendarClock className="h-4 w-4 text-muted-foreground" />
@@ -1040,7 +1067,7 @@ const handleUploadGeneralDocument = async () => {
           <CardContent>
             {summaryStats.nextToExpire ? (
               <div>
-                <div className="text-2xl font-bold text-highlight">{format(new Date(summaryStats.nextToExpire.deadline!), 'dd MMM yyyy, p', { locale: es })}</div>
+                <div className="text-2xl font-bold text-primary">{format(new Date(summaryStats.nextToExpire.deadline!), 'dd MMM yyyy, p', { locale: es })}</div>
                 <p className="text-xs text-muted-foreground truncate">{summaryStats.nextToExpire.title}</p>
               </div>
             ) : (
@@ -1048,7 +1075,7 @@ const handleUploadGeneralDocument = async () => {
             )}
           </CardContent>
         </Card>
-        <Card className="shadow-sm border-l-4 border-accent">
+        <Card className="shadow-sm border border-border border-l-4 border-l-border">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Oportunidades Activas</CardTitle>
             <Target className="h-4 w-4 text-muted-foreground" />
@@ -1058,7 +1085,7 @@ const handleUploadGeneralDocument = async () => {
             <p className="text-xs text-muted-foreground">Total de oportunidades en curso</p>
           </CardContent>
         </Card>
-        <Card className="shadow-sm border-l-4 border-highlight">
+        <Card className="shadow-sm border border-border border-l-4 border-l-highlight">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Próximas a Vencer</CardTitle>
             <AlertTriangle className="h-4 w-4 text-muted-foreground" />
@@ -1068,23 +1095,23 @@ const handleUploadGeneralDocument = async () => {
             <p className="text-xs text-muted-foreground">Vencen en 8-14 días</p>
           </CardContent>
         </Card>
-        <Card className="shadow-sm border-l-4 border-destructive">
+        <Card className="shadow-sm border border-border border-l-4 border-l-urgency">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Urgentes</CardTitle>
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-destructive">{summaryStats.urgentCount}</div>
+            <div className="text-2xl font-bold text-urgency">{summaryStats.urgentCount}</div>
             <p className="text-xs text-muted-foreground">Vencen en &lt; 8 días</p>
           </CardContent>
         </Card>
-        <Card className="shadow-sm border-l-4 border-accent">
+        <Card className="shadow-sm border border-border border-l-4 border-l-accent">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Valor en Juego</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-highlight">{formatCurrency(summaryStats.pipelineValue)}</div>
+            <div className="text-2xl font-bold text-accent">{formatCurrency(summaryStats.pipelineValue)}</div>
             <p className="text-xs text-muted-foreground">Suma de oportunidades activas</p>
           </CardContent>
         </Card>
@@ -1126,7 +1153,10 @@ const handleUploadGeneralDocument = async () => {
               </CardDescription>
               
               {canAnalyzeTender && statusFilter !== 'archived' && (
-                <Button className="mt-6" onClick={handleOpenAnalysisModal}>
+                <Button
+                  className="mt-6 bg-accent text-accent-foreground shadow-sm hover:bg-accent/90"
+                  onClick={handleOpenAnalysisModal}
+                >
                   <BidtoryRadarIcon className="mr-2 h-4 w-4" /> Analizar Nuevo Pliego
                 </Button>
               )}
@@ -1141,23 +1171,20 @@ const handleUploadGeneralDocument = async () => {
               const isFinalStatus = FINAL_OPPORTUNITY_STATUSES.includes(opportunity.status);
               const isEnviada = opportunity.status === 'Enviada';
 
+              const leftBorder = opportunityCardLeftBorderClass(opportunity.status, {
+                isArchivedView,
+                isFinalStatus,
+                isEnviada,
+                urgencyStatus: urgencyInfo?.status ?? null,
+              });
+
               return (
                 <Card 
                   key={opportunity.id} 
                   className={cn(
-                      "flex flex-col shadow-sm hover:shadow-lg transition-shadow duration-300 border-l-4",
-                      isArchivedView 
-                        ? "border-muted-foreground bg-muted/30"
-                        : {
-                            'border-accent': opportunity.status === 'Ganada',
-                            'border-destructive': opportunity.status === 'Perdida',
-                            'border-muted-foreground': opportunity.status === 'Descartada',
-                            'border-secondary': isEnviada,
-                            'border-destructive': !isFinalStatus && !isEnviada && urgencyInfo?.status === 'overdue',
-                            'border-destructive': !isFinalStatus && !isEnviada && urgencyInfo?.status === 'urgent',
-                            'border-highlight': !isFinalStatus && !isEnviada && urgencyInfo?.status === 'upcoming',
-                            'border-transparent': !isFinalStatus && !isEnviada && urgencyInfo?.status === 'normal'
-                        }
+                    'flex flex-col border border-border border-l-4 shadow-sm transition-shadow duration-300 hover:shadow-lg',
+                    isArchivedView && 'bg-muted/30',
+                    leftBorder,
                   )}
                 >
                   <CardHeader>
@@ -1201,7 +1228,7 @@ const handleUploadGeneralDocument = async () => {
                   </CardHeader>
                   <CardContent className="flex-grow space-y-3">
                     {opportunity.amount && opportunity.amount > 0 && (
-                      <div className="text-lg font-semibold text-highlight">
+                      <div className="text-lg font-semibold text-accent">
                         <span>{formatCurrency(opportunity.amount)}</span>
                       </div>
                     )}
@@ -1233,15 +1260,43 @@ const handleUploadGeneralDocument = async () => {
                             </Badge>
                         ) : (
                             <>
-                                <Badge variant='secondary' className='capitalize'>{opportunity.status}</Badge>
-                                {urgencyInfo?.status === 'overdue' && <Badge variant="destructive"><Clock className="mr-1.5 h-3 w-3" /> Vencida</Badge>}
-                                {urgencyInfo?.status === 'urgent' && <Badge variant="destructive"><Clock className="mr-1.5 h-3 w-3" /> Urgente</Badge>}
-                                {urgencyInfo?.status === 'upcoming' && <Badge variant="secondary" className="bg-highlight text-black"><Clock className="mr-1.5 h-3 w-3" /> Próxima a Vencer</Badge>}
+                                <Badge
+                                  variant="secondary"
+                                  className="capitalize border border-primary/35 bg-primary/10 text-primary hover:bg-primary/15"
+                                >
+                                  {opportunity.status}
+                                </Badge>
+                                {urgencyInfo?.status === 'overdue' && (
+                                  <Badge className="border-0 bg-urgency text-urgency-foreground hover:bg-urgency/90">
+                                    <Clock className="mr-1.5 h-3 w-3" /> Vencida
+                                  </Badge>
+                                )}
+                                {urgencyInfo?.status === 'urgent' && (
+                                  <Badge className="border border-highlight/60 bg-highlight text-highlight-foreground hover:bg-highlight/90">
+                                    <Clock className="mr-1.5 h-3 w-3" /> Urgente
+                                  </Badge>
+                                )}
+                                {urgencyInfo?.status === 'upcoming' && (
+                                  <Badge className="border border-highlight/60 bg-highlight text-highlight-foreground hover:bg-highlight/90">
+                                    <Clock className="mr-1.5 h-3 w-3" /> Próxima a Vencer
+                                  </Badge>
+                                )}
                             </>
                         )}
                     </div>
                     {opportunity.deadline && !isFinalStatus && (
-                       <p className={cn("text-sm text-muted-foreground flex items-center gap-2", !isEnviada && urgencyInfo?.status === 'urgent' && 'text-destructive font-semibold')}>
+                       <p
+                         className={cn(
+                           'text-sm flex items-center gap-2',
+                           isEnviada && 'text-muted-foreground',
+                           !isEnviada && urgencyInfo?.status === 'overdue' && 'font-semibold text-urgency',
+                           !isEnviada && urgencyInfo?.status === 'urgent' && 'font-semibold text-highlight',
+                           !isEnviada && urgencyInfo?.status === 'upcoming' && 'font-medium text-highlight',
+                           !isEnviada &&
+                             (!urgencyInfo || urgencyInfo.status === 'normal') &&
+                             'text-muted-foreground',
+                         )}
+                       >
                          <CalendarIcon className="h-4 w-4" />
                          <span>Fecha Límite: {format(new Date(opportunity.deadline), "dd MMM yyyy, p", { locale: es })}</span>
                        </p>

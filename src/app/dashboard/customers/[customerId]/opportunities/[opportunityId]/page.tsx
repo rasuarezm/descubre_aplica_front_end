@@ -14,7 +14,7 @@ import Link from "next/link";
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, CalendarDays, Loader2, AlertCircle, Edit, PlusCircle, Trash2, CalendarIcon, DollarSign, Clock, CheckCircle, Pencil, AlertTriangle, MoreVertical, Archive, Trophy, XCircle, Trash } from "lucide-react";
+import { ArrowLeft, CalendarDays, Loader2, AlertCircle, Edit, PlusCircle, Trash2, CalendarIcon, DollarSign, Clock, CheckCircle, Pencil, AlertTriangle, MoreVertical, Archive, Trophy, XCircle, Trash, CalendarClock, Target } from "lucide-react";
 import type { Opportunity, Customer, DocumentItem, OpportunityStatusInfo, RequiredDocument, UserProfile, ProposalDocument, ProposalDocumentStatusInfo, ImportantDate, OpportunityComment, IaRequiredDocument, AdendaAnalysis } from '@/types';
 import { useAuth } from '@/contexts/auth-context';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog';
@@ -45,6 +45,37 @@ import { onSnapshot, doc as firestoreDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 const FINAL_OPPORTUNITY_STATUSES = ['Ganada', 'Perdida', 'Descartada'];
+
+/** Borde izquierdo de la stat card «Estado» (misma lógica que las tarjetas de oportunidad en el listado). */
+function opportunityDetailStatusStatBorder(
+  status: string,
+  opts: {
+    isFinalStatus: boolean;
+    isEnviada: boolean;
+    urgencyStatus?: 'overdue' | 'urgent' | 'upcoming' | 'normal' | null;
+  },
+): string {
+  const { isFinalStatus, isEnviada, urgencyStatus } = opts;
+  if (status === 'Ganada') return 'border-l-accent';
+  if (status === 'Perdida') return 'border-l-destructive';
+  if (status === 'Descartada') return 'border-l-muted-foreground';
+  if (isEnviada) return 'border-l-primary';
+  if (!isFinalStatus && !isEnviada) {
+    if (urgencyStatus === 'overdue') return 'border-l-urgency';
+    if (urgencyStatus === 'urgent' || urgencyStatus === 'upcoming') return 'border-l-highlight';
+  }
+  return 'border-l-border';
+}
+
+function opportunityDetailTimeStatBorder(
+  isFinalStatus: boolean,
+  urgencyStatus?: 'overdue' | 'urgent' | 'upcoming' | 'normal' | null,
+): string {
+  if (isFinalStatus) return 'border-l-border';
+  if (urgencyStatus === 'overdue') return 'border-l-urgency';
+  if (urgencyStatus === 'urgent' || urgencyStatus === 'upcoming') return 'border-l-highlight';
+  return 'border-l-border';
+}
 
 export default function OpportunityDetailPage() {
   const params = useParams();
@@ -763,6 +794,16 @@ const sortedRequiredDocs = useMemo(() => {
   const progress = calculateProgress();
   const modalTitle = opportunity.status === 'Prospecto' ? "Revisar y Publicar Oportunidad" : "Editar Detalles de la Oportunidad";
   const isFinalStatus = FINAL_OPPORTUNITY_STATUSES.includes(opportunity.status);
+  const isEnviada = opportunity.status === 'Enviada';
+  const urgencyStatus = urgencyInfo?.status ?? null;
+  const statusStatBorder = opportunityDetailStatusStatBorder(opportunity.status, {
+    isFinalStatus,
+    isEnviada,
+    urgencyStatus,
+  });
+  const timeStatBorder = opportunityDetailTimeStatBorder(isFinalStatus, urgencyStatus);
+  const valueStatBorder =
+    opportunity.amount && opportunity.amount > 0 ? 'border-l-accent' : 'border-l-border';
 
   const iaErrorMessage =
     opportunity.ia_analysis?.analysis_error_message ||
@@ -813,30 +854,64 @@ const sortedRequiredDocs = useMemo(() => {
           <ArrowLeft className="mr-2 h-4 w-4" />
           Volver a {customer.name}
         </Link>
-        <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-headline tracking-tight">{opportunity.title}</h1>
-            <div className="flex flex-wrap items-center gap-x-4 gap-y-2 mt-2 text-sm text-muted-foreground">
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <h1 className="text-3xl font-headline tracking-tight">{opportunity.title}</h1>
+          {canManageOpportunity && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="shrink-0 border-primary/35 text-primary hover:bg-primary/10">
+                  Acciones
+                  <MoreVertical className="ml-2 h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onSelect={openEditModal}>
+                  <Edit className="mr-2 h-4 w-4" />
+                  <span>{opportunity.status === 'Prospecto' ? 'Revisar y Publicar' : 'Editar Oportunidad'}</span>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={() => setShowArchiveConfirm(true)} className="text-destructive focus:text-destructive">
+                  <Archive className="mr-2 h-4 w-4" />
+                  <span>Archivar Oportunidad</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
+        </div>
+
+        <div className="mt-4 grid gap-4 sm:grid-cols-3">
+          <Card
+            className={cn(
+              'shadow-sm border border-border border-l-4',
+              statusStatBorder,
+            )}
+          >
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Estado</CardTitle>
+              <Target className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent className="space-y-2">
               {opportunityStatuses && canManageOpportunity ? (
                 <Select value={opportunity.status} onValueChange={handleStatusChange}>
-                  <SelectTrigger className="w-auto min-w-[150px] capitalize text-sm h-9">
+                  <SelectTrigger className="w-full min-w-0 capitalize text-sm h-9">
                     <SelectValue placeholder="Seleccionar estado..." />
                   </SelectTrigger>
                   <SelectContent>
-                    {opportunityStatuses.all_statuses.map(s => <SelectItem key={s} value={s} className="capitalize">{s}</SelectItem>)}
+                    {opportunityStatuses.all_statuses.map((s) => (
+                      <SelectItem key={s} value={s} className="capitalize">
+                        {s}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               ) : (
-                <Badge 
-                    variant='secondary'
-                    className={cn(
-                        'capitalize',
-                        {
-                          'bg-accent text-accent-foreground': opportunity.status === 'Ganada',
-                          'bg-destructive text-destructive-foreground': opportunity.status === 'Perdida',
-                          'bg-muted-foreground/80 text-background': opportunity.status === 'Descartada',
-                        }
-                    )}
+                <Badge
+                  variant="secondary"
+                  className={cn('w-fit capitalize', {
+                    'bg-accent text-accent-foreground': opportunity.status === 'Ganada',
+                    'bg-destructive text-destructive-foreground': opportunity.status === 'Perdida',
+                    'bg-muted-foreground/80 text-background': opportunity.status === 'Descartada',
+                  })}
                 >
                   {opportunity.status === 'Ganada' && <Trophy className="mr-1.5 h-3 w-3" />}
                   {opportunity.status === 'Perdida' && <XCircle className="mr-1.5 h-3 w-3" />}
@@ -844,57 +919,64 @@ const sortedRequiredDocs = useMemo(() => {
                   {opportunity.status}
                 </Badge>
               )}
-              
-              {!isFinalStatus && urgencyInfo && <CountdownTimer urgency={urgencyInfo} />}
+            </CardContent>
+          </Card>
 
-               {!isFinalStatus && urgencyInfo?.status === 'overdue' && (
-                  <Badge variant="destructive">
-                    <Clock className="mr-1.5 h-3 w-3" /> Vencida
-                  </Badge>
-                )}
-                {!isFinalStatus && urgencyInfo?.status === 'urgent' && (
-                  <Badge variant="destructive">
-                    <Clock className="mr-1.5 h-3 w-3" /> Urgente
-                  </Badge>
-                )}
-                {!isFinalStatus && urgencyInfo?.status === 'upcoming' && (
-                  <Badge variant="secondary" className="bg-highlight text-black">
-                    <Clock className="mr-1.5 h-3 w-3" /> Próxima a Vencer
-                  </Badge>
-                )}
-
-              {opportunity.amount && opportunity.amount > 0 && (
-                <span className="font-semibold text-highlight">
-                  {formatCurrency(opportunity.amount)}
-                </span>
+          <Card className={cn('shadow-sm border border-border border-l-4', timeStatBorder)}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Tiempo restante</CardTitle>
+              <CalendarClock className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {!isFinalStatus && urgencyInfo ? (
+                <>
+                  <CountdownTimer variant="plain" urgency={urgencyInfo} />
+                  <div className="flex flex-wrap justify-center gap-2">
+                    {urgencyInfo.status === 'overdue' && (
+                      <Badge className="bg-urgency text-urgency-foreground">
+                        <Clock className="mr-1.5 h-3 w-3" /> Vencida
+                      </Badge>
+                    )}
+                    {urgencyInfo.status === 'urgent' && (
+                      <Badge className="bg-urgency text-urgency-foreground">
+                        <Clock className="mr-1.5 h-3 w-3" /> Urgente
+                      </Badge>
+                    )}
+                    {urgencyInfo.status === 'upcoming' && (
+                      <Badge variant="secondary" className="bg-highlight text-highlight-foreground">
+                        <Clock className="mr-1.5 h-3 w-3" /> Próxima a Vencer
+                      </Badge>
+                    )}
+                  </div>
+                </>
+              ) : (
+                <p className="text-sm text-muted-foreground text-center py-1">
+                  {isFinalStatus
+                    ? 'Oportunidad en estado final: sin seguimiento de plazo activo.'
+                    : 'Sin fecha de cierre configurada para esta oportunidad.'}
+                </p>
               )}
+            </CardContent>
+          </Card>
 
-               {canManageOpportunity && (
-                <div className="flex items-center gap-2">
-                   <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="outline" size="sm">
-                          Acciones
-                          <MoreVertical className="ml-2 h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onSelect={openEditModal}>
-                           <Edit className="mr-2 h-4 w-4" />
-                           <span>{opportunity.status === 'Prospecto' ? 'Revisar y Publicar' : 'Editar Oportunidad'}</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onSelect={() => setShowArchiveConfirm(true)} className="text-destructive focus:text-destructive">
-                          <Archive className="mr-2 h-4 w-4" />
-                          <span>Archivar Oportunidad</span>
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                </div>
+          <Card className={cn('shadow-sm border border-border border-l-4', valueStatBorder)}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Valor</CardTitle>
+              <DollarSign className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              {opportunity.amount && opportunity.amount > 0 ? (
+                <>
+                  <div className="text-2xl font-bold text-accent">{formatCurrency(opportunity.amount)}</div>
+                  <p className="text-xs text-muted-foreground mt-1">Presupuesto referenciado</p>
+                </>
+              ) : (
+                <p className="text-sm text-muted-foreground">Sin monto registrado.</p>
               )}
-            </div>
-          </div>
+            </CardContent>
+          </Card>
         </div>
+
         <Card className="mt-4 bg-card">
           <CardContent className="pt-6">
             <p className="text-muted-foreground">{opportunity.description}</p>
@@ -916,11 +998,32 @@ const sortedRequiredDocs = useMemo(() => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2">
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="checklist">Checklist</TabsTrigger>
-                <TabsTrigger value="proposal">Propuesta</TabsTrigger>
-                <TabsTrigger value="ia-analysis" disabled={!opportunity.ia_analysis}>Análisis IA</TabsTrigger>
-                <TabsTrigger value="log">Bitácora</TabsTrigger>
+              <TabsList className="grid h-auto w-full grid-cols-2 gap-0 rounded-none border-b border-border bg-transparent p-0 sm:grid-cols-4">
+                <TabsTrigger
+                  value="checklist"
+                  className="rounded-none border-b-2 border-transparent py-3 text-muted-foreground shadow-none data-[state=active]:border-b-accent data-[state=active]:bg-card data-[state=active]:font-semibold data-[state=active]:text-primary data-[state=active]:shadow-none dark:data-[state=active]:bg-card"
+                >
+                  Checklist
+                </TabsTrigger>
+                <TabsTrigger
+                  value="proposal"
+                  className="rounded-none border-b-2 border-transparent py-3 text-muted-foreground shadow-none data-[state=active]:border-b-accent data-[state=active]:bg-card data-[state=active]:font-semibold data-[state=active]:text-primary data-[state=active]:shadow-none dark:data-[state=active]:bg-card"
+                >
+                  Propuesta
+                </TabsTrigger>
+                <TabsTrigger
+                  value="ia-analysis"
+                  disabled={!opportunity.ia_analysis}
+                  className="rounded-none border-b-2 border-transparent py-3 text-muted-foreground shadow-none data-[state=active]:border-b-accent data-[state=active]:bg-card data-[state=active]:font-semibold data-[state=active]:text-primary data-[state=active]:shadow-none dark:data-[state=active]:bg-card"
+                >
+                  Análisis IA
+                </TabsTrigger>
+                <TabsTrigger
+                  value="log"
+                  className="rounded-none border-b-2 border-transparent py-3 text-muted-foreground shadow-none data-[state=active]:border-b-accent data-[state=active]:bg-card data-[state=active]:font-semibold data-[state=active]:text-primary data-[state=active]:shadow-none dark:data-[state=active]:bg-card"
+                >
+                  Bitácora
+                </TabsTrigger>
               </TabsList>
               <TabsContent value="checklist" className="mt-6 space-y-8">
                 <TenderDocumentsSection
@@ -976,7 +1079,7 @@ const sortedRequiredDocs = useMemo(() => {
              <CardHeader className="flex flex-row items-center justify-between pb-4">
                <CardTitle>Cronograma Clave</CardTitle>
                {canManageOpportunity && (
-                <Button variant="outline" size="sm" onClick={openDatesModal}>
+                <Button size="sm" onClick={openDatesModal}>
                   {importantDatesInfo.sortedDates.length > 0 ? <Pencil className="mr-2 h-4 w-4"/> : <PlusCircle className="mr-2 h-4 w-4"/>}
                   {importantDatesInfo.sortedDates.length > 0 ? 'Editar Fechas' : 'Añadir Fecha'}
                 </Button>
