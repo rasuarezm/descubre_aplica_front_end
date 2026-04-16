@@ -4,17 +4,18 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { FeatureScroll } from "@/components/home/FeatureScroll";
 import {
-  Bot,
-  Mail,
-  ShieldCheck,
   ArrowRight,
   Menu,
   X,
-  Rss,
-  Lock,
+  Zap,
+  FileText,
+  Users,
+  Bell,
+  Search,
+  ChevronRight,
 } from "lucide-react";
 
 export function HomeClient() {
@@ -40,9 +41,8 @@ export function HomeClient() {
   }, []);
 
   return (
-    <div className="flex flex-col min-h-screen bg-background text-foreground">
-      {/* Header - estilo procurement */}
-      <header className="sticky top-0 z-50 w-full bg-white border-b border-border shadow-sm">
+    <div className="flex min-h-screen flex-col bg-background text-foreground">
+      <header className="sticky top-0 z-50 w-full border-b border-border bg-background">
         <div className="container mx-auto flex h-16 items-center justify-between gap-2 px-4 md:px-6">
           <Link href="/" className="flex min-w-0 shrink items-center gap-2">
             <Image
@@ -54,32 +54,38 @@ export function HomeClient() {
             />
           </Link>
           <nav
-            className="hidden md:flex items-center gap-6"
+            className="hidden items-center gap-6 md:flex"
             aria-label="Secciones de la página"
           >
             <Link
-              href="#caracteristicas"
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              href="#el-sistema"
+              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
-              Características
+              Descubre
             </Link>
             <Link
               href="#como-funciona"
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
               Cómo funciona
+            </Link>
+            <Link
+              href="/suscripciones"
+              className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
+            >
+              Planes
             </Link>
           </nav>
           <div className="flex shrink-0 items-center gap-1 sm:gap-2 md:gap-4">
             <Button variant="ghost" size="sm" className="px-2 sm:px-3" asChild>
-              <Link href="/login">Iniciar Sesión</Link>
+              <Link href="/login">Iniciar sesión</Link>
             </Button>
             <Button
               size="sm"
-              className="bg-accent hover:bg-accent/90 text-accent-foreground px-2 sm:px-3"
+              className="bg-accent px-2 text-accent-foreground hover:bg-accent/90 sm:px-3"
               asChild
             >
-              <Link href="/suscripciones">Suscribirse</Link>
+              <Link href="/registro">Empezar ahora</Link>
             </Button>
             <Button
               type="button"
@@ -88,7 +94,9 @@ export function HomeClient() {
               className="md:hidden"
               aria-expanded={mobileNavOpen}
               aria-controls="mobile-nav-menu"
-              aria-label={mobileNavOpen ? "Cerrar menú" : "Abrir menú de navegación"}
+              aria-label={
+                mobileNavOpen ? "Cerrar menú" : "Abrir menú de navegación"
+              }
               onClick={() => setMobileNavOpen((o) => !o)}
             >
               {mobileNavOpen ? (
@@ -100,29 +108,28 @@ export function HomeClient() {
           </div>
         </div>
 
-        {/* Panel móvil: anclas a secciones */}
         {mobileNavOpen ? (
           <>
             <button
               type="button"
-              className="fixed inset-x-0 top-16 bottom-0 z-[60] bg-black/40 md:hidden"
+              className="fixed inset-x-0 bottom-0 top-16 z-[60] bg-black/40 md:hidden"
               aria-label="Cerrar menú"
               onClick={() => setMobileNavOpen(false)}
             />
             <div
               id="mobile-nav-menu"
-              className="fixed inset-x-0 top-16 z-[70] border-b border-border bg-white shadow-lg md:hidden animate-in slide-in-from-top-2 duration-200"
+              className="fixed inset-x-0 top-16 z-[70] animate-in border-b border-border bg-background shadow-sm duration-200 slide-in-from-top-2 md:hidden"
               role="dialog"
               aria-modal="true"
               aria-label="Navegación"
             >
               <nav className="container mx-auto flex flex-col gap-1 px-4 py-4">
                 <Link
-                  href="#caracteristicas"
+                  href="#el-sistema"
                   className="rounded-md px-3 py-3 text-base font-medium text-foreground hover:bg-muted"
                   onClick={() => setMobileNavOpen(false)}
                 >
-                  Características
+                  Descubre
                 </Link>
                 <Link
                   href="#como-funciona"
@@ -131,6 +138,13 @@ export function HomeClient() {
                 >
                   Cómo funciona
                 </Link>
+                <Link
+                  href="/suscripciones"
+                  className="rounded-md px-3 py-3 text-base font-medium text-foreground hover:bg-muted"
+                  onClick={() => setMobileNavOpen(false)}
+                >
+                  Planes
+                </Link>
               </nav>
             </div>
           </>
@@ -138,48 +152,78 @@ export function HomeClient() {
       </header>
 
       <main className="flex-1">
-        {/* Hero Section */}
-        <section className="relative w-full py-16 md:py-24 lg:py-32">
+        {/* Hero */}
+        <section className="w-full bg-background py-20 md:py-28">
           <div className="container mx-auto px-4 md:px-6">
-            <div className="flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
-              <div className="flex-1 text-center lg:text-left space-y-6">
-                <h1 className="text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl lg:text-6xl font-headline">
-                  Su radar de licitaciones con IA
+            <div className="grid items-center gap-12 lg:grid-cols-2 lg:gap-16">
+              <div className="order-1 flex flex-col lg:order-none">
+                <span className="mb-6 inline-flex items-center gap-1.5 rounded-full border border-accent/30 bg-accent/8 px-3 py-1 text-xs font-medium text-accent">
+                  <Zap className="h-3 w-3" />
+                  Contratación pública · Fondos de fomento · Colombia
+                </span>
+                <h1 className="font-headline text-5xl font-semibold leading-[1.1] tracking-tight text-foreground md:text-6xl lg:text-[4.25rem]">
+                  Encuentra las licitaciones que tu empresa puede ganar.
                 </h1>
-                <p className="text-lg text-muted-foreground max-w-2xl mx-auto lg:mx-0">
-                  No se pierda ninguna oportunidad. Bidtory analiza múltiples
-                  fuentes, filtra las convocatorias y licitaciones más relevantes
-                  para su negocio, y las entrega directamente en su correo.
+                <p className="mt-5 max-w-lg text-lg leading-relaxed text-muted-foreground">
+                  Bidtory monitorea SECOP II y fondos de fomento con IA, puntúa
+                  cada convocatoria según tu perfil y la lleva directo a tu
+                  equipo de trabajo.
                 </p>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                <div className="mt-8 flex flex-wrap gap-3">
                   <Button
                     size="lg"
-                    className="bg-accent hover:bg-accent/90 text-accent-foreground"
+                    className="gap-2 bg-accent text-accent-foreground hover:bg-accent/90"
                     asChild
                   >
-                    <Link href="/suscripciones">Suscribirse Ahora</Link>
+                    <Link href="/registro">
+                      Empezar ahora{" "}
+                      <ArrowRight className="h-4 w-4" aria-hidden />
+                    </Link>
                   </Button>
-                  <Button size="lg" variant="outline" className="border-accent text-accent hover:bg-accent/10" asChild>
-                    <Link href="#caracteristicas">Descubrir Características</Link>
+                  <Button
+                    size="lg"
+                    variant="ghost"
+                    className="gap-1 text-foreground/70 hover:text-foreground"
+                    asChild
+                  >
+                    <Link href="#como-funciona">
+                      Ver cómo funciona{" "}
+                      <ChevronRight className="h-4 w-4" aria-hidden />
+                    </Link>
                   </Button>
                 </div>
               </div>
-              <div className="flex-1 flex justify-center w-full">
-                <div className="relative w-full max-w-xl">
-                  {/* Halo suave detrás del mockup: separación visual del fondo */}
-                  <div
-                    className="pointer-events-none absolute -inset-1 -z-10 rounded-[1.25rem] bg-gradient-to-br from-accent/25 via-muted/40 to-foreground/20 opacity-90 blur-xl"
-                    aria-hidden
-                  />
-                  <div className="relative overflow-hidden rounded-lg border border-border bg-white shadow-2xl shadow-accent/10 ring-1 ring-black/[0.06]">
+
+              <div className="relative order-2 w-full lg:order-none">
+                <div className="relative w-full pb-6 pt-4">
+                  <div className="absolute right-0 top-0 w-[88%] translate-x-3 -translate-y-3 rotate-[0.8deg] overflow-hidden rounded-xl border border-border bg-white shadow-sm">
+                    <Image
+                      src="/5-Bidtory Aplica-Dashboard.webp"
+                      alt="Bidtory Aplica — gestión de licitaciones"
+                      width={600}
+                      height={380}
+                      className="h-auto w-full object-cover"
+                    />
+                  </div>
+                  <div className="relative w-[88%] -translate-x-3 translate-y-3 -rotate-[0.8deg] overflow-hidden rounded-xl border border-border bg-white shadow-md">
                     <Image
                       src="/1-Bidtory Descubre.webp"
-                      alt="Reciba oportunidades filtradas por IA en su correo"
+                      alt="Bidtory Descubre — monitoreo con IA"
                       width={600}
-                      height={800}
-                      className="w-full h-auto object-contain"
-                      sizes="(max-width: 768px) 100vw, 600px"
+                      height={380}
+                      className="h-auto w-full object-cover"
+                      priority
                     />
+                  </div>
+                  <div className="absolute bottom-6 left-2 z-10">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-accent px-2.5 py-1 text-[11px] font-semibold text-accent-foreground shadow-sm">
+                      Bidtory Descubre
+                    </span>
+                  </div>
+                  <div className="absolute right-4 top-2 z-10">
+                    <span className="inline-flex items-center gap-1.5 rounded-full bg-foreground px-2.5 py-1 text-[11px] font-semibold text-white shadow-sm">
+                      Bidtory Aplica
+                    </span>
                   </div>
                 </div>
               </div>
@@ -187,179 +231,239 @@ export function HomeClient() {
           </div>
         </section>
 
-        {/* Franja de confianza (claims verificables) */}
+        {/* Trust bar */}
         <section
-          className="border-y border-border/80 bg-muted/40"
+          className="border-y border-border/60 bg-muted/30 py-4"
           aria-label="Señales de confianza"
         >
-          <div className="container mx-auto px-4 py-5 md:px-6 md:py-6">
-            <ul className="flex flex-col gap-4 text-sm text-muted-foreground md:flex-row md:flex-wrap md:items-center md:justify-center md:gap-x-10 md:gap-y-3">
-              <li className="flex items-start gap-3 md:items-center">
-                <Rss
-                  className="mt-0.5 h-4 w-4 shrink-0 text-accent md:mt-0"
-                  aria-hidden
-                />
-                <span>Monitoreo de Fuentes Oficiales, como SECOP</span>
-              </li>
-              <li className="flex items-start gap-3 md:items-center">
-                <Lock
-                  className="mt-0.5 h-4 w-4 shrink-0 text-accent md:mt-0"
-                  aria-hidden
-                />
-                <span>Navegación con conexión segura (HTTPS)</span>
-              </li>
-              <li className="flex items-start gap-3 md:items-center">
-                <Mail
-                  className="mt-0.5 h-4 w-4 shrink-0 text-accent md:mt-0"
-                  aria-hidden
-                />
-                <span>Alertas filtradas según el perfil de su empresa</span>
-              </li>
-            </ul>
+          <div className="container mx-auto flex flex-wrap items-center justify-center gap-x-8 gap-y-3 px-4 md:px-6">
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Search className="h-3.5 w-3.5 shrink-0 text-accent" aria-hidden />
+              SECOP II oficial
+            </div>
+            <span
+              className="hidden h-4 w-px bg-border md:block"
+              aria-hidden
+            />
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Zap className="h-3.5 w-3.5 shrink-0 text-accent" aria-hidden />
+              Gemini AI (Google)
+            </div>
+            <span
+              className="hidden h-4 w-px bg-border md:block"
+              aria-hidden
+            />
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Bell className="h-3.5 w-3.5 shrink-0 text-accent" aria-hidden />
+              Alertas diarias
+            </div>
+            <span
+              className="hidden h-4 w-px bg-border md:block"
+              aria-hidden
+            />
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Users className="h-3.5 w-3.5 shrink-0 text-accent" aria-hidden />
+              Equipos de hasta 5 personas
+            </div>
+            <span
+              className="hidden h-4 w-px bg-border md:block"
+              aria-hidden
+            />
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <FileText
+                className="h-3.5 w-3.5 shrink-0 text-accent"
+                aria-hidden
+              />
+              Análisis de pliegos con IA
+            </div>
           </div>
         </section>
 
-        {/* Características - ¿Por qué Bidtory? */}
+        {/* El sistema */}
         <section
-          id="caracteristicas"
-          className="w-full py-16 md:py-24 bg-muted/30"
+          id="el-sistema"
+          className="w-full bg-muted/40 py-20 md:py-28"
         >
           <div className="container mx-auto px-4 md:px-6">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold font-headline mb-4">
-                ¿Por qué Bidtory?
+            <div className="mb-16 text-center">
+              <p className="mb-3 text-sm font-medium text-accent">El sistema</p>
+              <h2 className="font-headline text-3xl font-semibold tracking-tight text-foreground md:text-4xl">
+                Dos módulos. Un solo flujo.
               </h2>
-              <p className="text-muted-foreground max-w-2xl mx-auto">
-                Así es como nuestra plataforma inteligente le ayuda a asegurar las
-                mejores oportunidades para nuevos contratos:
+              <p className="mx-auto mt-3 max-w-xl text-center text-muted-foreground">
+                Descubre una oportunidad y llévala al pipeline con un clic.
               </p>
             </div>
-            <div className="grid gap-6 md:grid-cols-3">
-              <Card className="border border-border bg-white shadow-md hover:shadow-lg transition-shadow">
-                <CardContent className="p-6">
-                  <Bot className="h-10 w-10 text-accent mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">
-                    Análisis inteligente: Solo oportunidades relevantes
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    Nuestra IA procesa miles de datos para identificar y filtrar
-                    las convocatorias y licitaciones, asegurando que usted
-                    reciba únicamente las más estratégicas para su empresa.
-                  </p>
-                </CardContent>
-              </Card>
-              <Card className="border border-border bg-white shadow-md hover:shadow-lg transition-shadow">
-                <CardContent className="p-6">
-                  <Mail className="h-10 w-10 text-accent mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">
-                    Notificaciones oportunas: Directo a su Email
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    Reciba alertas diarias directamente en su buzón con las
-                    oportunidades ya filtradas por nuestra IA. Acceda a la
-                    información clave potenciando su estrategia de descubrimiento
-                    de nuevos negocios.
-                  </p>
-                </CardContent>
-              </Card>
-              <Card className="border border-border bg-white shadow-md hover:shadow-lg transition-shadow">
-                <CardContent className="p-6">
-                  <ShieldCheck className="h-10 w-10 text-accent mb-4" />
-                  <h3 className="text-lg font-semibold mb-2">
-                    No vuelva a perder una oportunidad
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    Nuestro monitoreo constante y filtros precisos permiten que las
-                    licitaciones y convocatorias adecuadas para su perfil lleguen
-                    a usted, minimizando el riesgo de perderse oportunidades que
-                    puedan aumentar sus ventas.
-                  </p>
-                </CardContent>
-              </Card>
+
+            <div className="mx-auto mt-12 grid max-w-4xl items-center gap-4 md:grid-cols-[1fr_auto_1fr]">
+              <div className="rounded-xl border border-border border-l-4 border-l-accent bg-card p-7 shadow-sm">
+                <Image
+                  src="/logo-bidtory-descubre-neg.svg"
+                  alt="Bidtory Descubre"
+                  width={140}
+                  height={32}
+                  className="mb-5 h-7 w-auto opacity-80"
+                />
+                <h3 className="mb-1 text-lg font-semibold text-foreground">
+                  Bidtory Descubre
+                </h3>
+                <p className="mb-5 text-sm text-muted-foreground">
+                  Descubrimiento inteligente — tu radar de convocatorias con IA
+                </p>
+                <ul className="space-y-2.5">
+                  {[
+                    "Scoring Gemini por perfil de empresa",
+                    "Alertas diarias por email",
+                    "SECOP II + fondos de fomento",
+                    "Dashboard de oportunidades",
+                  ].map((text) => (
+                    <li
+                      key={text}
+                      className="flex items-center gap-2.5 text-sm text-foreground/80"
+                    >
+                      <div className="h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
+                      {text}
+                    </li>
+                  ))}
+                </ul>
+                <Badge variant="secondary" className="mt-6 text-xs">
+                  Disponible en todos los planes
+                </Badge>
+              </div>
+
+              <div className="flex flex-col items-center gap-1 py-4">
+                <ChevronRight
+                  className="hidden h-6 w-6 text-muted-foreground/50 md:block"
+                  aria-hidden
+                />
+                <span className="hidden text-[10px] font-medium tracking-wider text-muted-foreground/40 md:block">
+                  1 clic
+                </span>
+              </div>
+
+              <div className="rounded-xl border border-border border-l-4 border-l-foreground bg-card p-7 shadow-sm">
+                <Image
+                  src="/logo-bidtory-aplica-neg.svg"
+                  alt="Bidtory Aplica"
+                  width={140}
+                  height={32}
+                  className="mb-5 h-7 w-auto opacity-80"
+                />
+                <h3 className="mb-1 text-lg font-semibold text-foreground">
+                  Bidtory Aplica
+                </h3>
+                <p className="mb-5 text-sm text-muted-foreground">
+                  Gestión y formulación — tu pipeline de licitaciones
+                </p>
+                <ul className="space-y-2.5">
+                  {[
+                    "Pipeline Kanban de oportunidades",
+                    "Análisis de pliegos con IA",
+                    "Checklist de documentos",
+                    "Colaboración de equipo",
+                  ].map((text) => (
+                    <li
+                      key={text}
+                      className="flex items-center gap-2.5 text-sm text-foreground/80"
+                    >
+                      <div className="h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
+                      {text}
+                    </li>
+                  ))}
+                </ul>
+                <Badge variant="secondary" className="mt-6 text-xs">
+                  Desde plan Profesional
+                </Badge>
+              </div>
             </div>
           </div>
         </section>
 
         {/* Cómo funciona */}
-        <section id="como-funciona" className="w-full py-16 md:py-24">
-          <div className="container mx-auto px-4 md:px-6">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl font-bold font-headline mb-4">
-                ¿Cómo funciona?
-              </h2>
-              <p className="text-muted-foreground max-w-2xl mx-auto">
-                Empezar con Bidtory es rápido y sencillo. Siga estos pasos:
-              </p>
+        <section
+          id="como-funciona"
+          className="w-full bg-background py-20 md:py-28"
+        >
+          <div className="container mx-auto mb-16 max-w-4xl px-4 text-center md:px-6">
+            <p className="mb-3 text-sm font-medium text-accent">Cómo funciona</p>
+            <h2 className="font-headline text-3xl font-semibold tracking-tight text-foreground md:text-4xl">
+              Del hallazgo a la propuesta ganadora
+            </h2>
+            <p className="mx-auto mt-3 max-w-xl text-muted-foreground">
+              Un flujo continuo desde que detectamos la oportunidad hasta que tu
+              equipo presenta la propuesta.
+            </p>
+          </div>
+          <FeatureScroll />
+        </section>
+
+        {/* Métricas */}
+        <section className="border-y border-border/60 bg-muted/30 py-12">
+          <div className="mx-auto grid max-w-3xl grid-cols-1 divide-y divide-border/60 md:grid-cols-3 md:divide-x md:divide-y-0">
+            <div className="flex flex-col items-center py-6 text-center md:py-0 md:px-10">
+              <span className="text-4xl font-semibold tracking-tight text-foreground">
+                Diario
+              </span>
+              <span className="mt-1.5 text-sm text-muted-foreground">
+                Monitoreo de convocatorias activas
+              </span>
             </div>
-            <div className="max-w-2xl mx-auto space-y-6">
-              {[
-                {
-                  step: 1,
-                  title: "Elija su plan y cree su cuenta",
-                  desc: "Seleccione el plan de suscripción que mejor se adapte a sus necesidades y complete su registro inicial",
-                },
-                {
-                  step: 2,
-                  title: "Configure sus filtros precisos",
-                  desc: "Defina los criterios clave: tipos de oportunidades, regiones, palabras clave y más, para que nuestra IA sepa exactamente qué buscar.",
-                },
-                {
-                  step: 3,
-                  title: "Reciba alertas relevantes en su Email",
-                  desc: "Nuestra IA monitorea, filtra y le envía diariamente las oportunidades que coinciden con sus filtros, listas para analizar.",
-                },
-                {
-                  step: 4,
-                  title: "Actúe sobre las oportunidades",
-                  desc: "Utilice la información oportuna y relevante para preparar sus propuestas y aumentar sus posibilidades de ganar.",
-                },
-              ].map((item) => (
-                <div
-                  key={item.step}
-                  className="flex items-start gap-4 p-4 rounded-lg bg-white border border-border shadow-md"
-                >
-                  <Badge
-                    variant="secondary"
-                    className="shrink-0 h-8 w-8 rounded-full p-0 flex items-center justify-center bg-foreground text-primary-foreground"
-                  >
-                    {item.step}
-                  </Badge>
-                  <div>
-                    <h4 className="font-semibold mb-1">{item.title}</h4>
-                    <p className="text-sm text-muted-foreground">{item.desc}</p>
-                  </div>
-                </div>
-              ))}
+            <div className="flex flex-col items-center py-6 text-center md:py-0 md:px-10">
+              <span className="text-4xl font-semibold tracking-tight text-foreground">
+                &lt; 10 min
+              </span>
+              <span className="mt-1.5 text-sm text-muted-foreground">
+                Para ver tus primeras oportunidades
+              </span>
+            </div>
+            <div className="flex flex-col items-center py-6 text-center md:py-0 md:px-10">
+              <span className="text-4xl font-semibold tracking-tight text-foreground">
+                3 capas
+              </span>
+              <span className="mt-1.5 text-sm text-muted-foreground">
+                Contratación pública · Fomento · Cooperación
+              </span>
             </div>
           </div>
         </section>
 
-        {/* CTA Section — fondo accent-cta (verde más oscuro) para contraste AA con texto blanco */}
-        <section className="w-full py-16 md:py-24 bg-accent-cta text-accent-cta-foreground">
-          <div className="container mx-auto px-4 md:px-6 text-center">
-            <h2 className="text-3xl font-bold font-headline mb-4 text-accent-cta-foreground">
-              ¿Listo para Transformar su Búsqueda de Licitaciones?
-            </h2>
-            <p className="text-lg mb-8 max-w-2xl mx-auto text-accent-cta-foreground leading-relaxed">
-              Únase a Bidtory hoy mismo y empiece a recibir oportunidades
-              inteligentes directamente en su correo.
-            </p>
-            <Button
-              size="lg"
-              variant="secondary"
-              className="bg-white text-accent hover:bg-white/90 focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-accent-cta"
-              asChild
-            >
-              <Link href="/suscripciones" className="gap-2">
-                Suscribirse Ahora
-                <ArrowRight className="h-4 w-4" />
-              </Link>
-            </Button>
+        {/* CTA final */}
+        <section className="w-full bg-background py-20 md:py-28">
+          <div className="mx-auto max-w-2xl px-4 text-center md:px-6">
+            <div className="rounded-2xl border border-border bg-card p-10 shadow-sm md:p-14">
+              <h2 className="font-headline text-3xl font-semibold tracking-tight text-foreground md:text-4xl">
+                ¿Listo para encontrar tu próxima licitación?
+              </h2>
+              <p className="mx-auto mt-4 max-w-md text-base leading-relaxed text-muted-foreground">
+                Empieza desde $149.000 COP/mes. Sin contratos. Cancela cuando
+                quieras.
+              </p>
+              <div className="mt-8 flex flex-wrap justify-center gap-3">
+                <Button
+                  size="lg"
+                  className="bg-accent text-accent-foreground hover:bg-accent/90"
+                  asChild
+                >
+                  <Link href="/suscripciones">Ver planes y empezar</Link>
+                </Button>
+                <Button size="lg" variant="outline" asChild>
+                  <a
+                    href="https://wa.me/573208691817?text=Hola%2C%20quiero%20conocer%20m%C3%A1s%20sobre%20Bidtory"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    Hablar con el equipo
+                  </a>
+                </Button>
+              </div>
+              <p className="mt-6 text-xs text-muted-foreground/60">
+                Puro Contenido SAS · NIT 900.561.858-3 · bidtory.com
+              </p>
+            </div>
           </div>
         </section>
       </main>
 
-      {/* Footer: móvil apilado (logo → copyright → legales); md+ en fila */}
       <footer className="w-full border-t border-border py-8 bg-[#E5E7EB]">
         <div className="container mx-auto px-4 md:px-6">
           <div className="flex flex-col items-center gap-6 md:flex-row md:items-center md:justify-between md:gap-8">
@@ -383,19 +487,19 @@ export function HomeClient() {
             >
               <Link
                 href="/privacidad"
-                className="text-muted-foreground hover:text-foreground transition-colors"
+                className="text-muted-foreground transition-colors hover:text-foreground"
               >
                 Política de Privacidad
               </Link>
               <Link
                 href="/terminos"
-                className="text-muted-foreground hover:text-foreground transition-colors"
+                className="text-muted-foreground transition-colors hover:text-foreground"
               >
                 Términos de Uso
               </Link>
               <Link
                 href="/cookies"
-                className="text-muted-foreground hover:text-foreground transition-colors"
+                className="text-muted-foreground transition-colors hover:text-foreground"
               >
                 Política de Cookies
               </Link>

@@ -13,38 +13,42 @@ const features = [
   {
     step: 1,
     logo: '/logo-bidtory-descubre-neg.svg',
-    title: 'Paso 1: Descubrimiento Inteligente',
-    description: 'Con Bidtory Descubre, utilizamos IA para monitorear el mercado y encontrar las oportunidades perfectas. La inteligencia de mercado, a su alcance.',
+    title: 'Paso 1: Tu radar de convocatorias',
+    description:
+      'Bidtory Descubre monitorea SECOP II, fondos de fomento y cooperación internacional cada día. Gemini analiza cada convocatoria y la puntúa según el perfil de tu empresa. Solo ves lo que realmente te aplica.',
     cta: {
-      text: 'Conocer Bidtory Descubre',
-      href: 'https://bidtory.co',
-      external: true,
+      text: 'Conocer Descubre',
+      href: '/suscripciones',
+      external: false,
     },
     image: '/1-Bidtory Descubre.webp',
   },
   {
     step: 2,
     logo: '/logo-bidtory-aplica-neg.svg',
-    title: 'Paso 2: Gestión Centralizada',
-    description: 'Una vez identificada la oportunidad, la gestionamos en Bidtory Aplica, nuestro portal exclusivo. Tenga una visión completa del estado de todos sus proyectos en un solo lugar.',
+    title: 'Paso 2: Lleva al pipeline con un clic',
+    description:
+      'Cuando Descubre identifica una oportunidad relevante, la llevas a Bidtory Aplica en un clic. Tu pipeline Kanban muestra el estado de todas tus licitaciones activas: prospecto, en desarrollo, enviada, ganada.',
     cta: null,
     image: '/5-Bidtory Aplica-Dashboard.webp',
   },
   {
     step: 3,
     logo: '/logo-bidtory-aplica-neg.svg',
-    title: 'Paso 3: Ejecución y Cumplimiento',
-    description: 'Hacemos seguimiento a cada documento requerido con nuestro checklist inteligente. Controle el progreso y asegure el cumplimiento de cada requisito, a tiempo.',
+    title: 'Paso 3: Análisis inteligente de pliegos',
+    description:
+      'Sube el pliego y Bidtory extrae los requisitos técnicos, financieros y jurídicos automáticamente. Compara los requisitos contra el perfil de tu empresa y muestra exactamente qué cumples y qué te falta.',
     cta: null,
     image: '/3-Bidtory Aplica-Checklist.webp',
   },
   {
     step: 4,
     logo: '/logo-bidtory-aplica-neg.svg',
-    title: 'Paso 4: Colaboración y Cierre',
-    description: 'Centralizamos toda la comunicación y los documentos de la propuesta en un espacio colaborativo y seguro. Desde la primera versión hasta la entrega final.',
+    title: 'Paso 4: Colaboración en equipo',
+    description:
+      'Centraliza toda la comunicación, versiones de propuesta y documentos en un solo espacio. Tu equipo sabe en qué punto está cada licitación sin necesidad de hilos de correo.',
     cta: {
-      text: 'Acceso Clientes',
+      text: 'Acceso clientes',
       href: '/login',
       external: false,
     },
@@ -53,10 +57,11 @@ const features = [
   {
     step: 5,
     logo: '/logo-bidtory-aplica-neg.svg',
-    title: 'Paso 5: Visión Estratégica del Pipeline',
-    description: 'Visualice y gestione el flujo completo de todas sus oportunidades en un tablero Kanban intuitivo. Mida su rendimiento, identifique cuellos de botella y tome decisiones basadas en datos.',
+    title: 'Paso 5: Visión estratégica',
+    description:
+      'Gestiona el flujo completo de oportunidades en un tablero visual. Identifica dónde se estancan las propuestas y toma decisiones basadas en datos, no en intuición.',
     cta: {
-      text: 'Acceso Clientes',
+      text: 'Acceso clientes',
       href: '/login',
       external: false,
     },
