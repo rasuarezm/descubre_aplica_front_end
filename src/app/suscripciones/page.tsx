@@ -1,9 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { LegalLayout } from "@/components/layout/LegalLayout";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Check, X, ChevronDown } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 export const metadata: Metadata = {
   title: "Planes de Suscripción - Bidtory Colombia",
@@ -11,279 +13,397 @@ export const metadata: Metadata = {
     "Elija el plan de Bidtory que mejor se adapta a sus necesidades para encontrar licitaciones y convocatorias en Colombia con IA.",
 };
 
-const PLANS = [
+type Plan = {
+  id: string;
+  name: string;
+  price: string;
+  period: string;
+  tagline: string;
+  popular: boolean;
+  badge?: string;
+  features: string[];
+  href: string;
+};
+
+const PLANS: Plan[] = [
   {
     id: "esencial",
     name: "Esencial",
-    price: "Consultar",
-    description: "Ideal para iniciar",
-    features: [
-      "Monitoreo de 1 Fuente SECOP RSS",
-      "Alertas Diarias por Email",
-      "Información Esencial (Título y Enlace)",
-      "1 Destinatario de Correo",
-    ],
-    cta: "Elegir Plan",
-    href: "/login",
+    price: "$149.000",
+    period: "COP / mes",
+    tagline: "Para comenzar a monitorear",
     popular: false,
+    features: [
+      "Bidtory Descubre incluido",
+      "Contratación pública (SECOP II)",
+      "Scoring IA básico",
+      "Alertas diarias por email",
+      "CTA de apoyo Puro Contenido",
+      "1 usuario · 5 palabras clave",
+      "Soporte por email",
+    ],
+    href: "/registro",
   },
   {
     id: "profesional",
     name: "Profesional",
-    price: "Consultar",
-    description: "Más popular",
-    features: [
-      "Todo lo del Plan Esencial, MÁS:",
-      "Monitoreo hasta 2 Fuentes SECOP",
-      "Análisis Detallado por IA",
-      "Dashboard de Oportunidades",
-      "Hasta 3 Destinatarios de Correo",
-      "Mayor Número de Palabras Clave",
-    ],
-    cta: "Elegir Plan",
-    href: "/login",
+    price: "$349.000",
+    period: "COP / mes",
+    tagline: "El más popular",
     popular: true,
+    badge: "Más popular",
+    features: [
+      "Todo lo de Esencial, más:",
+      "Bidtory Aplica incluido",
+      "Fondos de fomento nacionales",
+      "Scoring IA completo con Gemini",
+      "Botón Llevar al pipeline (próximamente)",
+      "Hasta 5 usuarios · 20 palabras clave",
+      "Soporte prioritario",
+    ],
+    href: "/registro",
   },
   {
     id: "experto",
     name: "Experto",
-    price: "Consultar",
-    description: "Soporte Prioritario",
-    features: [
-      "Todo lo del Plan Profesional, MÁS:",
-      "Monitoreo hasta 3 Fuentes SECOP",
-      "Alertas Inmediatas (Palabras Clave Doradas)",
-      "Hasta 5 Destinatarios de Correo",
-      "Máximo Número de Palabras Clave",
-    ],
-    cta: "Elegir Plan",
-    href: "/login",
+    price: "$649.000",
+    period: "COP / mes",
+    tagline: "Para equipos de licitaciones",
     popular: false,
+    features: [
+      "Todo lo de Profesional, más:",
+      "Cooperación internacional y fondos privados",
+      "Alertas inmediatas (sin esperar el batch diario)",
+      "Usuarios ilimitados · Palabras clave sin límite",
+      "Soporte por WhatsApp",
+    ],
+    href: "/registro",
   },
 ];
 
-const COMPARISON_ROWS = [
-  { feature: "Fuentes SECOP RSS", esencial: "1", profesional: "Hasta 2", experto: "Hasta 3" },
+type ComparisonDataRow = {
+  feature: string;
+  esencial: boolean | string;
+  profesional: boolean | string;
+  experto: boolean | string;
+};
+
+type ComparisonCategoryRow = { category: string };
+
+type ComparisonRow = ComparisonCategoryRow | ComparisonDataRow;
+
+function isCategoryRow(row: ComparisonRow): row is ComparisonCategoryRow {
+  return "category" in row && typeof row.category === "string";
+}
+
+const COMPARISON_ROWS: ComparisonRow[] = [
+  { category: "Módulos" },
   {
-    feature: "Alertas por Email",
-    esencial: "Diarias",
-    profesional: "Diarias",
-    experto: "Diarias + Inmediatas (Doradas)",
+    feature: "Bidtory Descubre",
+    esencial: true,
+    profesional: true,
+    experto: true,
   },
   {
-    feature: "Detalle de Análisis IA",
-    esencial: "Básico (Título, Enlace)",
-    profesional: "Detallado",
-    experto: "Detallado",
+    feature: "Bidtory Aplica",
+    esencial: false,
+    profesional: true,
+    experto: true,
   },
-  { feature: "Dashboard Web", esencial: false, profesional: true, experto: true },
-  { feature: "Destinatarios Email", esencial: "1", profesional: "Hasta 3", experto: "Hasta 5" },
+  { category: "Fuentes de convocatorias" },
   {
-    feature: "Palabras Clave (+/-)",
-    esencial: "Básico",
-    profesional: "Estándar",
-    experto: "Avanzado",
+    feature: "Contratación pública (SECOP II)",
+    esencial: true,
+    profesional: true,
+    experto: true,
   },
   {
-    feature: "Palabras Clave Doradas",
+    feature: "Fondos de fomento nacionales",
+    esencial: false,
+    profesional: true,
+    experto: true,
+  },
+  {
+    feature: "Cooperación internacional",
     esencial: false,
     profesional: false,
-    experto: "Hasta 3",
+    experto: true,
+  },
+  {
+    feature: "Fondos privados y fundaciones",
+    esencial: false,
+    profesional: false,
+    experto: true,
+  },
+  { category: "Funcionalidades" },
+  {
+    feature: "Scoring IA",
+    esencial: "Básico",
+    profesional: "Completo",
+    experto: "Completo",
+  },
+  {
+    feature: "Alertas por email",
+    esencial: "Diarias",
+    profesional: "Diarias",
+    experto: "Inmediatas",
+  },
+  {
+    feature: "CTA apoyo Puro Contenido",
+    esencial: true,
+    profesional: true,
+    experto: true,
+  },
+  {
+    feature: "Llevar al pipeline",
+    esencial: false,
+    profesional: "Próximamente",
+    experto: "Próximamente",
+  },
+  { category: "Límites de uso" },
+  {
+    feature: "Usuarios",
+    esencial: "1",
+    profesional: "Hasta 5",
+    experto: "Ilimitados",
+  },
+  {
+    feature: "Palabras clave",
+    esencial: "5",
+    profesional: "20",
+    experto: "Sin límite",
+  },
+  {
+    feature: "Soporte",
+    esencial: "Email",
+    profesional: "Prioritario",
+    experto: "WhatsApp",
   },
 ];
 
 const FAQ_ITEMS = [
   {
-    q: "¿Puedo cambiar de plan después?",
-    a: "¡Claro que sí! Puede cambiar su plan en cualquier momento desde su panel de control. Los cambios se aplicarán al inicio de su próximo ciclo de facturación.",
+    q: "¿Puedo cambiar de plan?",
+    a: "Sí. Puedes subir o bajar de plan en cualquier momento. El cambio se aplica al inicio del siguiente ciclo de facturación.",
   },
   {
-    q: "¿Hay un periodo de prueba?",
-    a: "Consulte los detalles de cada plan. Ofrecemos garantía de devolución de dinero de 14 días para suscripciones iniciales.",
+    q: "¿Cómo funciona el cobro?",
+    a: "El cobro es mensual y automático a través de Wompi (Bancolombia). Recibirás una notificación antes de cada renovación.",
   },
   {
-    q: "¿Qué métodos de pago aceptan?",
-    a: "Aceptamos transferencia bancaria a través del Banco Caja Social. Consulte con nuestro equipo para más opciones.",
+    q: "¿Puedo cancelar en cualquier momento?",
+    a: "Sí. Cancelas antes del próximo ciclo y no se genera ningún cargo adicional. Tu acceso continúa hasta el final del período pagado.",
   },
   {
-    q: "¿Hay contratos a largo plazo?",
-    a: "Nuestros planes son flexibles. Puede elegir una suscripción mensual o anual. Puede cancelar su suscripción en cualquier momento antes del próximo ciclo de renovación.",
+    q: "¿Qué es el botón 'Llevar al pipeline'?",
+    a: "Es una función de integración entre Bidtory Descubre y Bidtory Aplica: con un clic, una licitación pasa directamente a tu pipeline de trabajo en Aplica. Disponible próximamente para planes Profesional y Experto.",
+  },
+  {
+    q: "¿Qué incluye el CTA de apoyo Puro Contenido?",
+    a: "En cada convocatoria con score relevante aparece un botón para hablar directamente con el equipo consultor de Puro Contenido SAS. No tiene costo adicional: es un canal para derivar a consultoría cuando lo necesites.",
   },
 ];
 
-function CheckIcon() {
-  return <Check className="h-5 w-5 text-accent shrink-0" />;
+function PlanFeatureCheck() {
+  return (
+    <span className="inline-flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full bg-accent/15 text-accent">
+      <Check className="h-3 w-3" strokeWidth={2.5} />
+    </span>
+  );
 }
 
-function XIcon() {
-  return <X className="h-5 w-5 text-muted-foreground shrink-0" />;
+function PlanFeatureCross() {
+  return (
+    <span className="inline-flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full bg-muted text-muted-foreground">
+      <X className="h-3 w-3" />
+    </span>
+  );
+}
+
+function featureLineShowsProntoBadge(text: string) {
+  return /próximamente/i.test(text);
+}
+
+function ComparisonCell({ value }: { value: boolean | string }) {
+  if (value === true) {
+    return (
+      <div className="flex justify-center">
+        <PlanFeatureCheck />
+      </div>
+    );
+  }
+  if (value === false) {
+    return (
+      <div className="flex justify-center">
+        <PlanFeatureCross />
+      </div>
+    );
+  }
+  if (value === "Próximamente") {
+    return (
+      <div className="flex flex-wrap items-center justify-center gap-1">
+        <span className="text-sm">Próximamente</span>
+        <span className="rounded-full bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">
+          Pronto
+        </span>
+      </div>
+    );
+  }
+  return <span className="block text-center text-sm">{value}</span>;
 }
 
 export default function SuscripcionesPage() {
   return (
     <LegalLayout>
       <div className="container mx-auto max-w-6xl px-4 py-8 md:py-12">
-        {/* Header */}
-        <div className="text-center max-w-2xl mx-auto mb-12">
-          <h1 className="text-3xl md:text-4xl font-headline font-semibold mb-4">
+        {/* 1. Header */}
+        <div className="mx-auto mb-12 max-w-2xl text-center">
+          <h1 className="mb-4 font-headline text-3xl font-semibold tracking-tight text-foreground md:text-4xl">
             Planes Bidtory
           </h1>
-          <p className="text-muted-foreground text-lg">
-            Elija el plan que impulse su éxito en la contratación pública. Todos
-            los planes incluyen nuestro potente motor de IA para filtrar
-            oportunidades.
+          <p className="text-lg text-muted-foreground">
+            Encuentra las convocatorias que tu empresa puede ganar. Elige el plan
+            que mejor se adapta a tu etapa.
           </p>
         </div>
 
-        {/* Plan Cards */}
-        <div className="grid md:grid-cols-3 gap-6 lg:gap-8 mb-16">
+        {/* 2. Plan cards */}
+        <div className="mb-16 grid gap-6 md:grid-cols-3 lg:gap-8">
           {PLANS.map((plan) => (
-            <div
-              key={plan.id}
-              className={`relative ${plan.popular ? "md:-mt-2 md:mb-2" : ""}`}
-            >
-              {plan.popular && (
-                <span className="absolute top-3 right-4 px-3 py-1 rounded-full text-xs font-semibold bg-foreground text-background shadow-sm z-20">
-                  Más Popular
-                </span>
-              )}
+            <div key={plan.id} className="relative h-full">
+              {plan.popular && plan.badge ? (
+                <div className="absolute -top-3 left-1/2 z-10 -translate-x-1/2">
+                  <Badge className="bg-accent px-3 py-1 text-xs font-medium text-accent-foreground shadow-sm">
+                    {plan.badge}
+                  </Badge>
+                </div>
+              ) : null}
               <Card
-                className={`h-full flex flex-col bg-white shadow-md ${
+                className={cn(
+                  "relative flex h-full flex-col rounded-xl border bg-card shadow-sm transition-shadow hover:shadow-md",
                   plan.popular
-                    ? "border-2 border-accent shadow-lg"
-                    : "border border-border"
-                }`}
+                    ? "border-2 border-accent bg-accent/5 shadow-md"
+                    : "border-border",
+                )}
               >
-                <CardHeader
-                  className={
-                    plan.popular
-                      ? "bg-[#E6FFFA] border-b border-border"
-                      : ""
-                  }
-                >
-                  <CardTitle className="text-xl">{plan.name}</CardTitle>
+                <CardHeader className="pb-2">
+                  <CardTitle className="font-headline text-lg font-semibold text-foreground">
+                    {plan.name}
+                  </CardTitle>
+                  <p className="mt-0.5 text-sm text-muted-foreground">{plan.tagline}</p>
                 </CardHeader>
-                <CardContent className="flex-1 flex flex-col pt-6">
+                <CardContent className="flex flex-1 flex-col pt-0">
                   <div className="mb-6">
-                    <span className="text-2xl font-headline font-semibold">
+                    <span className="text-[34px] font-semibold leading-none tracking-tight text-foreground">
                       {plan.price}
                     </span>
-                    <span className="text-muted-foreground text-sm ml-1">
-                      /mes
+                    <span className="ml-1 text-sm font-normal text-muted-foreground">
+                      {plan.period}
                     </span>
                   </div>
-                  <ul className="space-y-3 flex-1 mb-6">
-                    {plan.features.map((f, i) => (
-                      <li key={i} className="flex items-start gap-2 text-sm">
-                        <CheckIcon />
-                        <span>{f}</span>
+                  <ul className="flex-1 space-y-3">
+                    {plan.features.map((line, i) => (
+                      <li key={i} className="flex items-start gap-2 text-sm text-foreground">
+                        <PlanFeatureCheck />
+                        <span>
+                          {line}
+                          {featureLineShowsProntoBadge(line) ? (
+                            <span className="ml-1.5 rounded-full bg-muted px-1.5 py-0.5 align-middle text-[10px] font-medium text-muted-foreground">
+                              Pronto
+                            </span>
+                          ) : null}
+                        </span>
                       </li>
                     ))}
-                    <li className="text-muted-foreground text-sm italic">
-                      {plan.description}
-                    </li>
                   </ul>
-                  <Link href={plan.href} className="block mt-auto">
-                    <Button
-                      className={`w-full ${plan.popular ? "bg-accent hover:bg-accent/90 text-accent-foreground" : ""}`}
-                      variant={plan.popular ? "default" : "outline"}
-                      size="lg"
-                    >
-                      {plan.cta}
-                    </Button>
-                  </Link>
+                  <Button
+                    asChild
+                    variant="outline"
+                    className={cn(
+                      "mt-6 w-full",
+                      plan.popular &&
+                        "border-transparent bg-accent text-accent-foreground shadow-sm hover:bg-accent/90 hover:text-accent-foreground",
+                    )}
+                  >
+                    <Link href={plan.href}>Elegir plan</Link>
+                  </Button>
                 </CardContent>
               </Card>
             </div>
           ))}
         </div>
 
-        {/* Comparison Table */}
+        {/* 3. Comparison table */}
         <section className="mb-16">
-          <h2 className="text-2xl font-headline font-semibold text-center mb-8">
-            Compare los planes
-          </h2>
-          <div className="overflow-x-auto rounded-lg border border-border bg-white shadow-md">
-            <table className="w-full text-sm">
+          <div className="mb-8 text-center">
+            <h2 className="font-headline text-2xl font-semibold text-foreground">
+              Comparar planes
+            </h2>
+            <p className="mt-2 text-muted-foreground">
+              Todos los detalles lado a lado
+            </p>
+          </div>
+          <div className="overflow-x-auto rounded-xl border border-border bg-card shadow-sm">
+            <table className="w-full min-w-[640px] text-sm">
               <thead>
-                <tr className="border-b border-border bg-muted/30">
-                  <th className="text-left p-4 font-medium w-[34%]">
+                <tr className="border-b border-border">
+                  <th className="w-[34%] p-4 text-left font-semibold text-foreground">
                     Característica
                   </th>
-                  <th className="text-center p-4 font-medium w-[22%]">
+                  <th className="w-[22%] p-4 text-center font-semibold text-foreground">
                     Esencial
                   </th>
-                  <th className="text-center p-4 font-medium w-[22%]">
+                  <th className="w-[22%] bg-accent/10 p-4 text-center font-semibold text-accent">
                     Profesional
                   </th>
-                  <th className="text-center p-4 font-medium w-[22%]">
+                  <th className="w-[22%] p-4 text-center font-semibold text-foreground">
                     Experto
                   </th>
                 </tr>
               </thead>
               <tbody>
-                {COMPARISON_ROWS.map((row, i) => (
-                  <tr
-                    key={i}
-                    className="border-b border-border last:border-0 hover:bg-muted/10"
-                  >
-                    <td className="p-4 text-left align-middle">{row.feature}</td>
-                    <td className="p-4 text-center align-middle">
-                      {typeof row.esencial === "boolean" ? (
-                        row.esencial ? (
-                          <div className="flex justify-center">
-                            <CheckIcon />
-                          </div>
-                        ) : (
-                          <div className="flex justify-center">
-                            <XIcon />
-                          </div>
-                        )
-                      ) : (
-                        row.esencial
-                      )}
-                    </td>
-                    <td className="p-4 text-center align-middle">
-                      {typeof row.profesional === "boolean" ? (
-                        row.profesional ? (
-                          <div className="flex justify-center">
-                            <CheckIcon />
-                          </div>
-                        ) : (
-                          <div className="flex justify-center">
-                            <XIcon />
-                          </div>
-                        )
-                      ) : (
-                        row.profesional
-                      )}
-                    </td>
-                    <td className="p-4 text-center align-middle">
-                      {typeof row.experto === "boolean" ? (
-                        row.experto ? (
-                          <div className="flex justify-center">
-                            <CheckIcon />
-                          </div>
-                        ) : (
-                          <div className="flex justify-center">
-                            <XIcon />
-                          </div>
-                        )
-                      ) : (
-                        row.experto
-                      )}
-                    </td>
-                  </tr>
-                ))}
+                {COMPARISON_ROWS.map((row, i) => {
+                  if (isCategoryRow(row)) {
+                    return (
+                      <tr key={`cat-${row.category}-${i}`} className="border-b border-border">
+                        <td
+                          colSpan={4}
+                          className="bg-muted/40 px-4 py-2.5 text-xs font-semibold uppercase tracking-wider text-muted-foreground"
+                        >
+                          {row.category}
+                        </td>
+                      </tr>
+                    );
+                  }
+                  return (
+                    <tr
+                      key={`${row.feature}-${i}`}
+                      className="border-b border-border last:border-0 hover:bg-muted/10"
+                    >
+                      <td className="p-4 text-left align-middle text-foreground">
+                        {row.feature}
+                      </td>
+                      <td className="p-4 align-middle">
+                        <ComparisonCell value={row.esencial} />
+                      </td>
+                      <td className="p-4 align-middle">
+                        <ComparisonCell value={row.profesional} />
+                      </td>
+                      <td className="p-4 align-middle">
+                        <ComparisonCell value={row.experto} />
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
         </section>
 
-        {/* FAQ */}
-        <section className="max-w-2xl mx-auto">
-          <h2 className="text-2xl font-headline font-semibold text-center mb-8">
-            Preguntas Frecuentes
+        {/* 4. FAQ */}
+        <section className="mb-16 max-w-2xl mx-auto">
+          <h2 className="mb-8 text-center font-headline text-2xl font-semibold text-foreground">
+            Preguntas frecuentes
           </h2>
           <div className="space-y-2">
             {FAQ_ITEMS.map((item, i) => (
@@ -291,16 +411,31 @@ export default function SuscripcionesPage() {
                 key={i}
                 className="group rounded-lg border border-border bg-card"
               >
-                <summary className="flex cursor-pointer list-none items-center justify-between p-4 font-medium hover:bg-muted/10 rounded-lg transition-colors [&::-webkit-details-marker]:hidden">
+                <summary className="flex cursor-pointer list-none items-center justify-between rounded-lg p-4 font-medium text-foreground transition-colors hover:bg-muted/10 [&::-webkit-details-marker]:hidden">
                   {item.q}
                   <ChevronDown className="ml-2 h-4 w-4 shrink-0 transition-transform group-open:rotate-180" />
                 </summary>
-                <div className="px-4 pb-4 pt-0 text-muted-foreground text-sm">
+                <div className="px-4 pb-4 pt-0 text-sm text-muted-foreground">
                   {item.a}
                 </div>
               </details>
             ))}
           </div>
+        </section>
+
+        {/* 5. CTA final */}
+        <section className="mx-auto max-w-2xl rounded-xl bg-muted/30 p-8 text-center">
+          <h2 className="font-headline text-xl font-semibold text-foreground md:text-2xl">
+            ¿Tienes dudas sobre qué plan elegir?
+          </h2>
+          <p className="mt-3 text-muted-foreground">
+            Escríbenos y te ayudamos a encontrar el plan correcto para tu empresa.
+          </p>
+          <Button asChild variant="outline" className="mt-6">
+            <a href="https://wa.me/573208691817?text=Hola%2C%20quiero%20conocer%20más%20sobre%20los%20planes%20de%20Bidtory">
+              Hablar con el equipo
+            </a>
+          </Button>
         </section>
       </div>
     </LegalLayout>
