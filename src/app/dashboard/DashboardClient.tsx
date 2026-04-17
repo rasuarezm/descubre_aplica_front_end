@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/auth-context";
 import type { Customer } from "@/types";
-import { Users, PlusCircle, ArrowRight, Loader2, AlertCircle, Search, Briefcase } from "lucide-react";
+import { Users, PlusCircle, ArrowRight, Loader2, AlertCircle, Search, Briefcase, CheckCircle2, Settings } from "lucide-react";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -246,6 +246,12 @@ export default function DashboardClient() {
       );
     }
 
+    const estadoBidtory = descubreData?.estado_bidtory_info;
+    const isDescubreMonitoreoActivo = estadoBidtory?.code === 'ACTIVO_BUSCANDO';
+    const showEstadoBidtoryBanner =
+      !!estadoBidtory &&
+      (!!estadoBidtory.message || (estadoBidtory.sugerencias?.length ?? 0) > 0);
+
     return (
       <div className="space-y-8">
         <div>
@@ -262,23 +268,65 @@ export default function DashboardClient() {
           </p>
         </div>
 
-        {descubreData?.estado_bidtory_info &&
-          (descubreData.estado_bidtory_info.message ||
-            (descubreData.estado_bidtory_info.sugerencias?.length ?? 0) > 0) && (
-            <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
-              <AlertCircle className="h-4 w-4 mt-0.5 shrink-0 text-amber-500" />
-              <div>
-                {descubreData.estado_bidtory_info.message && (
-                  <p className="font-medium">{descubreData.estado_bidtory_info.message}</p>
+        {showEstadoBidtoryBanner && (
+          <div
+            className={cn(
+              'flex flex-col gap-3 rounded-lg border px-4 py-3 text-sm sm:flex-row sm:items-start sm:justify-between',
+              isDescubreMonitoreoActivo
+                ? 'border-accent/35 bg-accent/10 text-foreground'
+                : 'border-destructive/35 bg-destructive/10 text-foreground'
+            )}
+          >
+            <div className="flex min-w-0 items-start gap-3">
+              {isDescubreMonitoreoActivo ? (
+                <CheckCircle2 className="h-4 w-4 mt-0.5 shrink-0 text-accent" aria-hidden />
+              ) : (
+                <AlertCircle className="h-4 w-4 mt-0.5 shrink-0 text-destructive" aria-hidden />
+              )}
+              <div className="min-w-0">
+                {estadoBidtory.message && (
+                  <p
+                    className={cn(
+                      'font-medium',
+                      !isDescubreMonitoreoActivo && 'text-destructive'
+                    )}
+                  >
+                    {estadoBidtory.message}
+                  </p>
                 )}
-                {descubreData.estado_bidtory_info.sugerencias?.map((s, i) => (
-                  <p key={i} className="mt-0.5 text-amber-700">
+                {estadoBidtory.sugerencias?.map((s, i) => (
+                  <p
+                    key={i}
+                    className={cn(
+                      'mt-0.5',
+                      isDescubreMonitoreoActivo
+                        ? 'text-muted-foreground'
+                        : 'text-destructive/90'
+                    )}
+                  >
                     {s}
                   </p>
                 ))}
               </div>
             </div>
-          )}
+            <Button
+              asChild
+              size="sm"
+              variant="outline"
+              className={cn(
+                'shrink-0 sm:self-center',
+                isDescubreMonitoreoActivo
+                  ? 'border-accent/50 text-accent hover:bg-accent/15'
+                  : 'border-destructive/50 text-destructive hover:bg-destructive/10'
+              )}
+            >
+              <Link href="/dashboard/descubre/perfil">
+                <Settings className="mr-2 h-4 w-4" />
+                Preferencias Descubre
+              </Link>
+            </Button>
+          </div>
+        )}
 
         <div
           className={cn(
