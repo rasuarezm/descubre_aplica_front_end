@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xhtml="http://www.w3.org/1999/xhtml" width="1200" height="675" viewBox="0 0 1200 675">
+  <rect width="1200" height="675" fill="#f4f7f9"/>
+  <rect x="0" y="0" width="1200" height="52" fill="#fff" stroke="#e5e7eb"/>
+  <text x="24" y="34" font-family="system-ui, sans-serif" font-size="15" font-weight="600" fill="#3a6d8c">Espacio de licitaci&#243;n | Equipo</text>
+  <rect x="24" y="72" width="1152" height="72" rx="8" fill="#fff" stroke="#e5e7eb"/>
+  <foreignObject x="36" y="84" width="1120" height="52">
+    <xhtml:div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;line-height:1.35;color:#3a6d8c;font-weight:600;">
+      Integraci&#243;n de sistemas, APIs y capa de interoperabilidad para ventanilla &#250;nica de tr&#225;mites
+    </xhtml:div>
+  </foreignObject>
+  <rect x="24" y="164" width="1152" height="460" rx="8" fill="#fff" stroke="#e5e7eb"/>
+  <text x="40" y="198" font-family="system-ui, sans-serif" font-size="12" font-weight="600" fill="#64748b">Actividad reciente</text>
+  <line x1="40" y1="210" x2="1160" y2="210" stroke="#e5e7eb"/>
+  <g font-family="system-ui, sans-serif" font-size="12">
+    <circle cx="52" cy="242" r="16" fill="#cbd5e1"/>
+    <text x="80" y="238" fill="#334155" font-weight="600">Mar&#237;a G.</text>
+    <text x="80" y="254" fill="#64748b">Subi&#243; borrador v3 de propuesta t&#233;cnica | hace 2 h</text>
+    <circle cx="52" cy="292" r="16" fill="#cbd5e1"/>
+    <text x="80" y="288" fill="#334155" font-weight="600">Carlos R.</text>
+    <text x="80" y="304" fill="#64748b">Comentario en requisitos de interoperabilidad | ayer</text>
+    <circle cx="52" cy="342" r="16" fill="#cbd5e1"/>
+    <text x="80" y="338" fill="#334155" font-weight="600">Usted</text>
+    <text x="80" y="354" fill="#64748b">Invit&#243; a revisi&#243;n jur&#237;dica | Instituto de Fomento Europeo</text>
+  </g>
+</svg>

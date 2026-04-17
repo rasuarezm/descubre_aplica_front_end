@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xhtml="http://www.w3.org/1999/xhtml" width="1200" height="675" viewBox="0 0 1200 675">
+  <rect width="1200" height="675" fill="#f4f7f9"/>
+  <rect x="0" y="0" width="1200" height="52" fill="#fff" stroke="#e5e7eb"/>
+  <text x="24" y="34" font-family="system-ui, sans-serif" font-size="15" font-weight="600" fill="#3a6d8c">Visi&#243;n estrat&#233;gica | Pipeline</text>
+  <text x="1050" y="32" font-family="system-ui, sans-serif" font-size="12" fill="#64748b">Fast Tech SAS</text>
+  <g font-family="system-ui, sans-serif">
+    <rect x="24" y="72" width="260" height="88" rx="8" fill="#fff" stroke="#e5e7eb"/>
+    <text x="40" y="102" font-size="11" fill="#64748b">En prospecto</text>
+    <text x="40" y="132" font-size="28" font-weight="700" fill="#3a6d8c">4</text>
+    <rect x="304" y="72" width="260" height="88" rx="8" fill="#fff" stroke="#e5e7eb"/>
+    <text x="320" y="102" font-size="11" fill="#64748b">En desarrollo</text>
+    <text x="320" y="132" font-size="28" font-weight="700" fill="#00a99d">7</text>
+    <rect x="584" y="72" width="260" height="88" rx="8" fill="#fff" stroke="#e5e7eb"/>
+    <text x="600" y="102" font-size="11" fill="#64748b">Enviadas (30 d&#237;as)</text>
+    <text x="600" y="132" font-size="28" font-weight="700" fill="#3a6d8c">3</text>
+    <rect x="864" y="72" width="312" height="88" rx="8" fill="#fff" stroke="#e5e7eb"/>
+    <text x="880" y="102" font-size="11" fill="#64748b">Tasa de cierre</text>
+    <text x="880" y="132" font-size="28" font-weight="700" fill="#3a6d8c">28%</text>
+  </g>
+  <rect x="24" y="188" width="1152" height="460" rx="8" fill="#fff" stroke="#e5e7eb"/>
+  <text x="40" y="222" font-family="system-ui, sans-serif" font-size="12" font-weight="600" fill="#64748b">Destacado | mayor valor en curso</text>
+  <rect x="40" y="240" width="1120" height="96" rx="8" fill="#f8fafc" stroke="#00a99d" stroke-width="2"/>
+  <foreignObject x="56" y="252" width="1088" height="72">
+    <xhtml:div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;line-height:1.4;color:#3a6d8c;font-weight:600;">
+      Integraci&#243;n de sistemas, APIs y capa de interoperabilidad para ventanilla &#250;nica de tr&#225;mites
+      <span style="display:block;margin-top:6px;font-size:12px;font-weight:500;color:#64748b;">Instituto de Fomento Europeo | $ 450.000.000 | En desarrollo</span>
+    </xhtml:div>
+  </foreignObject>
+  <rect x="40" y="360" width="1120" height="260" rx="6" fill="#f1f5f9" stroke="#e5e7eb"/>
+  <text x="56" y="410" font-family="system-ui, sans-serif" font-size="11" fill="#94a3b8">[ Vista simplificada del tablero por etapas ]</text>
+</svg>

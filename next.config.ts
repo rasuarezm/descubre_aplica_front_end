@@ -7,7 +7,7 @@ const contentSecurityPolicy =
   "img-src 'self' data: blob: https:; " +
   "font-src 'self' https://fonts.gstatic.com; " +
   "connect-src 'self' https://*.googleapis.com https://*.cloudfunctions.net https://*.run.app https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://www.google-analytics.com https://firestore.googleapis.com https://firebase.googleapis.com https://aplica-gateway-1xa8cm8z.uc.gateway.dev; " +
-  "frame-src https://www.google.com https://recaptcha.google.com; " +
+  "frame-src 'self' https://www.google.com https://recaptcha.google.com; " +
   "frame-ancestors 'none';";
 
 const nextConfig: NextConfig = {

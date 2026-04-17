@@ -12,7 +12,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 const features = [
   {
     step: 1,
-    logo: '/logo-bidtory-descubre-neg.svg',
+    logo: '/logo-bidtory-descubre-pos.svg',
     title: 'Paso 1: Su radar de convocatorias',
     description:
       'Bidtory Descubre monitorea SECOP II, fondos de fomento y cooperación internacional cada día. Gemini analiza cada convocatoria y la puntúa según el perfil de su empresa. Usted solo ve lo que realmente le aplica.',
@@ -21,29 +21,29 @@ const features = [
       href: '/suscripciones',
       external: false,
     },
-    image: '/1-Bidtory Descubre.webp',
+    image: '/2-Bidtory%20Descubre-Oportunidades.webp',
   },
   {
     step: 2,
-    logo: '/logo-bidtory-aplica-neg.svg',
+    logo: '/logo-bidtory-aplica-pos.svg',
     title: 'Paso 2: Lleva al pipeline con un clic',
     description:
       'Cuando Descubre identifica una oportunidad relevante, usted la lleva a Bidtory Aplica en un clic. Su pipeline Kanban muestra el estado de todas sus licitaciones activas: prospecto, en desarrollo, enviada, ganada.',
     cta: null,
-    image: '/5-Bidtory Aplica-Dashboard.webp',
+    image: '/2-Bidtory%20Aplica-PipelinePasos.webp',
   },
   {
     step: 3,
-    logo: '/logo-bidtory-aplica-neg.svg',
+    logo: '/logo-bidtory-aplica-pos.svg',
     title: 'Paso 3: Análisis inteligente de pliegos',
     description:
       'Suba el pliego y Bidtory extrae los requisitos técnicos, financieros y jurídicos automáticamente. Compara los requisitos contra el perfil de su empresa y muestra exactamente qué cumple y qué le falta.',
     cta: null,
-    image: '/3-Bidtory Aplica-Checklist.webp',
+    image: '/home-paso-3-pliego.svg',
   },
   {
     step: 4,
-    logo: '/logo-bidtory-aplica-neg.svg',
+    logo: '/logo-bidtory-aplica-pos.svg',
     title: 'Paso 4: Colaboración en equipo',
     description:
       'Centralice toda la comunicación, versiones de propuesta y documentos en un solo espacio. Su equipo sabe en qué punto está cada licitación sin necesidad de hilos de correo.',
@@ -52,11 +52,11 @@ const features = [
       href: '/login',
       external: false,
     },
-    image: '/4-Bidtory Aplica-Bitacora.webp',
+    image: '/home-paso-4-equipo.svg',
   },
   {
     step: 5,
-    logo: '/logo-bidtory-aplica-neg.svg',
+    logo: '/logo-bidtory-aplica-pos.svg',
     title: 'Paso 5: Visión estratégica',
     description:
       'Gestiona el flujo completo de oportunidades en un tablero visual. Identifica dónde se estancan las propuestas y toma decisiones basadas en datos, no en intuición.',
@@ -65,7 +65,7 @@ const features = [
       href: '/login',
       external: false,
     },
-    image: '/2-Bidtory Aplica-Pipeline.webp',
+    image: '/home-paso-5-tablero.svg',
   },
 ];
 
@@ -108,8 +108,7 @@ export function FeatureScroll() {
       <div className="relative grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
 
         {/* Left — image */}
-        <div className="relative w-full rounded-xl border border-secondary overflow-hidden bg-card aspect-video lg:aspect-auto lg:h-[30rem]">
-          {/* Preload all images — hidden except the active one */}
+        <div className="relative w-full rounded-xl border border-secondary overflow-hidden bg-muted/40 aspect-video lg:aspect-auto lg:min-h-[22rem] lg:h-[min(36rem,70vh)]">
           {features.map((f, i) => (
             <Image
               key={f.step}
@@ -117,7 +116,10 @@ export function FeatureScroll() {
               fill
               sizes="(max-width: 1023px) 100vw, min(720px, 50vw)"
               alt={f.title}
-              className={cn('object-cover transition-opacity duration-500', i === activeIndex ? 'opacity-100' : 'opacity-0')}
+              className={cn(
+                'object-contain object-center transition-opacity duration-500',
+                i === activeIndex ? 'opacity-100' : 'opacity-0'
+              )}
               priority={i === 0}
             />
           ))}

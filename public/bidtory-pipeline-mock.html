@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Bidtory · Pipeline de oportunidades</title>
+  <style>
+    :root {
+      --background: hsl(210 20% 98%);
+      --foreground: hsl(206 41% 39%);
+      --primary: hsl(206 41% 39%);
+      --secondary-foreground: hsl(0 0% 100%);
+      --secondary: hsl(206 40% 38%);
+      --muted-foreground: hsl(215 28% 27%);
+      --border: hsl(220 13% 91%);
+      --highlight: hsl(39 59% 65%);
+      --accent: hsl(175 100% 33%);
+      --card: hsl(0 0% 100%);
+      --radius: 0.5rem;
+      --col-bg: hsl(206 41% 39% / 0.045);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: system-ui, "Segoe UI", sans-serif;
+      background: var(--background);
+      color: var(--foreground);
+      padding: 1.5rem;
+    }
+
+    .wrap {
+      max-width: 1280px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 1.875rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      margin: 0 0 0.25rem;
+    }
+
+    .sub {
+      font-size: 0.875rem;
+      color: var(--muted-foreground);
+      margin-bottom: 1.5rem;
+    }
+
+    .metrics {
+      display: grid;
+      gap: 1rem;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      margin-bottom: 1.5rem;
+    }
+
+    .metric-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 1.25rem;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    }
+
+    .metric-card .label {
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--foreground);
+      margin-bottom: 0.5rem;
+    }
+
+    .metric-card .value {
+      font-size: 1.5rem;
+      font-weight: 700;
+    }
+
+    .metric-card .value.highlight { color: var(--highlight); }
+    .metric-card .value.accent { color: var(--accent); }
+
+    .metric-card .hint {
+      font-size: 0.75rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+
+    .kanban-scroll {
+      overflow-x: auto;
+      padding-bottom: 0.5rem;
+    }
+
+    .kanban-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(280px, 1fr));
+      gap: 1rem;
+      align-items: start;
+      min-height: 320px;
+    }
+
+    @media (max-width: 1024px) {
+      .kanban-grid {
+        grid-template-columns: minmax(280px, 1fr);
+      }
+    }
+
+    .kanban-col {
+      display: flex;
+      flex-direction: column;
+      border-radius: var(--radius);
+      border: 1px solid hsl(220 13% 91% / 0.8);
+      background: var(--col-bg);
+      padding: 0.5rem;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+      min-height: 280px;
+    }
+
+    .kanban-col h2 {
+      margin: 0;
+      padding: 0.5rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--foreground);
+    }
+
+    .kanban-col .count {
+      font-size: 0.875rem;
+      font-weight: 400;
+      color: var(--secondary-foreground);
+      background: var(--secondary);
+      border-radius: 9999px;
+      padding: 0.125rem 0.5rem;
+    }
+
+    .kanban-col .col-sum {
+      padding: 0 0.5rem 0.5rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--highlight);
+    }
+
+    .kanban-col .cards {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      padding: 0.25rem;
+      min-height: 150px;
+    }
+
+    .opp-card {
+      border-radius: 0.5rem;
+      border: 1px solid var(--border);
+      background: #fff;
+      padding: 0.75rem;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      border-left: 4px solid var(--primary);
+    }
+
+    .opp-card.enviada {
+      border-left-color: hsl(206 41% 39%);
+    }
+
+    .opp-card .title {
+      font-size: 0.875rem;
+      font-weight: 600;
+      margin: 0 0 0.25rem;
+      line-height: 1.35;
+      color: var(--foreground);
+    }
+
+    .opp-card .amount {
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--highlight);
+      margin-bottom: 0.5rem;
+    }
+
+    .badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.25rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .badge {
+      font-size: 10px;
+      padding: 0.125rem 0.375rem;
+      border-radius: 0.25rem;
+      text-transform: capitalize;
+    }
+
+    .badge-clock {
+      border: 1px solid hsl(39 59% 65% / 0.6);
+      background: hsl(39 59% 65%);
+      color: hsl(206 41% 22%);
+    }
+
+    .badge-send {
+      border: 1px solid hsl(206 41% 39% / 0.3);
+      background: hsl(206 41% 39% / 0.1);
+      color: hsl(206 41% 39%);
+    }
+
+    .opp-card .cierre {
+      font-size: 0.75rem;
+      color: var(--muted-foreground);
+      margin-top: 0.25rem;
+    }
+
+    .entity {
+      font-size: 0.65rem;
+      color: var(--muted-foreground);
+      margin-top: 0.35rem;
+    }
+
+    html.embed body {
+      padding: 0.75rem;
+      min-height: auto;
+    }
+    html.embed h1 {
+      font-size: 1.125rem;
+      margin-bottom: 0.35rem;
+    }
+    html.embed .metrics {
+      margin-bottom: 0.65rem;
+      gap: 0.5rem;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    @media (min-width: 640px) {
+      html.embed .metrics {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+      }
+    }
+    html.embed .metric-card {
+      padding: 0.5rem 0.65rem;
+    }
+    html.embed .metric-card .label {
+      font-size: 0.7rem;
+      margin-bottom: 0.2rem;
+    }
+    html.embed .metric-card .value {
+      font-size: 1rem;
+    }
+    html.embed .metric-card .hint {
+      font-size: 0.65rem;
+    }
+    html.embed .kanban-scroll {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+    html.embed .kanban-grid {
+      min-height: 0;
+      grid-template-columns: repeat(3, minmax(200px, 1fr));
+      gap: 0.5rem;
+    }
+    html.embed .kanban-col {
+      min-height: 0;
+    }
+    html.embed .kanban-col h2 {
+      font-size: 0.75rem;
+      padding: 0.35rem 0.4rem;
+    }
+    html.embed .kanban-col .col-sum {
+      font-size: 0.65rem;
+      padding: 0 0.4rem 0.35rem;
+    }
+    html.embed .opp-card {
+      padding: 0.5rem;
+    }
+    html.embed .opp-card .title {
+      font-size: 0.7rem;
+    }
+    html.embed .opp-card .amount {
+      font-size: 0.65rem;
+    }
+    html.embed .opp-card .cierre,
+    html.embed .entity {
+      font-size: 0.6rem;
+    }
+  </style>
+  <script>
+    (function () {
+      if (new URLSearchParams(location.search).get("embed") === "1") {
+        document.documentElement.classList.add("embed");
+      }
+    })();
+  </script>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Pipeline de Oportunidades</h1>
+    <p class="sub">Cliente: <strong>Fast Tech SAS</strong></p>
+
+    <div class="metrics">
+      <div class="metric-card">
+        <div class="label">Valor en Pipeline</div>
+        <div class="value highlight">$&nbsp;755.000.000</div>
+        <div class="hint">Valor total de oportunidades activas</div>
+      </div>
+      <div class="metric-card">
+        <div class="label">Tasa de Conversi&#243;n</div>
+        <div class="value">28,0%</div>
+        <div class="hint">De las oportunidades cerradas</div>
+      </div>
+      <div class="metric-card">
+        <div class="label">Valor Total Ganado</div>
+        <div class="value accent">$&nbsp;0</div>
+        <div class="hint">En el per&#237;odo seleccionado</div>
+      </div>
+      <div class="metric-card">
+        <div class="label">Oportunidades Activas</div>
+        <div class="value">3</div>
+        <div class="hint">No cerradas en el per&#237;odo</div>
+      </div>
+    </div>
+
+    <div class="kanban-scroll">
+      <div class="kanban-grid">
+        <div class="kanban-col">
+          <h2><span>Prospecto</span><span class="count">1</span></h2>
+          <div class="col-sum">$&nbsp;450.000.000</div>
+          <div class="cards">
+            <div class="opp-card">
+              <p class="title">Integraci&#243;n de sistemas, APIs y capa de interoperabilidad para ventanilla &#250;nica de tr&#225;mites</p>
+              <p class="amount">$&nbsp;450.000.000</p>
+              <div class="badges">
+                <span class="badge badge-clock">Pr&#243;xima a vencer</span>
+              </div>
+              <p class="cierre">Cierre: 30 jun 2026, 11:59 p.&nbsp;m.</p>
+              <p class="entity">Instituto de Fomento Europeo</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="kanban-col">
+          <h2><span>En Desarrollo</span><span class="count">1</span></h2>
+          <div class="col-sum">$&nbsp;185.000.000</div>
+          <div class="cards">
+            <div class="opp-card">
+              <p class="title">Plataforma de informaci&#243;n geogr&#225;fica y anal&#237;tica para seguimiento de cultivos y variables clim&#225;ticas</p>
+              <p class="amount">$&nbsp;185.000.000</p>
+              <div class="badges">
+                <span class="badge badge-clock">Urgente</span>
+              </div>
+              <p class="cierre">Cierre: 15 may 2026, 11:59 p.&nbsp;m.</p>
+              <p class="entity">Instituto para el desarrollo Agrario</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="kanban-col">
+          <h2><span>Enviada</span><span class="count">1</span></h2>
+          <div class="col-sum">$&nbsp;120.000.000</div>
+          <div class="cards">
+            <div class="opp-card enviada">
+              <p class="title">Ciberseguridad, monitoreo SOC 24/7 y continuidad del servicio para infraestructura cr&#237;tica</p>
+              <p class="amount">$&nbsp;120.000.000</p>
+              <div class="badges">
+                <span class="badge badge-send">Enviada</span>
+              </div>
+              <p class="cierre">Cierre: 01 ago 2026, 11:59 p.&nbsp;m.</p>
+              <p class="entity">Fondo de Desarrollo Americano</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

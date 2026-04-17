@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xhtml="http://www.w3.org/1999/xhtml" width="1200" height="675" viewBox="0 0 1200 675">
+  <rect width="1200" height="675" fill="#f4f7f9"/>
+  <rect x="0" y="0" width="1200" height="52" fill="#fff" stroke="#e5e7eb"/>
+  <text x="24" y="34" font-family="system-ui, sans-serif" font-size="15" font-weight="600" fill="#3a6d8c">An&#225;lisis de pliego | Bidtory Aplica</text>
+  <rect x="24" y="72" width="1152" height="56" rx="8" fill="#fff" stroke="#e5e7eb"/>
+  <foreignObject x="36" y="82" width="1120" height="44">
+    <xhtml:div xmlns="http://www.w3.org/1999/xhtml" style="font-size:13px;line-height:1.35;color:#3a6d8c;font-weight:600;">
+      Proceso: Integraci&#243;n de sistemas, APIs y capa de interoperabilidad para ventanilla &#250;nica de tr&#225;mites &#183; Instituto de Fomento Europeo
+    </xhtml:div>
+  </foreignObject>
+  <rect x="24" y="148" width="560" height="480" rx="8" fill="#fff" stroke="#e5e7eb"/>
+  <text x="40" y="182" font-family="system-ui, sans-serif" font-size="13" font-weight="600" fill="#3a6d8c">Requisitos detectados</text>
+  <g font-family="system-ui, sans-serif" font-size="12">
+    <rect x="40" y="198" width="12" height="12" rx="2" fill="#00a99d"/>
+    <text x="60" y="208" fill="#334155">Interoperabilidad y est&#225;ndares de datos</text>
+    <rect x="40" y="228" width="12" height="12" rx="2" fill="#00a99d"/>
+    <text x="60" y="238" fill="#334155">Seguridad de la informaci&#243;n y continuidad</text>
+    <rect x="40" y="258" width="12" height="12" rx="2" fill="#00a99d"/>
+    <text x="60" y="268" fill="#334155">Experiencia en integraci&#243;n con ventanillas p&#250;blicas</text>
+    <rect x="40" y="288" width="12" height="12" rx="2" fill="#e5e7eb"/>
+    <text x="60" y="298" fill="#94a3b8">Certificaci&#243;n ISO 27001 (pendiente en su perfil)</text>
+  </g>
+  <rect x="616" y="148" width="560" height="480" rx="8" fill="#fff" stroke="#e5e7eb"/>
+  <text x="632" y="182" font-family="system-ui, sans-serif" font-size="13" font-weight="600" fill="#3a6d8c">Coincidencia con su empresa</text>
+  <rect x="632" y="200" width="520" height="120" rx="6" fill="#ecfdf5" stroke="#00a99d" stroke-opacity="0.4"/>
+  <text x="648" y="228" font-family="system-ui, sans-serif" font-size="12" fill="#0f766e">Cumple: referencias en integraci&#243;n, APIs y sector p&#250;blico.</text>
+  <text x="648" y="252" font-family="system-ui, sans-serif" font-size="12" fill="#64748b">Revise el &#237;tem marcado en gris para completar el perfil.</text>
+</svg>
