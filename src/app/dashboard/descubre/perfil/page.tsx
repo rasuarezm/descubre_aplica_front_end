@@ -171,7 +171,7 @@ export default function DescubrePerfilPage() {
             <CardTitle className="text-destructive flex items-center gap-2">
               <AlertCircle className="h-5 w-5" />Sin acceso
             </CardTitle>
-            <CardDescription>No tienes un perfil Descubre activo.</CardDescription>
+            <CardDescription>No tiene un perfil Descubre activo.</CardDescription>
           </CardHeader>
           <CardContent>
             <Link href="/dashboard/descubre"><Button variant="outline">Volver</Button></Link>
@@ -213,7 +213,7 @@ export default function DescubrePerfilPage() {
           <ArrowLeft className="mr-2 h-4 w-4" />Volver al dashboard
         </Link>
         <h1 className="text-2xl font-semibold">Perfil Descubre</h1>
-        <p className="text-muted-foreground mt-1">Edita tus preferencias de búsqueda y datos de contacto</p>
+        <p className="text-muted-foreground mt-1">Edite sus preferencias de búsqueda y datos de contacto</p>
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -336,7 +336,7 @@ export default function DescubrePerfilPage() {
             </CardTitle>
             <CardDescription>
               <Badge variant="secondary" className="mr-2">{fuentesSuscritas.length}</Badge>
-              de {maxFuentes} fuente(s) activa(s) en tu plan
+              de {maxFuentes} fuente(s) activa(s) en su plan
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -366,7 +366,7 @@ export default function DescubrePerfilPage() {
                 })}
               </ul>
             ) : (
-              <p className="text-muted-foreground text-sm">No tienes fuentes activas. Suscríbete para recibir oportunidades.</p>
+              <p className="text-muted-foreground text-sm">No tiene fuentes activas. Suscríbase para recibir oportunidades.</p>
             )}
 
             {fuentesNoSuscritas.length > 0 && (
@@ -385,7 +385,7 @@ export default function DescubrePerfilPage() {
                           className="shrink-0 gap-1"
                           onClick={() => handleSubscribe(f)}
                           disabled={limiteAlcanzado || !!actionInProgress}
-                          title={limiteAlcanzado ? 'Límite de fuentes alcanzado en tu plan' : undefined}
+                          title={limiteAlcanzado ? 'Límite de fuentes alcanzado en su plan' : undefined}
                         >
                           {isProcessing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Plus className="h-3 w-3" />}
                           Suscribirse

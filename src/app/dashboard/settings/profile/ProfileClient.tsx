@@ -17,7 +17,6 @@ import apiClient from '@/lib/api-client';
 import { avatarUrlForImg } from '@/lib/user-profile';
 
 export default function ProfileClient() {
-    // ... (Todo el código de tu componente original va aquí) ...
     const { user, userProfile, refreshUserProfile, loading: authLoading } = useAuth();
     const { toast } = useToast();
     const [displayName, setDisplayName] = useState('');
@@ -43,7 +42,7 @@ export default function ProfileClient() {
     
     const handleNameUpdate = async () => {
         if (!user) {
-            toast({ title: "Error", description: "Debes iniciar sesión para actualizar tu perfil.", variant: "destructive" });
+            toast({ title: "Error", description: "Debe iniciar sesión para actualizar su perfil.", variant: "destructive" });
             return;
         }
         if (displayName.trim() === (userProfile?.displayName || '')) {
@@ -54,7 +53,7 @@ export default function ProfileClient() {
         try {
             await updateProfile(user, { displayName: displayName.trim() });
             await refreshUserProfile(true); // Force sync with backend
-            toast({ title: "Éxito", description: "Tu nombre ha sido actualizado." });
+            toast({ title: "Éxito", description: "Su nombre ha sido actualizado." });
         } catch (error) {
             const errorMessage = error instanceof FirebaseError ? error.message : error instanceof Error ? error.message : "Ocurrió un error desconocido.";
             toast({ title: "Error al actualizar", description: errorMessage, variant: "destructive" });
@@ -98,7 +97,7 @@ export default function ProfileClient() {
                 setAvatarPreviewUrl(null);
             }
 
-            toast({ title: "Éxito", description: "Tu foto de perfil ha sido actualizada." });
+            toast({ title: "Éxito", description: "Su foto de perfil ha sido actualizada." });
         } catch (error) {
             URL.revokeObjectURL(preview);
             setAvatarPreviewUrl(null);
@@ -121,7 +120,7 @@ export default function ProfileClient() {
                     Volver a Configuración
                 </Link>
                 <h1 className="text-3xl font-headline tracking-tight">Mi Perfil</h1>
-                <p className="text-muted-foreground">Gestiona tu información personal y de cuenta.</p>
+                <p className="text-muted-foreground">Gestione su información personal y de cuenta.</p>
             </div>
             
             <Card>

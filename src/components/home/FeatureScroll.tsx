@@ -13,9 +13,9 @@ const features = [
   {
     step: 1,
     logo: '/logo-bidtory-descubre-neg.svg',
-    title: 'Paso 1: Tu radar de convocatorias',
+    title: 'Paso 1: Su radar de convocatorias',
     description:
-      'Bidtory Descubre monitorea SECOP II, fondos de fomento y cooperación internacional cada día. Gemini analiza cada convocatoria y la puntúa según el perfil de tu empresa. Solo ves lo que realmente te aplica.',
+      'Bidtory Descubre monitorea SECOP II, fondos de fomento y cooperación internacional cada día. Gemini analiza cada convocatoria y la puntúa según el perfil de su empresa. Usted solo ve lo que realmente le aplica.',
     cta: {
       text: 'Conocer Descubre',
       href: '/suscripciones',
@@ -28,7 +28,7 @@ const features = [
     logo: '/logo-bidtory-aplica-neg.svg',
     title: 'Paso 2: Lleva al pipeline con un clic',
     description:
-      'Cuando Descubre identifica una oportunidad relevante, la llevas a Bidtory Aplica en un clic. Tu pipeline Kanban muestra el estado de todas tus licitaciones activas: prospecto, en desarrollo, enviada, ganada.',
+      'Cuando Descubre identifica una oportunidad relevante, usted la lleva a Bidtory Aplica en un clic. Su pipeline Kanban muestra el estado de todas sus licitaciones activas: prospecto, en desarrollo, enviada, ganada.',
     cta: null,
     image: '/5-Bidtory Aplica-Dashboard.webp',
   },
@@ -37,7 +37,7 @@ const features = [
     logo: '/logo-bidtory-aplica-neg.svg',
     title: 'Paso 3: Análisis inteligente de pliegos',
     description:
-      'Sube el pliego y Bidtory extrae los requisitos técnicos, financieros y jurídicos automáticamente. Compara los requisitos contra el perfil de tu empresa y muestra exactamente qué cumples y qué te falta.',
+      'Suba el pliego y Bidtory extrae los requisitos técnicos, financieros y jurídicos automáticamente. Compara los requisitos contra el perfil de su empresa y muestra exactamente qué cumple y qué le falta.',
     cta: null,
     image: '/3-Bidtory Aplica-Checklist.webp',
   },
@@ -46,7 +46,7 @@ const features = [
     logo: '/logo-bidtory-aplica-neg.svg',
     title: 'Paso 4: Colaboración en equipo',
     description:
-      'Centraliza toda la comunicación, versiones de propuesta y documentos en un solo espacio. Tu equipo sabe en qué punto está cada licitación sin necesidad de hilos de correo.',
+      'Centralice toda la comunicación, versiones de propuesta y documentos en un solo espacio. Su equipo sabe en qué punto está cada licitación sin necesidad de hilos de correo.',
     cta: {
       text: 'Acceso clientes',
       href: '/login',

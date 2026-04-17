@@ -240,7 +240,7 @@ export default function DashboardClient() {
           <Users className="h-12 w-12 text-muted-foreground" />
           <h1 className="mt-4 text-2xl font-headline">¡Bienvenido!</h1>
           <p className="text-muted-foreground">
-            Tu zona de cliente está siendo preparada. Por favor, contacta a un administrador.
+            Su zona de cliente está siendo preparada. Por favor, contacte a un administrador.
           </p>
         </div>
       );
@@ -349,7 +349,7 @@ export default function DashboardClient() {
                     <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-accent transition-colors" />
                   </div>
                   <CardDescription className="pt-2">
-                    Convocatorias del SECOP II puntuadas por IA según el perfil de tu empresa.
+                    Convocatorias del SECOP II puntuadas por IA según el perfil de su empresa.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="pt-0">
@@ -399,7 +399,7 @@ export default function DashboardClient() {
                     <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-accent transition-colors" />
                   </div>
                   <CardDescription className="pt-2">
-                    Tu pipeline de licitaciones: análisis de pliegos, bitácora y seguimiento de propuestas.
+                    Su pipeline de licitaciones: análisis de pliegos, bitácora y seguimiento de propuestas.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="pt-0">
@@ -451,7 +451,7 @@ export default function DashboardClient() {
                   </Badge>
                 </div>
                 <CardDescription className="pt-2">
-                  Lleva tus oportunidades a un pipeline Kanban. Analiza pliegos con IA y gestiona propuestas en equipo.
+                  Lleve sus oportunidades a un pipeline Kanban. Analice pliegos con IA y gestione propuestas en equipo.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -520,7 +520,7 @@ export default function DashboardClient() {
                 <CardTitle className="mt-4 text-2xl">No se encontraron Zonas de Clientes</CardTitle>
               </CardHeader>
               <CardContent>
-                <CardDescription>Empieza creando una nueva zona privada para tu primer cliente.</CardDescription>
+                <CardDescription>Inicie creando una nueva zona privada para su primer cliente.</CardDescription>
                 <Button className="mt-6" onClick={() => setIsCreateZoneDialogOpen(true)}>
                   <PlusCircle className="mr-2 h-4 w-4" /> Crear Zona de Cliente
                 </Button>

@@ -42,7 +42,7 @@ const PLANS: Plan[] = [
       "1 usuario · 5 palabras clave",
       "Soporte por email",
     ],
-    href: "/registro",
+    href: "/registro?plan=esencial",
   },
   {
     id: "profesional",
@@ -61,7 +61,7 @@ const PLANS: Plan[] = [
       "Hasta 5 usuarios · 20 palabras clave",
       "Soporte prioritario",
     ],
-    href: "/registro",
+    href: "/registro?plan=profesional",
   },
   {
     id: "experto",
@@ -77,7 +77,7 @@ const PLANS: Plan[] = [
       "Usuarios ilimitados · Palabras clave sin límite",
       "Soporte por WhatsApp",
     ],
-    href: "/registro",
+    href: "/registro?plan=experto",
   },
 ];
 
@@ -184,23 +184,23 @@ const COMPARISON_ROWS: ComparisonRow[] = [
 const FAQ_ITEMS = [
   {
     q: "¿Puedo cambiar de plan?",
-    a: "Sí. Puedes subir o bajar de plan en cualquier momento. El cambio se aplica al inicio del siguiente ciclo de facturación.",
+    a: "Sí. Puede subir o bajar de plan en cualquier momento. El cambio se aplica al inicio del siguiente ciclo de facturación.",
   },
   {
     q: "¿Cómo funciona el cobro?",
-    a: "El cobro es mensual y automático a través de Wompi (Bancolombia). Recibirás una notificación antes de cada renovación.",
+    a: "El cobro es mensual y automático a través de Wompi (Bancolombia). Recibirá una notificación antes de cada renovación.",
   },
   {
     q: "¿Puedo cancelar en cualquier momento?",
-    a: "Sí. Cancelas antes del próximo ciclo y no se genera ningún cargo adicional. Tu acceso continúa hasta el final del período pagado.",
+    a: "Sí. Si cancela antes del próximo ciclo, no se genera ningún cargo adicional. Su acceso continúa hasta el final del período pagado.",
   },
   {
     q: "¿Qué es el botón 'Llevar al pipeline'?",
-    a: "Es una función de integración entre Bidtory Descubre y Bidtory Aplica: con un clic, una licitación pasa directamente a tu pipeline de trabajo en Aplica. Disponible próximamente para planes Profesional y Experto.",
+    a: "Es una función de integración entre Bidtory Descubre y Bidtory Aplica: con un clic, una licitación pasa directamente al pipeline de trabajo en Aplica. Disponible próximamente para planes Profesional y Experto.",
   },
   {
     q: "¿Qué incluye el CTA de apoyo Puro Contenido?",
-    a: "En cada convocatoria con score relevante aparece un botón para hablar directamente con el equipo consultor de Puro Contenido SAS. No tiene costo adicional: es un canal para derivar a consultoría cuando lo necesites.",
+    a: "En cada convocatoria con score relevante aparece un botón para hablar directamente con el equipo consultor de Puro Contenido SAS. No tiene costo adicional: es un canal para derivar a consultoría cuando lo requiera.",
   },
 ];
 
@@ -262,8 +262,8 @@ export default function SuscripcionesPage() {
             Planes Bidtory
           </h1>
           <p className="text-lg text-muted-foreground">
-            Encuentra las convocatorias que tu empresa puede ganar. Elige el plan
-            que mejor se adapta a tu etapa.
+            Encuentre las convocatorias que su empresa puede ganar. Elija el plan
+            que mejor se adapta a su etapa.
           </p>
         </div>
 
@@ -426,10 +426,10 @@ export default function SuscripcionesPage() {
         {/* 5. CTA final */}
         <section className="mx-auto max-w-2xl rounded-xl bg-muted/30 p-8 text-center">
           <h2 className="font-headline text-xl font-semibold text-foreground md:text-2xl">
-            ¿Tienes dudas sobre qué plan elegir?
+            ¿Tiene dudas sobre qué plan elegir?
           </h2>
           <p className="mt-3 text-muted-foreground">
-            Escríbenos y te ayudamos a encontrar el plan correcto para tu empresa.
+            Escríbanos y le ayudaremos a encontrar el plan correcto para su empresa.
           </p>
           <Button asChild variant="outline" className="mt-6">
             <a href="https://wa.me/573208691817?text=Hola%2C%20quiero%20conocer%20más%20sobre%20los%20planes%20de%20Bidtory">

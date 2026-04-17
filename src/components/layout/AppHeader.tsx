@@ -95,7 +95,7 @@ export function AppHeader() {
                 <Loader2 className="h-5 w-5 animate-spin" />
               </div>
             ) : notifications.length === 0 ? (
-              <p className="p-4 text-sm text-center text-muted-foreground">No tienes notificaciones.</p>
+              <p className="p-4 text-sm text-center text-muted-foreground">No tiene notificaciones nuevas.</p>
             ) : (
               notifications.map((notif) => (
                 <DropdownMenuItem key={notif.id} asChild className="cursor-pointer">

@@ -15,7 +15,6 @@ import apiClient from '@/lib/api-client';
 type PreferenceKey = keyof NotificationPreferences;
 
 export default function NotificationsClient() {
-    // ... (Todo el código de tu componente original va aquí: hooks, handlers, JSX) ...
     const { userProfile, refreshUserProfile, loading: authLoading } = useAuth();
     const { toast } = useToast();
     const [preferences, setPreferences] = useState<NotificationPreferences | null>(null);

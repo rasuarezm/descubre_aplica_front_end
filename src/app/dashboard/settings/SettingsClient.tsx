@@ -25,7 +25,7 @@ export default function SettingsClient() {
               Mi Perfil
             </CardTitle>
             <CardDescription>
-              Actualiza tu nombre, foto de perfil y otros datos personales.
+              Actualice su nombre, foto de perfil y otros datos personales.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -44,7 +44,7 @@ export default function SettingsClient() {
               Notificaciones
             </CardTitle>
             <CardDescription>
-              Gestiona cómo y cuándo recibes notificaciones por correo electrónico sobre tus oportunidades.
+              Gestione cómo y cuándo recibe notificaciones por correo electrónico sobre sus oportunidades.
             </CardDescription>
           </CardHeader>
           <CardContent>

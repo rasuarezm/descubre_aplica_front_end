@@ -39,7 +39,7 @@ export function ContactForm() {
     setError('');
     
     if (!formData.fullName || !formData.companyName || !formData.email || !formData.interest) {
-      setError('Por favor, completa todos los campos requeridos.');
+      setError('Por favor, complete todos los campos requeridos.');
       return;
     }
 
@@ -146,7 +146,7 @@ export function ContactForm() {
             </div>
 
             <div className="space-y-2">
-                <Label htmlFor="interest" className="text-foreground/80">Estoy interesado/a en...</Label>
+                <Label htmlFor="interest" className="text-foreground/80">Está interesado/a en...</Label>
                 <Select name="interest" required onValueChange={handleSelectChange} value={formData.interest}>
                     <SelectTrigger className="w-full bg-muted/50 border-secondary focus:border-accent focus:ring-accent" id="interest">
                         <SelectValue placeholder="Seleccione una opción..." />

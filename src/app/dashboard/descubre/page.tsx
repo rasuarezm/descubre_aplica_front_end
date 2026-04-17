@@ -72,7 +72,7 @@ export default function DescubreDashboardPage() {
               Bidtory Descubre
             </CardTitle>
             <CardDescription>
-              Descubre oportunidades de licitación con IA. Este módulo no está activo en tu cuenta.
+              Descubra oportunidades de licitación con IA. Este módulo no está activo en su cuenta.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -124,7 +124,7 @@ export default function DescubreDashboardPage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
-            <p className="text-sm text-muted-foreground">{estado_bidtory_info?.message || 'Ajusta tus preferencias para activar el monitoreo.'}</p>
+            <p className="text-sm text-muted-foreground">{estado_bidtory_info?.message || 'Ajuste sus preferencias para activar el monitoreo.'}</p>
             {estado_bidtory_info?.sugerencias && estado_bidtory_info.sugerencias.length > 0 && (
               <ul className="list-disc list-inside space-y-1 text-sm text-muted-foreground">
                 {estado_bidtory_info.sugerencias.map((s, i) => (
@@ -273,7 +273,7 @@ function OportunidadCard({ op }: { op: OportunidadDescubre }) {
           >
             <Button className="w-full gap-2 bg-accent hover:bg-accent/90 text-accent-foreground text-xs">
               <MessageCircle className="h-4 w-4" />
-              ¿Te interesa aplicar? Habla con un experto
+              ¿Necesita apoyo para aplicar? Hable con un experto
             </Button>
           </a>
         )}

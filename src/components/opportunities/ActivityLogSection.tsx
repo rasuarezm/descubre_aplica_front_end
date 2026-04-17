@@ -109,20 +109,9 @@ function CommentThread({ comment, onReply, onRefreshData, currentUserId }: Comme
     setIsDeleting(true);
 
     try {
-        // --- CÓDIGO CORREGIDO ---
-        // Nota: apiClient.delete suele aceptar config como segundo argumento, 
-        // pero si tu implementación de apiClient no soporta body en delete, 
-        // usamos la llamada genérica request o verificamos tu apiClient.
-        // Asumiendo un apiClient estándar con axios o fetch wrapper:
-
         await apiClient.delete('/delete_opportunity_comment', { 
             comment_id: comment.id 
         });
-        
-        // Si tu apiClient.delete no soporta body (algunos no lo hacen), 
-        // usa apiClient.request o post con method DELETE.
-        // Pero intentemos la forma estándar primero.
-        // ------------------------
 
         toast({ title: "Comentario eliminado" });
         setShowDeleteConfirm(false);

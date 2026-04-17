@@ -165,11 +165,11 @@ export function HomeClient() {
                   Contratación pública · Fondos de fomento · Colombia
                 </span>
                 <h1 className="font-headline text-5xl font-semibold leading-[1.1] tracking-tight text-foreground md:text-6xl lg:text-[4.25rem]">
-                  Encuentra las licitaciones que tu empresa puede ganar.
+                  Encuentre las licitaciones que su empresa puede ganar.
                 </h1>
                 <p className="mt-5 max-w-lg text-lg leading-relaxed text-muted-foreground">
                   Bidtory monitorea SECOP II y fondos de fomento con IA, puntúa
-                  cada convocatoria según tu perfil y la lleva directo a tu
+                  cada convocatoria según su perfil y la lleva directo a su
                   equipo de trabajo.
                 </p>
                 <div className="mt-8 flex flex-wrap gap-3">
@@ -291,7 +291,7 @@ export function HomeClient() {
                           className="flex w-full items-center justify-center gap-2 rounded-lg bg-accent px-3 py-2 text-xs font-medium text-accent-foreground transition-colors hover:bg-accent/90"
                         >
                           <MessageCircle className="h-3.5 w-3.5" />
-                          ¿Te interesa aplicar? Habla con un experto
+                          ¿Le interesa aplicar? Hable con un experto
                         </button>
                       </div>
                     </div>
@@ -368,7 +368,7 @@ export function HomeClient() {
                 Dos módulos. Un solo flujo.
               </h2>
               <p className="mx-auto mt-3 max-w-xl text-center text-muted-foreground">
-                Descubre una oportunidad y llévala al pipeline con un clic.
+                Descubra una oportunidad y llévela al pipeline con un clic.
               </p>
             </div>
 
@@ -385,7 +385,7 @@ export function HomeClient() {
                   Bidtory Descubre
                 </h3>
                 <p className="mb-5 text-sm text-muted-foreground">
-                  Descubrimiento inteligente — tu radar de convocatorias con IA
+                  Descubrimiento inteligente — su radar de convocatorias con IA
                 </p>
                 <ul className="space-y-2.5">
                   {[
@@ -430,7 +430,7 @@ export function HomeClient() {
                   Bidtory Aplica
                 </h3>
                 <p className="mb-5 text-sm text-muted-foreground">
-                  Gestión y formulación — tu pipeline de licitaciones
+                  Gestión y formulación — su pipeline de licitaciones
                 </p>
                 <ul className="space-y-2.5">
                   {[
@@ -467,7 +467,7 @@ export function HomeClient() {
               Del hallazgo a la propuesta ganadora
             </h2>
             <p className="mx-auto mt-3 max-w-xl text-muted-foreground">
-              Un flujo continuo desde que detectamos la oportunidad hasta que tu
+              Un flujo continuo desde que detectamos la oportunidad hasta que su
               equipo presenta la propuesta.
             </p>
           </div>
@@ -490,7 +490,7 @@ export function HomeClient() {
                 &lt; 10 min
               </span>
               <span className="mt-1.5 text-sm text-muted-foreground">
-                Para ver tus primeras oportunidades
+                Para ver sus primeras oportunidades
               </span>
             </div>
             <div className="flex flex-col items-center py-6 text-center md:py-0 md:px-10">
@@ -509,11 +509,11 @@ export function HomeClient() {
           <div className="mx-auto max-w-2xl px-4 text-center md:px-6">
             <div className="rounded-2xl border border-border bg-card p-10 shadow-sm md:p-14">
               <h2 className="font-headline text-3xl font-semibold tracking-tight text-foreground md:text-4xl">
-                ¿Listo para encontrar tu próxima licitación?
+                ¿Listo para encontrar su próxima licitación?
               </h2>
               <p className="mx-auto mt-4 max-w-md text-base leading-relaxed text-muted-foreground">
-                Empieza desde $149.000 COP/mes. Sin contratos. Cancela cuando
-                quieras.
+                Empiece desde $149.000 COP/mes. Sin contratos. Cancele cuando
+                quiera.
               </p>
               <div className="mt-8 flex flex-wrap justify-center gap-3">
                 <Button

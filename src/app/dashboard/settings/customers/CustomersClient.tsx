@@ -20,7 +20,6 @@ import { customerLogoImgSrc } from '@/lib/gcs-display';
 type ViewMode = 'active' | 'archived';
 
 export default function CustomersClient() {
-    // ... (Todo el código de tu componente original va aquí: hooks, handlers, JSX) ...
     const { userProfile, loading: authLoading } = useAuth();
     const router = useRouter();
     const { toast } = useToast();
@@ -62,7 +61,7 @@ export default function CustomersClient() {
     useEffect(() => {
         if (!authLoading) {
             if (userProfile?.role !== 'admin') {
-                toast({ title: "Acceso Denegado", description: "No tienes permiso para ver esta página.", variant: "destructive" });
+                toast({ title: "Acceso denegado", description: "No tiene permiso para ver esta página.", variant: "destructive" });
                 router.replace('/dashboard');
             } else {
                 fetchData(viewMode);

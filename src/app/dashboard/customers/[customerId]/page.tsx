@@ -438,7 +438,7 @@ export default function CustomerDetailPage() {
     if (!customerId || !userProfile) return;
 
     if (userProfile.role === 'customer' && String(userProfile.customer_id) !== String(customerId)) {
-      toast({ title: "Acceso Denegado", description: "No tienes permiso para ver esta zona de cliente.", variant: "destructive" });
+      toast({ title: "Acceso denegado", description: "No tiene permiso para ver esta zona de cliente.", variant: "destructive" });
       router.replace('/dashboard');
       return;
     }
