@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Bidtory Aplica · Oportunidad · Checklist</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --background: hsl(210 20% 98%);
+      --foreground: hsl(206 41% 39%);
+      --card: hsl(0 0% 100%);
+      --muted-foreground: hsl(215 28% 27%);
+      --foreground-75: hsl(206 41% 39% / 0.75);
+      --foreground-60: hsl(206 41% 39% / 0.6);
+      --border: hsl(220 13% 91%);
+      --accent: hsl(175 100% 33%);
+      --highlight: hsl(39 59% 65%);
+      --radius: 0.5rem;
+      --urgency: hsl(2 64% 58%);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "DM Sans", system-ui, sans-serif;
+      background: var(--background);
+      color: var(--foreground);
+      padding: 1.5rem 1rem 2.5rem;
+      font-size: 0.875rem;
+    }
+
+    .wrap { max-width: 1200px; margin: 0 auto; }
+
+    .back-row {
+      font-size: 0.8125rem;
+      color: var(--foreground-60);
+      margin-bottom: 0.75rem;
+    }
+    .back-row a { color: var(--foreground-75); text-decoration: none; }
+
+    h1 {
+      font-family: "Playfair Display", Georgia, serif;
+      font-size: 1.5rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      line-height: 1.25;
+      margin: 0 0 1rem;
+      max-width: 52rem;
+    }
+    @media (min-width: 768px) { h1 { font-size: 1.75rem; } }
+
+    .meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.5rem 1rem;
+      margin-bottom: 1rem;
+      font-size: 0.8125rem;
+      color: var(--foreground-60);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      border-radius: calc(var(--radius) - 2px);
+      padding: 0.125rem 0.5rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      border: 1px solid var(--border);
+      background: hsl(220 13% 96%);
+    }
+    .badge-urgent {
+      border-color: hsl(2 64% 58% / 0.45);
+      background: hsl(2 64% 58% / 0.1);
+      color: hsl(2 55% 32%);
+    }
+    .badge-status {
+      border-color: hsl(39 59% 65% / 0.6);
+      background: hsl(39 59% 65% / 0.2);
+      color: hsl(206 41% 22%);
+      font-weight: 600;
+    }
+
+    .progress-wrap {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 1.25rem;
+      margin-bottom: 1.25rem;
+      box-shadow: 0 1px 2px rgb(0 0 0 / 0.04);
+    }
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: var(--foreground-60);
+      margin-bottom: 0.35rem;
+    }
+    .progress-bar {
+      height: 0.5rem;
+      border-radius: 9999px;
+      background: hsl(220 13% 91%);
+      overflow: hidden;
+    }
+    .progress-bar > span {
+      display: block;
+      height: 100%;
+      width: 58%;
+      border-radius: 9999px;
+      background: var(--accent);
+    }
+
+    .grid {
+      display: grid;
+      gap: 1.5rem;
+    }
+    @media (min-width: 1024px) {
+      .grid {
+        grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr);
+        align-items: start;
+      }
+    }
+
+    .tabs {
+      border-bottom: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0;
+    }
+    @media (min-width: 640px) {
+      .tabs { grid-template-columns: repeat(4, 1fr); }
+    }
+    .tab {
+      padding: 0.75rem 0.5rem;
+      text-align: center;
+      font-size: 0.8125rem;
+      color: var(--foreground-60);
+      border-bottom: 2px solid transparent;
+      background: transparent;
+      cursor: default;
+    }
+    .tab.active {
+      color: var(--foreground);
+      font-weight: 600;
+      border-bottom-color: var(--accent);
+      background: var(--card);
+    }
+    .tab-pad { padding-top: 1.5rem; }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 1rem;
+      box-shadow: 0 1px 2px rgb(0 0 0 / 0.04);
+    }
+    .card-header { padding: 1rem 1.25rem 0; }
+    .card-title {
+      font-size: 1rem;
+      font-weight: 600;
+      margin: 0 0 0.25rem;
+    }
+    .card-desc {
+      font-size: 0.75rem;
+      color: var(--foreground-60);
+      margin: 0 0 0.75rem;
+    }
+    .card-body { padding: 0 1.25rem 1.25rem; }
+
+    .cat-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    .cat {
+      font-size: 0.6875rem;
+      font-weight: 600;
+      padding: 0.35rem 0.65rem;
+      border-radius: 9999px;
+      border: 1px solid var(--border);
+      background: hsl(220 13% 97%);
+      color: var(--foreground-60);
+    }
+    .cat.on {
+      border-color: hsl(175 100% 33% / 0.45);
+      background: hsl(175 100% 33% / 0.08);
+      color: var(--foreground);
+    }
+
+    .file-row {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding: 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 0.5rem;
+      background: hsl(220 13% 99%);
+    }
+    .file-row .name { font-weight: 600; font-size: 0.8125rem; margin: 0 0 0.2rem; }
+    .file-row .meta { font-size: 0.7rem; color: var(--foreground-60); }
+    .file-icon {
+      width: 2rem;
+      height: 2rem;
+      border-radius: 0.35rem;
+      background: hsl(206 41% 39% / 0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 0.9rem;
+    }
+
+    .doc-progress {
+      font-size: 0.75rem;
+      color: var(--foreground-60);
+      margin-bottom: 0.75rem;
+    }
+    .doc-progress strong { color: var(--foreground); }
+
+    .check-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      padding: 1rem;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 0.65rem;
+      background: var(--card);
+      box-shadow: 0 1px 2px rgb(0 0 0 / 0.04);
+    }
+    @media (min-width: 640px) {
+      .check-item {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+      }
+    }
+
+    .check-left {
+      display: flex;
+      gap: 0.75rem;
+      align-items: flex-start;
+      flex: 1;
+      min-width: 0;
+    }
+    .icon-ok { color: var(--accent); font-size: 1.25rem; line-height: 1; }
+    .icon-warn { color: var(--highlight); font-size: 1.25rem; line-height: 1; }
+
+    .check-left h4 {
+      margin: 0 0 0.2rem;
+      font-size: 0.875rem;
+      font-weight: 600;
+    }
+    .check-left p {
+      margin: 0;
+      font-size: 0.75rem;
+      color: var(--foreground-60);
+      line-height: 1.4;
+    }
+
+    .tag-row { display: flex; flex-wrap: wrap; gap: 0.35rem; margin-top: 0.35rem; align-items: center; }
+
+    .tag-file {
+      font-size: 0.65rem;
+      padding: 0.15rem 0.45rem;
+      border-radius: 0.25rem;
+      background: hsl(220 13% 94%);
+      border: 1px solid var(--border);
+      color: var(--foreground-75);
+    }
+
+    .tag-ia {
+      font-size: 0.6rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding: 0.15rem 0.4rem;
+      border-radius: 0.25rem;
+      background: hsl(175 100% 33% / 0.12);
+      color: hsl(175 100% 26%);
+      border: 1px solid hsl(175 100% 33% / 0.25);
+    }
+
+    .btn-fake {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 500;
+      padding: 0.4rem 0.85rem;
+      border-radius: var(--radius);
+      border: 1px solid hsl(206 41% 39% / 0.35);
+      background: transparent;
+      color: var(--foreground);
+      cursor: default;
+      white-space: nowrap;
+    }
+
+    .aside-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 1.15rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 1px 2px rgb(0 0 0 / 0.04);
+    }
+    .aside-card h3 {
+      font-size: 0.875rem;
+      font-weight: 500;
+      margin: 0 0 0.5rem;
+      color: var(--foreground-60);
+    }
+    .aside-card .big {
+      font-size: 1.125rem;
+      font-weight: 600;
+      margin: 0;
+    }
+    .stat-line { border-left: 4px solid var(--highlight); padding-left: 0.75rem; }
+    .stat-line.urgent { border-left-color: var(--urgency); }
+
+    .entity {
+      font-size: 0.75rem;
+      color: var(--foreground-60);
+      margin-top: 0.5rem;
+    }
+
+    html.embed body { padding: 0.75rem; font-size: 0.75rem; }
+    html.embed h1 { font-size: 1.125rem; margin-bottom: 0.65rem; }
+    html.embed .progress-wrap { padding: 0.65rem 0.85rem; margin-bottom: 0.85rem; }
+    html.embed .tab { padding: 0.5rem 0.35rem; font-size: 0.7rem; }
+    html.embed .tab-pad { padding-top: 0.85rem; }
+    html.embed .card-header { padding: 0.65rem 0.85rem 0; }
+    html.embed .card-body { padding: 0 0.85rem 0.85rem; }
+    html.embed .check-item { padding: 0.65rem; }
+    html.embed .file-row { padding: 0.5rem; }
+  </style>
+  <script>
+    (function () {
+      if (new URLSearchParams(location.search).get("embed") === "1") {
+        document.documentElement.classList.add("embed");
+      }
+    })();
+  </script>
+</head>
+<body>
+  <div class="wrap">
+    <p class="back-row">
+      <a href="#">&#8592; Pipeline</a>
+      <span aria-hidden="true"> · </span>
+      <span>Fast Tech SAS</span>
+    </p>
+
+    <h1>Plataforma de informaci&#243;n geogr&#225;fica y anal&#237;tica para seguimiento de cultivos y variables clim&#225;ticas</h1>
+
+    <div class="meta-row">
+      <span class="badge badge-status">En Desarrollo</span>
+      <span class="badge badge-urgent">Urgente</span>
+      <span>Monto referencia: <strong>$&nbsp;185.000.000</strong></span>
+      <span>Cierre ofertas: <strong>15 may 2026, 11:59 p.&nbsp;m.</strong></span>
+    </div>
+    <p class="entity">Instituto para el desarrollo Agrario · Contrataci&#243;n abierta</p>
+
+    <div class="progress-wrap">
+      <div class="progress-label">
+        <span>Progreso estimado de preparaci&#243;n</span>
+        <span>58%</span>
+      </div>
+      <div class="progress-bar" aria-hidden="true"><span style="width:58%"></span></div>
+    </div>
+
+    <div class="grid">
+      <div>
+        <div class="tabs" role="tablist" aria-label="Secciones de la oportunidad">
+          <div class="tab active">Checklist</div>
+          <div class="tab">Propuesta</div>
+          <div class="tab">An&#225;lisis IA</div>
+          <div class="tab">Bit&#225;cora</div>
+        </div>
+
+        <div class="tab-pad">
+          <div class="card">
+            <div class="card-header">
+              <h2 class="card-title">Documentos del pliego</h2>
+              <p class="card-desc">Biblioteca de anexos y versiones publicadas por la entidad. Suba o elimine archivos seg&#250;n su rol.</p>
+            </div>
+            <div class="card-body">
+              <div class="cat-row" aria-hidden="true">
+                <span class="cat on">Pliego</span>
+                <span class="cat">Anexos</span>
+                <span class="cat">Adendas</span>
+              </div>
+              <div class="file-row">
+                <div style="display:flex;gap:0.65rem;align-items:flex-start;">
+                  <div class="file-icon" aria-hidden="true">&#128196;</div>
+                  <div>
+                    <p class="name">Pliego &#8212; condiciones particulares y t&#233;cnicas (PDF)</p>
+                    <p class="meta">Categor&#237;a: Pliego · Cargado 12 abr 2026</p>
+                  </div>
+                </div>
+              </div>
+              <div class="file-row">
+                <div style="display:flex;gap:0.65rem;align-items:flex-start;">
+                  <div class="file-icon" aria-hidden="true">&#128196;</div>
+                  <div>
+                    <p class="name">Anexo &#8212; especificaciones SIG y datos abiertos</p>
+                    <p class="meta">Categor&#237;a: Anexos · Cargado 12 abr 2026</p>
+                  </div>
+                </div>
+              </div>
+              <div class="file-row">
+                <div style="display:flex;gap:0.65rem;align-items:flex-start;">
+                  <div class="file-icon" aria-hidden="true">&#128196;</div>
+                  <div>
+                    <p class="name">Adenda No. 1 &#8212; aclaraciones pliego (PDF)</p>
+                    <p class="meta">Categor&#237;a: Adendas · Cargado 14 abr 2026</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-header">
+              <h2 class="card-title">Checklist oficial de documentos</h2>
+              <p class="card-desc">Requisitos para armar la propuesta. Los &#237;tems marcados como sugeridos por IA provienen del an&#225;lisis del pliego.</p>
+            </div>
+            <div class="card-body">
+              <p class="doc-progress"><strong>4</strong> de <strong>7</strong> documentos con soporte cargado</p>
+
+              <div class="check-item">
+                <div class="check-left">
+                  <span class="icon-ok" aria-hidden="true">&#10003;</span>
+                  <div>
+                    <h4>Garant&#237;a de seriedad de la oferta</h4>
+                    <p>Seg&#250;n modelo y porcentaje indicados en el pliego.</p>
+                    <div class="tag-row">
+                      <span class="tag-file">Garantia_seriedad_FastTech_2026.pdf</span>
+                    </div>
+                  </div>
+                </div>
+                <span class="btn-fake" style="opacity:0.55;border-style:dashed;">Descargar</span>
+              </div>
+
+              <div class="check-item">
+                <div class="check-left">
+                  <span class="icon-warn" aria-hidden="true">&#9888;</span>
+                  <div>
+                    <h4>Carta de presentaci&#243;n de la oferta</h4>
+                    <p>Firmada por el representante legal o apoderado.</p>
+                  </div>
+                </div>
+                <span class="btn-fake">Subir</span>
+              </div>
+
+              <div class="check-item">
+                <div class="check-left">
+                  <span class="icon-ok" aria-hidden="true">&#10003;</span>
+                  <div>
+                    <h4>Certificaci&#243;n ISO 27001 o equivalente</h4>
+                    <p>Referencia en anexo de seguridad de la informaci&#243;n y datos geoespaciales.</p>
+                    <div class="tag-row">
+                      <span class="tag-ia">Sugerido IA</span>
+                      <span class="tag-file">ISO27001_vigencia_2026.pdf</span>
+                    </div>
+                  </div>
+                </div>
+                <span class="btn-fake" style="opacity:0.55;border-style:dashed;">Descargar</span>
+              </div>
+
+              <div class="check-item">
+                <div class="check-left">
+                  <span class="icon-warn" aria-hidden="true">&#9888;</span>
+                  <div>
+                    <h4>Carta de intenci&#243;n de alianza t&#233;cnica (subcontratista SIG)</h4>
+                    <p>Recomendada para reforzar experiencia en sector p&#250;blico seg&#250;n an&#225;lisis de elegibilidad.</p>
+                    <div class="tag-row">
+                      <span class="tag-ia">Sugerido IA</span>
+                    </div>
+                  </div>
+                </div>
+                <span class="btn-fake">Subir</span>
+              </div>
+
+              <div class="check-item">
+                <div class="check-left">
+                  <span class="icon-ok" aria-hidden="true">&#10003;</span>
+                  <div>
+                    <h4>Certificado de existencia y representaci&#243;n legal</h4>
+                    <p>No mayor a 30 d&#237;as seg&#250;n pliego.</p>
+                    <div class="tag-row">
+                      <span class="tag-file">CamaraComercio_FastTech_abr2026.pdf</span>
+                    </div>
+                  </div>
+                </div>
+                <span class="btn-fake" style="opacity:0.55;border-style:dashed;">Descargar</span>
+              </div>
+
+              <div class="check-item">
+                <div class="check-left">
+                  <span class="icon-ok" aria-hidden="true">&#10003;</span>
+                  <div>
+                    <h4>RUT actualizado</h4>
+                    <p>Registro &#218;nico Tributario de la proponente.</p>
+                    <div class="tag-row">
+                      <span class="tag-file">RUT_FastTech_2026.pdf</span>
+                    </div>
+                  </div>
+                </div>
+                <span class="btn-fake" style="opacity:0.55;border-style:dashed;">Descargar</span>
+              </div>
+
+              <div class="check-item">
+                <div class="check-left">
+                  <span class="icon-warn" aria-hidden="true">&#9888;</span>
+                  <div>
+                    <h4>Certificaci&#243;n tributaria y parafiscales al d&#237;a</h4>
+                    <p>Planes de salud, pensi&#243;n y ARL con mora en cero.</p>
+                  </div>
+                </div>
+                <span class="btn-fake">Subir</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <aside>
+        <div class="aside-card stat-line urgent">
+          <h3>Estado en pipeline</h3>
+          <p class="big">En Desarrollo</p>
+          <p style="margin: 0.35rem 0 0; font-size: 0.75rem; color: var(--foreground-60);">Complete el checklist antes del cierre de ofertas.</p>
+        </div>
+        <div class="aside-card">
+          <h3>Documentaci&#243;n</h3>
+          <p style="margin: 0; font-size: 0.8125rem; line-height: 1.45; color: var(--foreground-60);">
+            Documentos del pliego son de la entidad; el checklist oficial es lo que su equipo debe aportar para la propuesta.
+          </p>
+        </div>
+        <div class="aside-card">
+          <h3>Cliente</h3>
+          <p style="margin: 0; font-weight: 600;">Fast Tech SAS</p>
+        </div>
+      </aside>
+    </div>
+  </div>
+</body>
+</html>

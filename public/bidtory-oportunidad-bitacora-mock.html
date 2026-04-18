@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Bidtory Aplica · Oportunidad · Bitácora</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --background: hsl(210 20% 98%);
+      --foreground: hsl(206 41% 39%);
+      --card: hsl(0 0% 100%);
+      --foreground-60: hsl(206 41% 39% / 0.6);
+      --foreground-75: hsl(206 41% 39% / 0.75);
+      --border: hsl(220 13% 91%);
+      --accent: hsl(175 100% 33%);
+      --accent-foreground: hsl(0 0% 100%);
+      --highlight: hsl(39 59% 65%);
+      --secondary: hsl(206 40% 38%);
+      --secondary-fg: hsl(0 0% 100%);
+      --muted: hsl(220 13% 96%);
+      --radius: 0.5rem;
+      --urgency: hsl(2 64% 58%);
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "DM Sans", system-ui, sans-serif;
+      background: var(--background);
+      color: var(--foreground);
+      padding: 1.5rem 1rem 2.5rem;
+      font-size: 0.875rem;
+    }
+
+    .wrap { max-width: 1200px; margin: 0 auto; }
+
+    .back-row {
+      font-size: 0.8125rem;
+      color: var(--foreground-60);
+      margin-bottom: 0.75rem;
+    }
+    .back-row a { color: var(--foreground-75); text-decoration: none; }
+
+    h1 {
+      font-family: "Playfair Display", Georgia, serif;
+      font-size: 1.5rem;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      line-height: 1.25;
+      margin: 0 0 1rem;
+      max-width: 52rem;
+    }
+    @media (min-width: 768px) { h1 { font-size: 1.75rem; } }
+
+    .meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.5rem 1rem;
+      margin-bottom: 1rem;
+      font-size: 0.8125rem;
+      color: var(--foreground-60);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      border-radius: calc(var(--radius) - 2px);
+      padding: 0.125rem 0.5rem;
+      font-size: 0.75rem;
+      font-weight: 500;
+      border: 1px solid var(--border);
+      background: hsl(220 13% 96%);
+    }
+    .badge-urgent {
+      border-color: hsl(2 64% 58% / 0.45);
+      background: hsl(2 64% 58% / 0.1);
+      color: hsl(2 55% 32%);
+    }
+    .badge-status {
+      border-color: hsl(39 59% 65% / 0.6);
+      background: hsl(39 59% 65% / 0.2);
+      color: hsl(206 41% 22%);
+      font-weight: 600;
+    }
+
+    .progress-wrap {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 1.25rem;
+      margin-bottom: 1.25rem;
+      box-shadow: 0 1px 2px rgb(0 0 0 / 0.04);
+    }
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: var(--foreground-60);
+      margin-bottom: 0.35rem;
+    }
+    .progress-bar {
+      height: 0.5rem;
+      border-radius: 9999px;
+      background: hsl(220 13% 91%);
+      overflow: hidden;
+    }
+    .progress-bar > span {
+      display: block;
+      height: 100%;
+      width: 62%;
+      border-radius: 9999px;
+      background: var(--accent);
+    }
+
+    .grid {
+      display: grid;
+      gap: 1.5rem;
+    }
+    @media (min-width: 1024px) {
+      .grid {
+        grid-template-columns: minmax(0, 2fr) minmax(260px, 1fr);
+        align-items: start;
+      }
+    }
+
+    .tabs {
+      border-bottom: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0;
+    }
+    @media (min-width: 640px) {
+      .tabs { grid-template-columns: repeat(4, 1fr); }
+    }
+    .tab {
+      padding: 0.75rem 0.5rem;
+      text-align: center;
+      font-size: 0.8125rem;
+      color: var(--foreground-60);
+      border-bottom: 2px solid transparent;
+      cursor: default;
+    }
+    .tab.active {
+      color: var(--foreground);
+      font-weight: 600;
+      border-bottom-color: var(--accent);
+      background: var(--card);
+    }
+    .tab-pad { padding-top: 1.5rem; }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 1rem;
+      box-shadow: 0 1px 2px rgb(0 0 0 / 0.04);
+    }
+    .card-header { padding: 1rem 1.25rem 0; }
+    .card-title {
+      font-size: 1rem;
+      font-weight: 600;
+      margin: 0 0 0.25rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .card-desc {
+      font-size: 0.75rem;
+      color: var(--foreground-60);
+      margin: 0 0 1rem;
+    }
+    .card-body { padding: 0 1.25rem 1.25rem; }
+
+    .thread {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 1.15rem;
+    }
+    .thread.reply {
+      margin-left: 2.5rem;
+      padding-left: 0.75rem;
+      border-left: 2px solid hsl(175 100% 33% / 0.25);
+    }
+
+    .avatar {
+      width: 2rem;
+      height: 2rem;
+      border-radius: 9999px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: var(--secondary-fg);
+      background: hsl(206 40% 38%);
+    }
+    .avatar.jur { background: hsl(206 45% 35%); }
+    .avatar.ges { background: hsl(175 45% 36%); }
+    .avatar.accent { background: var(--accent); }
+
+    .bubble {
+      flex: 1;
+      min-width: 0;
+      border-radius: 0.5rem;
+      padding: 0.65rem 0.85rem;
+      background: hsl(206 40% 38% / 0.12);
+      border: 1px solid hsl(206 40% 38% / 0.15);
+    }
+    .bubble.me {
+      background: hsl(175 100% 33% / 0.14);
+      border-color: hsl(175 100% 33% / 0.28);
+    }
+
+    .bubble-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      gap: 0.75rem;
+      margin-bottom: 0.35rem;
+      flex-wrap: wrap;
+    }
+    .author { font-weight: 600; font-size: 0.8125rem; }
+    .role {
+      display: block;
+      font-size: 0.65rem;
+      font-weight: 500;
+      color: var(--foreground-60);
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      margin-top: 0.1rem;
+    }
+    .when { font-size: 0.65rem; color: var(--foreground-60); white-space: nowrap; }
+
+    .bubble p {
+      margin: 0;
+      font-size: 0.8125rem;
+      line-height: 1.5;
+      color: hsl(206 41% 39% / 0.92);
+    }
+
+    .composer {
+      margin-top: 0.5rem;
+      padding: 0.65rem 0.85rem;
+      border: 1px dashed var(--border);
+      border-radius: var(--radius);
+      font-size: 0.75rem;
+      color: var(--foreground-60);
+      background: hsl(220 13% 98%);
+    }
+
+    .aside-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem 1.15rem;
+      margin-bottom: 1rem;
+      box-shadow: 0 1px 2px rgb(0 0 0 / 0.04);
+    }
+    .aside-card h3 {
+      font-size: 0.875rem;
+      font-weight: 500;
+      margin: 0 0 0.5rem;
+      color: var(--foreground-60);
+    }
+    .aside-card .big {
+      font-size: 1.125rem;
+      font-weight: 600;
+      margin: 0;
+    }
+    .stat-line { border-left: 4px solid var(--highlight); padding-left: 0.75rem; }
+    .stat-line.urgent { border-left-color: var(--urgency); }
+
+    .entity {
+      font-size: 0.75rem;
+      color: var(--foreground-60);
+      margin-top: 0.5rem;
+    }
+
+    .icon-msg {
+      width: 1.1rem;
+      height: 1.1rem;
+      opacity: 0.85;
+    }
+
+    html.embed body { padding: 0.75rem; font-size: 0.75rem; }
+    html.embed h1 { font-size: 1.125rem; margin-bottom: 0.65rem; }
+    html.embed .progress-wrap { padding: 0.65rem 0.85rem; margin-bottom: 0.85rem; }
+    html.embed .tab { padding: 0.5rem 0.35rem; font-size: 0.7rem; }
+    html.embed .tab-pad { padding-top: 0.85rem; }
+    html.embed .card-header { padding: 0.65rem 0.85rem 0; }
+    html.embed .card-body { padding: 0 0.85rem 0.85rem; }
+    html.embed .bubble p { font-size: 0.72rem; }
+    html.embed .thread.reply { margin-left: 1.5rem; }
+  </style>
+  <script>
+    (function () {
+      if (new URLSearchParams(location.search).get("embed") === "1") {
+        document.documentElement.classList.add("embed");
+      }
+    })();
+  </script>
+</head>
+<body>
+  <div class="wrap">
+    <p class="back-row">
+      <a href="#">&#8592; Pipeline</a>
+      <span aria-hidden="true"> · </span>
+      <span>Fast Tech SAS</span>
+    </p>
+
+    <h1>Plataforma de informaci&#243;n geogr&#225;fica y anal&#237;tica para seguimiento de cultivos y variables clim&#225;ticas</h1>
+
+    <div class="meta-row">
+      <span class="badge badge-status">En Desarrollo</span>
+      <span class="badge badge-urgent">Urgente</span>
+      <span>Monto referencia: <strong>$&nbsp;185.000.000</strong></span>
+      <span>Cierre ofertas: <strong>15 may 2026, 11:59 p.&nbsp;m.</strong></span>
+    </div>
+    <p class="entity">Instituto para el desarrollo Agrario · Contrataci&#243;n abierta</p>
+
+    <div class="progress-wrap">
+      <div class="progress-label">
+        <span>Progreso estimado de preparaci&#243;n</span>
+        <span>62%</span>
+      </div>
+      <div class="progress-bar" aria-hidden="true"><span></span></div>
+    </div>
+
+    <div class="grid">
+      <div>
+        <div class="tabs" role="tablist" aria-label="Secciones de la oportunidad">
+          <div class="tab">Checklist</div>
+          <div class="tab">Propuesta</div>
+          <div class="tab">An&#225;lisis IA</div>
+          <div class="tab active">Bit&#225;cora</div>
+        </div>
+
+        <div class="tab-pad">
+          <div class="card">
+            <div class="card-header">
+              <h2 class="card-title">
+                <svg class="icon-msg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                  <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                </svg>
+                Bit&#225;cora de la oportunidad
+              </h2>
+              <p class="card-desc">Comentarios con fecha y autor. Ideal para validaciones de jur&#237;dica, seguimiento de formulaci&#243;n y decisiones trazables frente a auditor&#237;a.</p>
+            </div>
+            <div class="card-body">
+              <div class="thread">
+                <div class="avatar jur" aria-hidden="true">AL</div>
+                <div class="bubble">
+                  <div class="bubble-head">
+                    <div>
+                      <span class="author">Andrea L&#243;pez</span>
+                      <span class="role">Jur&#237;dica · Fast Tech SAS</span>
+                    </div>
+                    <span class="when">hace 3 d&#237;as</span>
+                  </div>
+                  <p>Revis&#233; el pliego y los anexos sobre garant&#237;a de seriedad y tratamiento de datos geoespaciales. <strong>No tengo objeci&#243;n</strong> al modelo de garant&#237;a propuesto ni a la referencia ISO 27001. Solicito la <strong>carta de presentaci&#243;n</strong> en versi&#243;n final antes del cierre para revisi&#243;n formal de firmas.</p>
+                </div>
+              </div>
+
+              <div class="thread">
+                <div class="avatar ges" aria-hidden="true">MV</div>
+                <div class="bubble">
+                  <div class="bubble-head">
+                    <div>
+                      <span class="author">Miguel Vargas</span>
+                      <span class="role">Gesti&#243;n / Formulaci&#243;n · Fast Tech SAS</span>
+                    </div>
+                    <span class="when">hace 2 d&#237;as</span>
+                  </div>
+                  <p>Actualic&#233; el checklist: cargu&#233; la carta de presentaci&#243;n v3 y el anexo de experiencia SIG con las dos referencias p&#250;blicas. Queda pendiente la <strong>carta de intenci&#243;n de alianza t&#233;cnica</strong> firmada por el subcontratista; la env&#237;o ma&#241;ana antes del mediod&#237;a.</p>
+                </div>
+              </div>
+
+              <div class="thread reply">
+                <div class="avatar jur" aria-hidden="true">AL</div>
+                <div class="bubble">
+                  <div class="bubble-head">
+                    <div>
+                      <span class="author">Andrea L&#243;pez</span>
+                      <span class="role">Jur&#237;dica · Fast Tech SAS</span>
+                    </div>
+                    <span class="when">hace 1 d&#237;a</span>
+                  </div>
+                  <p><strong>Validado.</strong> La carta de presentaci&#243;n v3 cumple requisitos de representaci&#243;n. Cuando suban la carta de alianza con el subcontratista, reviso consistencia con las cl&#225;usulas de responsabilidad del pliego y dejo constancia aqu&#237;.</p>
+                </div>
+              </div>
+
+              <div class="thread">
+                <div class="avatar accent" aria-hidden="true">CR</div>
+                <div class="bubble me">
+                  <div class="bubble-head">
+                    <div>
+                      <span class="author">Catalina R&#237;os</span>
+                      <span class="role">Formulaci&#243;n · Fast Tech SAS</span>
+                    </div>
+                    <span class="when">hace 6 horas</span>
+                  </div>
+                  <p>Dejo registro: versi&#243;n preliminar de la propuesta t&#233;cnica (secciones 3 y 4) en el repositorio interno. Coordinaci&#243;n con jur&#237;dica para el apartado de protecci&#243;n de datos el martes 10:00 a.&nbsp;m.</p>
+                </div>
+              </div>
+
+              <div class="composer" aria-hidden="true">Escriba un comentario...</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <aside>
+        <div class="aside-card stat-line urgent">
+          <h3>Estado en pipeline</h3>
+          <p class="big">En Desarrollo</p>
+          <p style="margin: 0.35rem 0 0; font-size: 0.75rem; color: var(--foreground-60);">La bit&#225;cora conserva el hilo de validaciones y acuerdos.</p>
+        </div>
+        <div class="aside-card">
+          <h3>Trazabilidad</h3>
+          <p style="margin: 0; font-size: 0.8125rem; line-height: 1.45; color: var(--foreground-60);">
+            Cada mensaje queda asociado a esta licitaci&#243;n, con autor y fecha, para seguimiento interno o solicitudes de auditor&#237;a.
+          </p>
+        </div>
+        <div class="aside-card">
+          <h3>Cliente</h3>
+          <p style="margin: 0; font-weight: 600;">Fast Tech SAS</p>
+        </div>
+      </aside>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
@@ -9,7 +9,27 @@ import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const features = [
+type FeatureCta = {
+  text: string;
+  href: string;
+  external: boolean;
+} | null;
+
+type FeatureItem = {
+  step: number;
+  logo: string;
+  title: string;
+  description: string;
+  cta: FeatureCta;
+  /** Una sola imagen por paso */
+  image?: string;
+  /** Varias vistas del mismo paso (p. ej. capturas apiladas del análisis IA) */
+  images?: string[];
+  /** Textos cortos para accesibilidad / pies de vista */
+  imageCaptions?: string[];
+};
+
+const features: FeatureItem[] = [
   {
     step: 1,
     logo: '/logo-bidtory-descubre-pos.svg',
@@ -35,43 +55,55 @@ const features = [
   {
     step: 3,
     logo: '/logo-bidtory-aplica-pos.svg',
-    title: 'Paso 3: Análisis inteligente de pliegos',
+    title: 'Paso 3: Análisis IA del pliego',
     description:
-      'Suba el pliego y Bidtory extrae los requisitos técnicos, financieros y jurídicos automáticamente. Compara los requisitos contra el perfil de su empresa y muestra exactamente qué cumple y qué le falta.',
+      'En la pestaña Análisis IA, Bidtory resume el pliego y los requisitos habilitantes, y en una segunda vista muestra el diagnóstico de elegibilidad frente al perfil de su empresa y el checklist de documentos sugerido. Use las vistas 1 y 2 debajo de la imagen para recorrer ambas pantallas con texto legible.',
     cta: null,
-    image: '/home-paso-3-pliego.svg',
+    images: [
+      '/2-Bidtory%20Aplica-AnalisisAi-1.webp',
+      '/2-Bidtory%20Aplica-AnalisisAi-2.webp',
+    ],
+    imageCaptions: [
+      'Análisis IA: resumen técnico y requisitos habilitantes',
+      'Análisis IA: elegibilidad y checklist de documentos sugerido',
+    ],
   },
   {
     step: 4,
     logo: '/logo-bidtory-aplica-pos.svg',
-    title: 'Paso 4: Colaboración en equipo',
+    title: 'Paso 4: Checklist y documentos de la propuesta',
     description:
-      'Centralice toda la comunicación, versiones de propuesta y documentos en un solo espacio. Su equipo sabe en qué punto está cada licitación sin necesidad de hilos de correo.',
+      'En la pestaña Checklist concentra lo que exige el proceso: biblioteca de documentos del pliego (pliego, anexos, adendas) y el checklist oficial con ítems como garantía de seriedad y carta de presentación. Los documentos que la IA sugirió al analizar el pliego (por ejemplo certificación ISO 27001 o carta de alianza técnica) quedan identificados para que no se pierdan entre el resto de requisitos.',
     cta: {
       text: 'Acceso clientes',
       href: '/login',
       external: false,
     },
-    image: '/home-paso-4-equipo.svg',
+    image: '/2-Bidtory%20Aplica-Checklist.webp',
   },
   {
     step: 5,
     logo: '/logo-bidtory-aplica-pos.svg',
-    title: 'Paso 5: Visión estratégica',
+    title: 'Paso 5: Bitácora y trazabilidad',
     description:
-      'Gestiona el flujo completo de oportunidades en un tablero visual. Identifica dónde se estancan las propuestas y toma decisiones basadas en datos, no en intuición.',
+      'En la pestaña Bitácora, los perfiles de jurídica revisan y validan requisitos y riesgos; los de gestión y formulación documentan acuerdos y el estado de los documentos asociados a la propuesta. Todo queda registrado en un solo hilo por licitación, con trazabilidad clara para auditorías o revisiones internas, sin perder el contexto entre correos dispersos.',
     cta: {
       text: 'Acceso clientes',
       href: '/login',
       external: false,
     },
-    image: '/home-paso-5-tablero.svg',
+    image: '/2-Bidtory%20Aplica-Bitacora.webp',
   },
 ];
 
 export function FeatureScroll() {
   const [activeIndex, setActiveIndex] = useState(0);
+  const [subImageIndex, setSubImageIndex] = useState(0);
   const activeFeature = features[activeIndex];
+
+  useEffect(() => {
+    setSubImageIndex(0);
+  }, [activeIndex]);
 
   return (
     <div className="container mx-auto px-4 md:px-6">
@@ -107,22 +139,74 @@ export function FeatureScroll() {
       {/* Content panel */}
       <div className="relative grid lg:grid-cols-2 gap-10 lg:gap-16 items-center">
 
-        {/* Left — image */}
+        {/* Left — image(s) */}
         <div className="relative w-full rounded-xl border border-secondary overflow-hidden bg-muted/40 aspect-video lg:aspect-auto lg:min-h-[22rem] lg:h-[min(36rem,70vh)]">
-          {features.map((f, i) => (
-            <Image
-              key={f.step}
-              src={f.image}
-              fill
-              sizes="(max-width: 1023px) 100vw, min(720px, 50vw)"
-              alt={f.title}
-              className={cn(
-                'object-contain object-center transition-opacity duration-500',
-                i === activeIndex ? 'opacity-100' : 'opacity-0'
-              )}
-              priority={i === 0}
-            />
-          ))}
+          {features.map((f, i) => {
+            if (i !== activeIndex) return null;
+            const multi = f.images && f.images.length > 1;
+            if (multi) {
+              return (
+                <div key={f.step} className="absolute inset-0">
+                  {f.images!.map((src, idx) => (
+                    <Image
+                      key={src}
+                      src={src}
+                      fill
+                      sizes="(max-width: 1023px) 100vw, min(720px, 50vw)"
+                      alt={
+                        f.imageCaptions?.[idx] ??
+                        `${f.title} — vista ${idx + 1} de ${f.images!.length}`
+                      }
+                      className={cn(
+                        'absolute inset-0 object-contain object-center transition-opacity duration-300',
+                        idx === subImageIndex
+                          ? 'z-10 opacity-100'
+                          : 'z-0 opacity-0 pointer-events-none'
+                      )}
+                      priority={idx === 0}
+                    />
+                  ))}
+                  <div
+                    className="absolute bottom-3 left-0 right-0 z-20 flex flex-col items-center gap-2 px-2"
+                    role="group"
+                    aria-label="Vistas del análisis IA"
+                  >
+                    <p className="text-[11px] text-muted-foreground/90 sm:text-xs">
+                      Vista {subImageIndex + 1} de {f.images!.length}
+                    </p>
+                    <div className="flex items-center gap-2">
+                      {f.images!.map((_, idx) => (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => setSubImageIndex(idx)}
+                          className={cn(
+                            'rounded-full transition-all duration-200 h-2.5',
+                            idx === subImageIndex
+                              ? 'w-7 bg-accent'
+                              : 'w-2.5 bg-white/20 hover:bg-white/40'
+                          )}
+                          aria-label={`Mostrar vista ${idx + 1} de ${f.images!.length}`}
+                          aria-current={idx === subImageIndex ? 'true' : undefined}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              );
+            }
+            return (
+              <Image
+                key={f.step}
+                src={f.image!}
+                fill
+                sizes="(max-width: 1023px) 100vw, min(720px, 50vw)"
+                alt={f.title}
+                className="object-contain object-center transition-opacity duration-500 opacity-100"
+                priority={i === 0}
+              />
+            );
+          })}
         </div>
 
         {/* Right — text */}
