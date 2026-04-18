@@ -9,6 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/auth-context";
 import type { Customer } from "@/types";
 import { Users, PlusCircle, ArrowRight, Loader2, AlertCircle, Search, Briefcase, CheckCircle2, Settings } from "lucide-react";
+import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
+import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -21,7 +23,6 @@ import { useDescubre } from '@/contexts/descubre-context';
 import descubreApiClient from '@/lib/descubre-api-client';
 import { getUrgencyInfo } from '@/lib/date-utils';
 import type { OportunidadesDescubreResponse, Opportunity } from '@/types';
-import { Skeleton } from '@/components/ui/skeleton';
 
 function StatChip({
   value,
@@ -215,12 +216,7 @@ export default function DashboardClient() {
 
 
   if (authLoading || descubreLoading || loading) {
-     return (
-        <div className="flex items-center justify-center min-h-[calc(100vh-theme(spacing.28))]">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="ml-4">Cargando el panel...</p>
-        </div>
-      );
+    return <DashboardSkeleton />;
   }
 
   if (error) {
