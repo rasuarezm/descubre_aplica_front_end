@@ -37,6 +37,15 @@ export interface UserManagementProfile extends UserProfile {
     customer_role?: CustomerRole | null;
 }
 
+export interface BidtoryAccessInfo {
+  granted: boolean;
+  granted_at?: string | null;
+  granted_by?: string | null;
+  revoked_at?: string | null;
+  revoked_by?: string | null;
+  level?: "account" | "opportunity" | null;
+}
+
 export interface Customer {
   id: string;
   name: string;
@@ -44,6 +53,7 @@ export interface Customer {
   logoUrl?: string; // gs:// URI
   logo_signed_url?: string | null; // Temporary public URL for viewing
   is_archived?: boolean;
+  bidtory_access?: BidtoryAccessInfo | null;
 }
 
 export interface RequiredDocument {

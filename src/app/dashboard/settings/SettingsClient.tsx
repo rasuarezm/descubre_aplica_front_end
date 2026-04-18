@@ -1,7 +1,7 @@
 "use client";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Users, UserCircle, Building, Bell } from "lucide-react";
+import { Users, UserCircle, Building, Bell, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
@@ -12,6 +12,7 @@ export default function SettingsClient() {
 
   const canManageUsers = userProfile?.role === 'admin' || userProfile?.customer_role === 'administrador_cliente';
   const isAdmin = userProfile?.role === 'admin';
+  const isAdminCliente = userProfile?.role === 'customer' && userProfile?.customer_role === 'administrador_cliente';
 
   return (
     <div className="space-y-8">
@@ -55,6 +56,27 @@ export default function SettingsClient() {
             </Link>
           </CardContent>
         </Card>
+
+        {isAdminCliente && (
+          <Card className="hover:border-accent transition-colors">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <ShieldCheck className="h-6 w-6 text-accent" />
+                Acceso Bidtory
+              </CardTitle>
+              <CardDescription>
+                Controle si el equipo de Bidtory puede acceder a su zona para brindarle soporte y asistencia.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Link href="/dashboard/settings/bidtory-access" passHref>
+                <Button variant="outline">
+                  Gestionar Acceso <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        )}
 
         {canManageUsers && (
           <Card className="hover:border-accent transition-colors">

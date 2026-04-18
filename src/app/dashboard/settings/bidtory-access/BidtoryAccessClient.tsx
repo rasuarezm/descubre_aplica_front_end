@@ -1,0 +1,319 @@
+"use client";
+
+import { useState, useEffect, useCallback } from "react";
+import Link from "next/link";
+import { useAuth } from "@/contexts/auth-context";
+import { useRouter } from "next/navigation";
+import { useToast } from "@/hooks/use-toast";
+import type { Customer } from "@/types";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  AlertDialog,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Badge } from "@/components/ui/badge";
+import {
+  ArrowLeft,
+  ShieldCheck,
+  ShieldOff,
+  Loader2,
+  AlertCircle,
+  CheckCircle2,
+} from "lucide-react";
+import apiClient from "@/lib/api-client";
+
+export default function BidtoryAccessClient() {
+  const { userProfile, loading: authLoading } = useAuth();
+  const router = useRouter();
+  const { toast } = useToast();
+
+  const [customer, setCustomer] = useState<Customer | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [showGrantDialog, setShowGrantDialog] = useState(false);
+  const [showRevokeDialog, setShowRevokeDialog] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const fetchData = useCallback(async () => {
+    const cid = userProfile?.customer_id;
+    if (!cid) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await apiClient.get<Customer[]>("/get_customers");
+      const mine = data.find((c) => c.id === cid) ?? null;
+      setCustomer(mine);
+      if (!mine) {
+        setError("No se encontró la información de su cuenta.");
+      }
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Ocurrió un error desconocido.";
+      setError(errorMessage);
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  }, [userProfile?.customer_id, toast]);
+
+  useEffect(() => {
+    if (authLoading) return;
+    if (!userProfile) {
+      router.replace("/dashboard");
+      return;
+    }
+    if (
+      userProfile.role !== "customer" ||
+      userProfile.customer_role !== "administrador_cliente"
+    ) {
+      toast({
+        title: "Acceso denegado",
+        description: "No tiene permiso para ver esta página.",
+        variant: "destructive",
+      });
+      router.replace("/dashboard");
+      return;
+    }
+    if (!userProfile.customer_id) {
+      toast({
+        title: "Acceso denegado",
+        description: "No tiene permiso para ver esta página.",
+        variant: "destructive",
+      });
+      router.replace("/dashboard");
+      return;
+    }
+    void fetchData();
+  }, [authLoading, userProfile, router, toast, fetchData]);
+
+  const handleGrant = async () => {
+    const cid = userProfile?.customer_id;
+    if (!cid) return;
+    setIsSubmitting(true);
+    try {
+      await apiClient.post("/grant_bidtory_access", {
+        customer_id: cid,
+        level: "account",
+      });
+      toast({ title: "Acceso concedido correctamente" });
+      await fetchData();
+      setShowGrantDialog(false);
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Ocurrió un error desconocido.";
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleRevoke = async () => {
+    const cid = userProfile?.customer_id;
+    if (!cid) return;
+    setIsSubmitting(true);
+    try {
+      await apiClient.post("/revoke_bidtory_access", {
+        customer_id: cid,
+        level: "account",
+      });
+      toast({ title: "Acceso revocado correctamente" });
+      await fetchData();
+      setShowRevokeDialog(false);
+    } catch (err) {
+      const errorMessage =
+        err instanceof Error ? err.message : "Ocurrió un error desconocido.";
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const granted = customer?.bidtory_access?.granted === true;
+
+  if (authLoading || (!userProfile && !error && loading)) {
+    return (
+      <div className="flex items-center justify-center min-h-[calc(100vh-theme(spacing.28))]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="ml-4">Verificando permisos...</p>
+      </div>
+    );
+  }
+
+  const allowed =
+    userProfile?.role === "customer" &&
+    userProfile?.customer_role === "administrador_cliente" &&
+    !!userProfile?.customer_id;
+
+  if (!allowed) {
+    return (
+      <div className="flex items-center justify-center min-h-[calc(100vh-theme(spacing.28))]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="ml-4">Verificando permisos...</p>
+      </div>
+    );
+  }
+
+  if (loading && !customer && !error) {
+    return (
+      <div className="flex items-center justify-center min-h-[calc(100vh-theme(spacing.28))]">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <p className="ml-4">Cargando...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <Link
+          href="/dashboard/settings"
+          className="inline-flex items-center text-sm text-accent hover:underline mb-2"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Volver a Configuración
+        </Link>
+        <h1 className="text-3xl font-headline tracking-tight">Acceso Bidtory</h1>
+      </div>
+
+      {error && (
+        <Card className="border-destructive/50">
+          <CardContent className="flex items-center gap-3 pt-6">
+            <AlertCircle className="h-5 w-5 text-destructive shrink-0" />
+            <p className="text-sm text-destructive">{error}</p>
+          </CardContent>
+        </Card>
+      )}
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Estado del acceso</CardTitle>
+          <CardDescription>
+            Permiso de acceso a nivel cuenta para el equipo de Bidtory.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {granted ? (
+            <Badge
+              variant="secondary"
+              className="border-transparent bg-emerald-600 text-white hover:bg-emerald-600 gap-1.5 px-3 py-1"
+            >
+              <CheckCircle2 className="h-3.5 w-3.5" />
+              Acceso concedido
+            </Badge>
+          ) : (
+            <Badge variant="secondary" className="gap-1.5 px-3 py-1">
+              <ShieldOff className="h-3.5 w-3.5" />
+              Sin acceso
+            </Badge>
+          )}
+
+          <p className="text-sm text-muted-foreground">
+            {granted
+              ? "El equipo de Bidtory tiene acceso a su zona. Pueden ver sus oportunidades y documentos para brindarle soporte."
+              : "El equipo de Bidtory no tiene acceso a su zona. Solo usted y sus usuarios pueden ver su información."}
+          </p>
+
+          {granted ? (
+            <Button
+              variant="destructive"
+              onClick={() => setShowRevokeDialog(true)}
+              disabled={!!error || !customer}
+            >
+              <ShieldOff className="mr-2 h-4 w-4" />
+              Revocar Acceso
+            </Button>
+          ) : (
+            <Button
+              variant="default"
+              onClick={() => setShowGrantDialog(true)}
+              disabled={!!error || !customer}
+            >
+              <ShieldCheck className="mr-2 h-4 w-4" />
+              Conceder Acceso
+            </Button>
+          )}
+        </CardContent>
+      </Card>
+
+      <AlertDialog open={showGrantDialog} onOpenChange={setShowGrantDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Conceder acceso a Bidtory?</AlertDialogTitle>
+            <AlertDialogDescription>
+              El equipo de Bidtory podrá ver sus oportunidades, documentos y
+              análisis. Esto les permite brindarle soporte personalizado. Usted
+              puede revocar este acceso en cualquier momento.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isSubmitting}>Cancelar</AlertDialogCancel>
+            <Button
+              type="button"
+              disabled={isSubmitting}
+              onClick={() => void handleGrant()}
+            >
+              {isSubmitting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                "Conceder Acceso"
+              )}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={showRevokeDialog} onOpenChange={setShowRevokeDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Revocar acceso a Bidtory?</AlertDialogTitle>
+            <AlertDialogDescription>
+              El equipo de Bidtory perderá acceso a su zona de forma inmediata.
+              Si necesita soporte en el futuro, deberá volver a conceder el
+              acceso.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isSubmitting}>Cancelar</AlertDialogCancel>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={isSubmitting}
+              onClick={() => void handleRevoke()}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              {isSubmitting ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                "Revocar Acceso"
+              )}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}
