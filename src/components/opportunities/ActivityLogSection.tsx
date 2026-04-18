@@ -6,7 +6,15 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { MessageSquareText, Loader2, Edit, Trash2, Bot } from 'lucide-react';
+import {
+  MessageSquareText,
+  Loader2,
+  Edit,
+  Trash2,
+  Bot,
+  MoreVertical,
+  Reply,
+} from 'lucide-react';
 import type { OpportunityComment, UserProfile } from '@/types';
 import { formatDistanceToNow } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -17,6 +25,12 @@ import { useToast } from '@/hooks/use-toast';
 import apiClient from '@/lib/api-client';
 import DOMPurify from 'dompurify';
 import { avatarUrlForImg } from '@/lib/user-profile';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface CommentThreadProps {
   comment: OpportunityComment;
@@ -37,8 +51,8 @@ function CommentThread({ comment, onReply, onRefreshData, currentUserId }: Comme
   const [isDeleting, setIsDeleting] = useState(false);
 
   const { toast } = useToast();
-  const { userProfile, user, getIdToken } = useAuth();
-  
+  const { userProfile, user } = useAuth();
+
   const isSystemComment = useMemo(() => comment.author_user_id === 'system_ia', [comment.author_user_id]);
 
   const authorDisplayName = isSystemComment ? 'Asistente IA' : (comment.author?.displayName || comment.author_display_name || 'Usuario');
@@ -70,6 +84,18 @@ function CommentThread({ comment, onReply, onRefreshData, currentUserId }: Comme
     }
     return false;
   }, [userProfile]);
+
+  const hasCommentActions = useMemo(() => {
+    if (isSystemComment || comment.is_deleted) return false;
+    const showReplyAction = !isSystemComment && canCollaborate;
+    return showReplyAction || canEditComment || canDeleteComment;
+  }, [
+    isSystemComment,
+    comment.is_deleted,
+    canCollaborate,
+    canEditComment,
+    canDeleteComment,
+  ]);
 
   const handleReplySubmit = async () => {
     if (!replyText.trim() || replyText === '<p></p>') return;
@@ -139,74 +165,132 @@ function CommentThread({ comment, onReply, onRefreshData, currentUserId }: Comme
               </Avatar>
             )}
 
-            <div className="flex-1">
-              <div className={cn(
-                "text-sm rounded-lg p-3 w-full",
-                comment.is_deleted 
-                  ? "bg-transparent" 
-                  : isCurrentUserComment ? "bg-accent text-accent-foreground" : isSystemComment ? "bg-muted" : "bg-secondary"
-              )}>
-                <div className={cn(
-                    "flex justify-between items-center mb-1 gap-4",
-                    isCurrentUserComment && !comment.is_deleted && "flex-row-reverse"
-                )}>
-                  <span className="font-semibold">{comment.is_deleted ? "" : authorDisplayName}</span>
-                  {!comment.is_deleted && (
-                    <span className="text-xs text-muted-foreground">
-                      {formatDistanceToNow(new Date(comment.created_at), { addSuffix: true, locale: es })}
-                    </span>
-                  )}
-                </div>
+            <div className="flex-1 min-w-0">
+              <div
+                className={cn(
+                  "text-sm w-full",
+                  comment.is_deleted
+                    ? "bg-transparent py-1"
+                    : "rounded-xl border p-3.5 shadow-sm",
+                  !comment.is_deleted &&
+                    isCurrentUserComment &&
+                    "border-accent/35 bg-accent/12 text-foreground",
+                  !comment.is_deleted &&
+                    !isCurrentUserComment &&
+                    isSystemComment &&
+                    "border-primary/20 bg-primary/[0.06] text-foreground",
+                  !comment.is_deleted &&
+                    !isCurrentUserComment &&
+                    !isSystemComment &&
+                    "border-border bg-card text-card-foreground",
+                )}
+              >
+                {!comment.is_deleted && (
+                  <div
+                    className={cn(
+                      "flex justify-between items-start gap-2 mb-1.5",
+                      isCurrentUserComment && "flex-row-reverse",
+                    )}
+                  >
+                    <span className="font-semibold text-sm leading-tight">{authorDisplayName}</span>
+                    <div className="flex items-center gap-0.5 shrink-0">
+                      <span className="text-xs text-muted-foreground whitespace-nowrap">
+                        {formatDistanceToNow(new Date(comment.created_at), {
+                          addSuffix: true,
+                          locale: es,
+                        })}
+                      </span>
+                      {!isEditing && hasCommentActions && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className={cn(
+                                "h-7 w-7 text-muted-foreground hover:text-foreground",
+                                isCurrentUserComment && "text-foreground/80 hover:text-foreground",
+                              )}
+                              aria-label="Acciones del comentario"
+                            >
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-52">
+                            {!isSystemComment && canCollaborate && (
+                              <DropdownMenuItem
+                                onClick={() => setShowReply((v) => !v)}
+                              >
+                                <Reply className="mr-2 h-4 w-4" />
+                                {showReply ? "Cancelar respuesta" : "Responder"}
+                              </DropdownMenuItem>
+                            )}
+                            {canEditComment && (
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  setIsEditing(true);
+                                  setEditedText(comment.comment_text);
+                                }}
+                              >
+                                <Edit className="mr-2 h-4 w-4" />
+                                Editar
+                              </DropdownMenuItem>
+                            )}
+                            {canDeleteComment && (
+                              <DropdownMenuItem
+                                className="text-destructive focus:text-destructive"
+                                onClick={() => setShowDeleteConfirm(true)}
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Eliminar
+                              </DropdownMenuItem>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
+                    </div>
+                  </div>
+                )}
                 {comment.is_deleted ? (
-                  <p className="italic text-muted-foreground text-sm" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(comment.comment_text) }} />
+                  <p
+                    className="italic text-muted-foreground text-sm"
+                    dangerouslySetInnerHTML={{
+                      __html: DOMPurify.sanitize(comment.comment_text),
+                    }}
+                  />
                 ) : isEditing ? (
-                   <div className="bg-card text-card-foreground rounded-md p-2 -m-1">
-                     <RichTextEditor value={editedText} onChange={setEditedText} />
-                   </div>
+                  <div className="bg-card text-card-foreground rounded-lg border border-border/80 p-2 -m-0.5">
+                    <RichTextEditor value={editedText} onChange={setEditedText} />
+                  </div>
                 ) : (
-                  <div 
-                    className="prose prose-sm dark:prose-invert max-w-none [&_a]:text-highlight [&_a:hover]:underline [&_p]:my-1"
-                    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(comment.comment_text) }} 
+                  <div
+                    className="prose prose-sm dark:prose-invert max-w-none leading-relaxed [&_a]:text-highlight [&_a:hover]:underline [&_p]:my-1.5 [&_p:first-child]:mt-0"
+                    dangerouslySetInnerHTML={{
+                      __html: DOMPurify.sanitize(comment.comment_text),
+                    }}
                   />
                 )}
               </div>
 
-              {!comment.is_deleted && (
-                <>
-                  {isEditing ? (
-                    <div className="text-xs text-muted-foreground mt-2 flex gap-2 justify-end">
-                        <Button size="sm" variant="ghost" onClick={() => setIsEditing(false)} disabled={isUpdating}>Cancelar</Button>
-                        <Button size="sm" onClick={handleUpdateSubmit} disabled={isUpdating}>
-                            {isUpdating && <Loader2 className="mr-2 h-3 w-3 animate-spin" />}
-                            Guardar
-                        </Button>
-                    </div>
-                  ) : (
-                    <div className={cn("text-xs text-muted-foreground mt-1 flex gap-2 items-center", isCurrentUserComment && "justify-end")}>
-                      {!isSystemComment && canCollaborate && (
-                        <button onClick={() => setShowReply(!showReply)} className="hover:underline">
-                          {showReply ? 'Cancelar' : 'Responder'}
-                        </button>
-                      )}
-                      {canEditComment && (
-                        <>
-                          {canCollaborate && <span className="text-muted-foreground/50">·</span>}
-                          <button onClick={() => { setIsEditing(true); setEditedText(comment.comment_text); }} className="hover:underline flex items-center gap-1"><Edit className="h-3 w-3"/> Editar</button>
-                        </>
-                      )}
-                      {canDeleteComment && (
-                        <>
-                          {(canCollaborate || canEditComment) && <span className="text-muted-foreground/50">·</span>}
-                          <button onClick={() => setShowDeleteConfirm(true)} className="hover:underline text-destructive flex items-center gap-1"><Trash2 className="h-3 w-3"/> Eliminar</button>
-                        </>
-                      )}
-                    </div>
-                  )}
-                </>
+              {!comment.is_deleted && isEditing && (
+                <div className="text-xs text-muted-foreground mt-2 flex gap-2 justify-end">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => setIsEditing(false)}
+                    disabled={isUpdating}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button size="sm" onClick={handleUpdateSubmit} disabled={isUpdating}>
+                    {isUpdating && <Loader2 className="mr-2 h-3 w-3 animate-spin" />}
+                    Guardar
+                  </Button>
+                </div>
               )}
               
               {showReply && (
-                <div className="mt-2 flex gap-4">
+                <div className="mt-3 flex gap-4">
                   <Avatar className="h-8 w-8">
                       <AvatarImage src={avatarUrlForImg(userProfile?.photo_signed_url, user?.photoURL)} alt={userProfile?.displayName || ''} referrerPolicy="no-referrer" />
                       <AvatarFallback>{userProfile?.displayName?.charAt(0) || 'U'}</AvatarFallback>
@@ -228,7 +312,7 @@ function CommentThread({ comment, onReply, onRefreshData, currentUserId }: Comme
               )}
 
               {comment.replies && comment.replies.length > 0 && (
-                <div className="mt-4 space-y-4">
+                <div className="mt-5 space-y-5 border-l-2 border-accent/25 pl-4 ml-0.5">
                   {comment.replies.map(reply => (
                     <CommentThread key={reply.id} comment={reply} onReply={onReply} onRefreshData={onRefreshData} currentUserId={currentUserId} />
                   ))}
@@ -294,27 +378,31 @@ export function ActivityLogSection({ userProfile, comments, onPostComment, onRef
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <MessageSquareText className="h-6 w-6" />
+        <CardTitle className="flex items-center gap-2 text-lg font-semibold tracking-tight">
+          <MessageSquareText className="h-5 w-5 shrink-0 opacity-85" />
           Bitácora y Comentarios
         </CardTitle>
-        <CardDescription>
+        <CardDescription className="max-w-xl leading-relaxed">
           Hilo de comunicación centralizado para esta oportunidad.
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-8">
         {canCollaborate && (
-          <div className="flex gap-4">
-             <Avatar>
-                <AvatarImage src={avatarUrlForImg(userProfile?.photo_signed_url, user?.photoURL)} alt={userProfile?.displayName || ''} referrerPolicy="no-referrer" />
-                <AvatarFallback>{userProfile?.displayName?.charAt(0) || 'U'}</AvatarFallback>
+          <div className="flex gap-4 rounded-xl border border-border/60 bg-muted/30 p-4">
+            <Avatar className="h-9 w-9 shrink-0">
+              <AvatarImage
+                src={avatarUrlForImg(userProfile?.photo_signed_url, user?.photoURL)}
+                alt={userProfile?.displayName || ""}
+                referrerPolicy="no-referrer"
+              />
+              <AvatarFallback>{userProfile?.displayName?.charAt(0) || "U"}</AvatarFallback>
             </Avatar>
-            <div className="flex-1 space-y-2">
+            <div className="min-w-0 flex-1 space-y-2">
               <RichTextEditor
-                  value={newComment}
-                  onChange={setNewComment}
-                  placeholder="Escribe un nuevo comentario..."
-                />
+                value={newComment}
+                onChange={setNewComment}
+                placeholder="Escribe un nuevo comentario..."
+              />
               <div className="flex justify-end">
                 <Button onClick={handleCommentSubmit} disabled={isSubmitting}>
                   {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -325,15 +413,21 @@ export function ActivityLogSection({ userProfile, comments, onPostComment, onRef
           </div>
         )}
 
-        <div className="space-y-6">
+        <div className="space-y-8">
           {comments.length > 0 ? (
-            comments.map(comment => (
-              <CommentThread key={comment.id} comment={comment} onReply={onPostComment} onRefreshData={onRefreshData} currentUserId={currentUserId} />
+            comments.map((comment) => (
+              <CommentThread
+                key={comment.id}
+                comment={comment}
+                onReply={onPostComment}
+                onRefreshData={onRefreshData}
+                currentUserId={currentUserId}
+              />
             ))
           ) : (
-             <div className="text-center text-muted-foreground py-8 border-2 border-dashed rounded-lg">
-                <p className="text-sm">Aún no hay comentarios.</p>
-                <p className="text-xs">¡Sea el primero en iniciar la conversación!</p>
+            <div className="rounded-xl border border-dashed border-border/60 bg-muted/20 px-4 py-10 text-center text-muted-foreground">
+              <p className="text-sm">Aún no hay comentarios.</p>
+              <p className="mt-1 text-xs">¡Sea el primero en iniciar la conversación!</p>
             </div>
           )}
         </div>
@@ -341,5 +435,4 @@ export function ActivityLogSection({ userProfile, comments, onPostComment, onRef
     </Card>
   );
 }
-
     
