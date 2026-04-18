@@ -27,6 +27,7 @@ import apiClient from '@/lib/api-client';
 import { customerLogoImgSrc } from '@/lib/gcs-display';
 import { FinancialProfileWidget } from '@/components/customers/FinancialProfileWidget';
 import { RupContractsWidget } from '@/components/customers/RupContractsWidget';
+import { CustomerZoneSkeleton } from '@/components/customers/CustomerZoneSkeleton';
 
 const FINAL_OPPORTUNITY_STATUSES = ['Ganada', 'Perdida', 'Descartada'];
 
@@ -874,22 +875,51 @@ const handleUploadGeneralDocument = async () => {
   };
   
   if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-[calc(100vh-theme(spacing.28))]">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <p className="ml-4">Cargando datos del cliente...</p>
-      </div>
-    );
+    return <CustomerZoneSkeleton />;
   }
 
   if (error) {
-     return (
-        <div className="flex flex-col items-center justify-center min-h-[calc(100vh-theme(spacing.28))] text-center">
-           <AlertCircle className="h-10 w-10 text-destructive" />
-           <p className="mt-4 text-lg font-semibold">{error}</p>
-          <p className="text-muted-foreground">No se pudieron cargar los datos de la zona del cliente. Intenta de nuevo más tarde.</p>
-        </div>
-      );
+    return (
+      <div className="space-y-6">
+        <section className="space-y-4 border-t border-border pt-8" aria-labelledby="customer-zone-error-heading">
+          <div className="space-y-2">
+            <h2
+              id="customer-zone-error-heading"
+              className="flex items-center gap-2 text-lg font-semibold tracking-tight text-foreground md:text-xl"
+            >
+              <AlertCircle className="h-5 w-5 shrink-0 text-destructive" aria-hidden />
+              No se pudo cargar la zona de cliente
+            </h2>
+            <p className="text-sm leading-relaxed text-muted-foreground">{error}</p>
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              Compruebe su conexión e inténtelo de nuevo más tarde.
+            </p>
+          </div>
+          <Card className="border-destructive/30 bg-destructive/[0.04] shadow-sm">
+            <CardContent className="flex flex-col gap-4 py-5 sm:flex-row sm:items-center sm:justify-between">
+              <p className="text-sm text-muted-foreground">
+                Si el problema continúa, escríbanos a{' '}
+                <a
+                  href="mailto:hola@bidtory.com"
+                  className="font-medium text-accent underline-offset-4 hover:underline"
+                >
+                  hola@bidtory.com
+                </a>
+                .
+              </p>
+              <Button
+                type="button"
+                variant="secondary"
+                className="shrink-0"
+                onClick={() => void fetchData()}
+              >
+                Reintentar
+              </Button>
+            </CardContent>
+          </Card>
+        </section>
+      </div>
+    );
   }
 
   if (!customer) {
@@ -902,7 +932,7 @@ const handleUploadGeneralDocument = async () => {
     <div className="space-y-8">
       {/* Header Section */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-4 min-w-0">
           {/* <img> nativo: URLs firmadas GCS no deben pasar por el optimizador de next/image (403 / ORB en dev). */}
           <img
             src={customerLogoImgSrc(
@@ -912,12 +942,12 @@ const handleUploadGeneralDocument = async () => {
             alt={`${customer.name} logo`}
             width={100}
             height={100}
-            className="rounded-lg border shadow-md object-cover"
+            className="rounded-lg border shadow-md object-cover shrink-0"
             data-ai-hint="company logo"
             key={customer.logo_signed_url}
             referrerPolicy="no-referrer"
           />
-          <div>
+          <div className="min-w-0">
             <h1 className="text-3xl font-headline tracking-tight">{customer.name}</h1>
             <p className="text-muted-foreground mt-1">{customer.profileInfo}</p>
           </div>
@@ -1057,70 +1087,79 @@ const handleUploadGeneralDocument = async () => {
         </div>
       </div>
       
-      {/* Summary Panel */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-        <Card className="shadow-sm border border-border border-l-4 border-l-border">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Próximo Vencimiento</CardTitle>
-            <CalendarClock className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            {summaryStats.nextToExpire ? (
-              <div>
-                <div className="text-2xl font-bold text-primary">{format(new Date(summaryStats.nextToExpire.deadline!), 'dd MMM yyyy, p', { locale: es })}</div>
-                <p className="text-xs text-muted-foreground truncate">{summaryStats.nextToExpire.title}</p>
-              </div>
-            ) : (
-              <p className="text-sm text-muted-foreground pt-2">No hay vencimientos próximos.</p>
-            )}
-          </CardContent>
-        </Card>
-        <Card className="shadow-sm border border-border border-l-4 border-l-border">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Oportunidades Activas</CardTitle>
-            <Target className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
+      {/* Summary — mismos datos, contenedor unificado */}
+      <section
+        aria-label="Resumen de oportunidades"
+        className="overflow-hidden rounded-xl border border-border bg-card shadow-sm"
+      >
+        <div className="grid grid-cols-1 divide-y divide-border md:grid-cols-2 md:divide-y lg:grid-cols-5 lg:divide-x lg:divide-y-0">
+          <div className="border-l-4 border-l-border p-4 sm:p-5">
+            <div className="flex flex-row items-center justify-between gap-2 pb-2">
+              <h3 className="text-sm font-medium">Próximo Vencimiento</h3>
+              <CalendarClock className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+            </div>
+            <div className="pt-0.5">
+              {summaryStats.nextToExpire ? (
+                <div>
+                  <div className="text-2xl font-bold text-primary">
+                    {format(new Date(summaryStats.nextToExpire.deadline!), 'dd MMM yyyy, p', {
+                      locale: es,
+                    })}
+                  </div>
+                  <p className="text-xs text-muted-foreground truncate">{summaryStats.nextToExpire.title}</p>
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground pt-2">No hay vencimientos próximos.</p>
+              )}
+            </div>
+          </div>
+          <div className="border-l-4 border-l-border p-4 sm:p-5">
+            <div className="flex flex-row items-center justify-between gap-2 pb-2">
+              <h3 className="text-sm font-medium">Oportunidades Activas</h3>
+              <Target className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+            </div>
             <div className="text-2xl font-bold">{filteredOpportunities.length}</div>
             <p className="text-xs text-muted-foreground">Total de oportunidades en curso</p>
-          </CardContent>
-        </Card>
-        <Card className="shadow-sm border border-border border-l-4 border-l-highlight">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Próximas a Vencer</CardTitle>
-            <AlertTriangle className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
+          </div>
+          <div className="border-l-4 border-l-highlight p-4 sm:p-5">
+            <div className="flex flex-row items-center justify-between gap-2 pb-2">
+              <h3 className="text-sm font-medium">Próximas a Vencer</h3>
+              <AlertTriangle className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+            </div>
             <div className="text-2xl font-bold">{summaryStats.upcomingCount}</div>
             <p className="text-xs text-muted-foreground">Vencen en 8-14 días</p>
-          </CardContent>
-        </Card>
-        <Card className="shadow-sm border border-border border-l-4 border-l-urgency">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Urgentes</CardTitle>
-            <Clock className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
+          </div>
+          <div className="border-l-4 border-l-urgency p-4 sm:p-5">
+            <div className="flex flex-row items-center justify-between gap-2 pb-2">
+              <h3 className="text-sm font-medium">Urgentes</h3>
+              <Clock className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+            </div>
             <div className="text-2xl font-bold text-urgency">{summaryStats.urgentCount}</div>
             <p className="text-xs text-muted-foreground">Vencen en &lt; 8 días</p>
-          </CardContent>
-        </Card>
-        <Card className="shadow-sm border border-border border-l-4 border-l-accent">
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Valor en Juego</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
+          </div>
+          <div className="border-l-4 border-l-accent p-4 sm:p-5 md:col-span-2 lg:col-span-1">
+            <div className="flex flex-row items-center justify-between gap-2 pb-2">
+              <h3 className="text-sm font-medium">Valor en Juego</h3>
+              <DollarSign className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+            </div>
             <div className="text-2xl font-bold text-accent">{formatCurrency(summaryStats.pipelineValue)}</div>
             <p className="text-xs text-muted-foreground">Suma de oportunidades activas</p>
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        </div>
+      </section>
 
       {/* Opportunities Section */}
-      <div className="space-y-4">
+      <section
+        aria-labelledby="customer-zone-opportunities-heading"
+        className="space-y-4 border-t border-border pt-8"
+      >
         <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-          <h2 className="text-2xl font-semibold font-headline">{currentViewTitle}</h2>
+          <h2
+            id="customer-zone-opportunities-heading"
+            className="text-2xl font-semibold font-headline"
+          >
+            {currentViewTitle}
+          </h2>
           <div className="flex items-center gap-2">
             <ListFilter className="h-4 w-4 text-muted-foreground" />
             <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -1142,14 +1181,16 @@ const handleUploadGeneralDocument = async () => {
         {filteredOpportunities.length === 0 ? (
           <Card className="text-center py-12">
             <CardHeader>
-              <Briefcase className="mx-auto h-12 w-12 text-muted-foreground" />
+              <Briefcase className="mx-auto h-12 w-12 text-muted-foreground" aria-hidden />
               <CardTitle className="mt-4 text-2xl">
-                {statusFilter === 'all' ? 'Aún no hay Oportunidades Activas' : `No hay Oportunidades en esta vista`}
+                {statusFilter === 'all' ? 'Aún no hay oportunidades activas' : 'No hay oportunidades en esta vista'}
               </CardTitle>
             </CardHeader>
             <CardContent>
               <CardDescription>
-                {statusFilter === 'archived' ? 'No hay oportunidades archivadas para este cliente.' : 'Prueba a seleccionar otro estado o crea una nueva oportunidad.'}
+                {statusFilter === 'archived'
+                  ? 'No hay oportunidades archivadas para este cliente.'
+                  : 'Pruebe a seleccionar otro estado o cree una nueva oportunidad.'}
               </CardDescription>
               
               {canAnalyzeTender && statusFilter !== 'archived' && (
@@ -1320,11 +1361,13 @@ const handleUploadGeneralDocument = async () => {
             })}
           </div>
         )}
-      </div>
+      </section>
 
       {/* Documents Library Section */}
-      <div className="space-y-4">
-          <h2 className="text-2xl font-semibold font-headline">Biblioteca de Documentos</h2>
+      <section aria-labelledby="customer-zone-documents-heading" className="space-y-4 border-t border-border pt-8">
+          <h2 id="customer-zone-documents-heading" className="text-2xl font-semibold font-headline">
+            Biblioteca de Documentos
+          </h2>
           <Accordion type="multiple" defaultValue={['experience', 'rup', 'financial_statements', 'other']} className="w-full">
               {Object.entries(documentCategories).map(([key, category]) => (
                   (category.documents.length > 0 || canCreateAndEdit) && (
@@ -1412,7 +1455,7 @@ const handleUploadGeneralDocument = async () => {
                   )
               ))}
           </Accordion>
-      </div>
+      </section>
       
       <Dialog open={isAddDocDialogOpen} onOpenChange={setIsAddDocDialogOpen}>
         <DialogContent>
