@@ -299,7 +299,7 @@ function CommentThread({ comment, onReply, onRefreshData, currentUserId }: Comme
                       <RichTextEditor
                         value={replyText}
                         onChange={setReplyText}
-                        placeholder={`Respondiendo a ${authorDisplayName}...`}
+                        placeholder={`Respuesta a ${authorDisplayName}…`}
                       />
                       <div className="mt-2 flex justify-end">
                       <Button size="sm" onClick={handleReplySubmit} disabled={isSubmittingReply}>
@@ -401,7 +401,7 @@ export function ActivityLogSection({ userProfile, comments, onPostComment, onRef
               <RichTextEditor
                 value={newComment}
                 onChange={setNewComment}
-                placeholder="Escribe un nuevo comentario..."
+                placeholder="Escriba su comentario…"
               />
               <div className="flex justify-end">
                 <Button onClick={handleCommentSubmit} disabled={isSubmitting}>
@@ -427,7 +427,7 @@ export function ActivityLogSection({ userProfile, comments, onPostComment, onRef
           ) : (
             <div className="rounded-xl border border-dashed border-border/60 bg-muted/20 px-4 py-10 text-center text-muted-foreground">
               <p className="text-sm">Aún no hay comentarios.</p>
-              <p className="mt-1 text-xs">¡Sea el primero en iniciar la conversación!</p>
+              <p className="mt-1 text-xs">Puede iniciar la conversación con el primer comentario.</p>
             </div>
           )}
         </div>

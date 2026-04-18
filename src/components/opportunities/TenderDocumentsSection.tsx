@@ -120,7 +120,7 @@ export function TenderDocumentsSection({ userProfile, documents, categories, onU
                 <DialogHeader>
                   <DialogTitle>Añadir Pliego o Documento de Referencia</DialogTitle>
                   <DialogDescription>
-                    Sube un nuevo documento que sirva como referencia para esta oportunidad.
+                    Suba un nuevo documento que sirva como referencia para esta oportunidad.
                   </DialogDescription>
                 </DialogHeader>
                 <div className="grid gap-4 py-4">

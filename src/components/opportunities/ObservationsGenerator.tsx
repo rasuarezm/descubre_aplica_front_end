@@ -233,7 +233,7 @@ export function ObservationsGenerator({ opportunityId, tenderDocuments }: Observ
       <Card className="bg-muted/50 border-dashed">
         <CardContent className="pt-6 flex flex-col items-center text-center">
           <AlertTriangle className="h-10 w-10 text-amber-500 mb-3" />
-          <h3 className="text-lg font-semibold">¿Hay algo que objetar en este pliego?</h3>
+          <h3 className="text-lg font-semibold">¿Desea plantear observaciones sobre este pliego?</h3>
           <p className="text-sm text-muted-foreground mb-4 max-w-md">
             Analice los documentos con IA para detectar contradicciones, requisitos que limiten
             la competencia, errores en cronogramas y ambigüedades técnicas. Obtenga borradores
@@ -244,7 +244,7 @@ export function ObservationsGenerator({ opportunityId, tenderDocuments }: Observ
           {hasDraft && !hasFinal && (
             <div className="flex items-center gap-2 text-xs text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-md px-3 py-2 mb-4 max-w-md">
               <FileClock className="h-3.5 w-3.5 shrink-0" />
-              <span>Estás analizando el <strong>borrador</strong>. Cuando llegue el pliego definitivo, podrás usar "Regenerar" para actualizar el análisis.</span>
+              <span>En este momento se analiza el <strong>borrador</strong>. Cuando disponga del pliego definitivo, podrá usar «Regenerar» para actualizar el análisis.</span>
             </div>
           )}
           {hasFinal && (
@@ -282,7 +282,7 @@ export function ObservationsGenerator({ opportunityId, tenderDocuments }: Observ
                 <AlertDescription className="text-xs text-blue-700 dark:text-blue-300">
                   Existe un pliego definitivo y un borrador. Para observaciones formales a la entidad,
                   se recomienda usar el <strong>pliego definitivo</strong>.
-                  El borrador puede ser útil si aún está en período previo de consulta.
+                  El borrador puede resultar útil si el proceso aún se encuentra en período previo de consulta.
                 </AlertDescription>
               </Alert>
             )}

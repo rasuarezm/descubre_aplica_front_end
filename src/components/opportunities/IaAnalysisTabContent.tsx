@@ -5,7 +5,7 @@
 import { useState, useMemo } from 'react';
 import type { Opportunity, IaRequiredDocument, RequiredDocument, DocumentItem } from "@/types";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
-import { Lightbulb, CheckCircle, AlertTriangle, Loader2, AlertCircleIcon, FileSignature, ListChecks, Plus, Info, PackageCheck, Briefcase, Landmark, Building } from "lucide-react";
+import { Lightbulb, CheckCircle, AlertTriangle, Loader2, AlertCircleIcon, FileSignature, ListChecks, Plus, Info, PackageCheck, Briefcase, Landmark, Building, RefreshCw } from "lucide-react";
 import { Skeleton } from "../ui/skeleton";
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -23,9 +23,20 @@ interface IaAnalysisTabContentProps {
   opportunityId: string;
   customerId: string;
   tenderDocuments: DocumentItem[];
+  /** Vuelve a cargar la oportunidad (p. ej. si el análisis aún no aparece). */
+  onRefreshData?: () => void;
 }
 
-export function IaAnalysisTabContent({ ia_analysis, officialChecklist, onAddDocumentsToChecklist, isSubmitting, opportunityId, customerId, tenderDocuments }: IaAnalysisTabContentProps) {
+export function IaAnalysisTabContent({
+  ia_analysis,
+  officialChecklist,
+  onAddDocumentsToChecklist,
+  isSubmitting,
+  opportunityId,
+  customerId,
+  tenderDocuments,
+  onRefreshData,
+}: IaAnalysisTabContentProps) {
 
   const [selectedDocs, setSelectedDocs] = useState<IaRequiredDocument[]>([]);
   
@@ -55,18 +66,32 @@ export function IaAnalysisTabContent({ ia_analysis, officialChecklist, onAddDocu
 
   if (!ia_analysis) {
     return (
-      <Card className="text-center py-12">
-        <CardHeader>
-          <Lightbulb className="mx-auto h-12 w-12 text-muted-foreground" />
-          <CardTitle className="mt-4 text-2xl">
-            Sin Análisis de IA
+      <Card className="border-border shadow-sm">
+        <CardHeader className="text-center sm:text-left">
+          <Lightbulb className="mx-auto h-10 w-10 text-muted-foreground sm:mx-0" aria-hidden />
+          <CardTitle className="mt-4 text-xl font-headline tracking-tight sm:mt-3">
+            Sin análisis de IA disponible
           </CardTitle>
-        </CardHeader>
-        <CardContent>
-          <CardDescription>
-            Esta oportunidad no fue creada usando el análisis con IA. La información de IA solo está disponible para nuevas oportunidades analizadas a través de un pliego.
+          <CardDescription className="text-left text-base leading-relaxed">
+            No hay un análisis de IA asociado a esta oportunidad en este momento. Si acaba de subir el pliego, espere unos minutos y pulse{' '}
+            <span className="font-medium text-foreground/90">Actualizar</span>. Si el problema continúa, escríbanos a{' '}
+            <a
+              href="mailto:hola@bidtory.com"
+              className="font-medium text-accent underline-offset-4 hover:underline"
+            >
+              hola@bidtory.com
+            </a>
+            .
           </CardDescription>
-        </CardContent>
+        </CardHeader>
+        {onRefreshData && (
+          <CardContent className="pt-0">
+            <Button type="button" variant="secondary" className="w-full sm:w-auto" onClick={() => onRefreshData()}>
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Actualizar
+            </Button>
+          </CardContent>
+        )}
       </Card>
     );
   }
@@ -86,7 +111,7 @@ export function IaAnalysisTabContent({ ia_analysis, officialChecklist, onAddDocu
         </CardHeader>
         <CardContent>
           <CardDescription>
-            La IA está procesando el documento. Los resultados aparecerán aquí una vez que se complete.
+            La IA está procesando el documento. Los resultados se mostrarán aquí al finalizar el análisis.
           </CardDescription>
         </CardContent>
       </Card>

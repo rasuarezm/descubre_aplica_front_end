@@ -334,7 +334,7 @@ export function ProposalDocumentsSection({ userProfile, opportunity, proposalDoc
             {documentThreads.length === 0 ? (
               <div className="text-center text-muted-foreground py-8 border-2 border-dashed rounded-lg">
                 <p className="text-sm">No hay documentos de propuesta aún.</p>
-                <p className="text-xs">Use el botón "Añadir Documento" para empezar.</p>
+                <p className="text-xs">Use el botón «Añadir Documento» para comenzar.</p>
               </div>
             ) : (
               <Accordion type="multiple" className="w-full space-y-3">
