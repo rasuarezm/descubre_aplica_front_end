@@ -7,13 +7,14 @@ import { useRouter } from 'next/navigation';
 import { useToast } from '@/hooks/use-toast';
 import type { Customer } from '@/types';
 
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { MoreHorizontal, ArrowLeft, Building, Loader2, AlertCircle, Archive, ArchiveRestore } from 'lucide-react';
+import { MoreHorizontal, ArrowLeft, Building, Loader2, AlertCircle, Archive, ArchiveRestore, CheckCircle2, ShieldOff } from 'lucide-react';
 import apiClient from '@/lib/api-client';
 import { customerLogoImgSrc } from '@/lib/gcs-display';
 
@@ -220,13 +221,14 @@ function CustomerTable({ customers, isLoading, error, onActionClick, actionLabel
                             <TableHead className="w-[100px]">Logo</TableHead>
                             <TableHead>Nombre</TableHead>
                             <TableHead>Descripción</TableHead>
+                            <TableHead>Acceso Bidtory</TableHead>
                             <TableHead><span className="sr-only">Acciones</span></TableHead>
                         </TableRow>
                     </TableHeader>
                     <TableBody>
                         {customers.length === 0 ? (
                             <TableRow>
-                                <TableCell colSpan={4} className="h-24 text-center">
+                                <TableCell colSpan={5} className="h-24 text-center">
                                     No se encontraron clientes en esta vista.
                                 </TableCell>
                             </TableRow>
@@ -249,6 +251,19 @@ function CustomerTable({ customers, isLoading, error, onActionClick, actionLabel
                                     </TableCell>
                                     <TableCell className="font-medium">{customer.name}</TableCell>
                                     <TableCell>{customer.profileInfo}</TableCell>
+                                    <TableCell>
+                                        {customer.bidtory_access?.granted === true ? (
+                                            <Badge className="border-transparent bg-emerald-600 text-white hover:bg-emerald-600 gap-1.5">
+                                                <CheckCircle2 className="h-3 w-3" />
+                                                Con acceso
+                                            </Badge>
+                                        ) : (
+                                            <Badge variant="secondary" className="gap-1.5">
+                                                <ShieldOff className="h-3 w-3" />
+                                                Sin acceso
+                                            </Badge>
+                                        )}
+                                    </TableCell>
                                     <TableCell>
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>

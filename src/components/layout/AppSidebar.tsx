@@ -60,7 +60,9 @@ export function AppSidebar() {
     setDataLoading(true);
     try {
       let customers: Customer[] = await apiClient.get('/get_customers');
-      customers = customers.filter(c => !c.is_archived);
+      customers = customers.filter(
+        (c) => !c.is_archived && c.bidtory_access?.granted === true
+      );
       customers.sort((a, b) => a.name.localeCompare(b.name));
       setCustomerSubItems(customers.map(c => ({ href: `/dashboard/customers/${c.id}`, label: c.name })));
     } catch (error) {
@@ -167,8 +169,8 @@ export function AppSidebar() {
                       <SidebarMenuSkeleton className="h-7" />
                       <SidebarMenuSkeleton className="h-7" />
                     </>
-                  ) : (
-                    customerSubItems.map(subItem => (
+                  ) : customerSubItems.length > 0 ? (
+                    customerSubItems.map((subItem) => (
                       <SidebarMenuSubItem key={subItem.href}>
                         <Link href={subItem.href} passHref>
                           <SidebarMenuSubButton asChild isActive={pathname === subItem.href}>
@@ -177,6 +179,18 @@ export function AppSidebar() {
                         </Link>
                       </SidebarMenuSubItem>
                     ))
+                  ) : (
+                    <SidebarMenuSubItem>
+                      <SidebarMenuSubButton
+                        href="#"
+                        aria-disabled
+                        tabIndex={-1}
+                        className="pointer-events-none cursor-default opacity-50"
+                        onClick={(e) => e.preventDefault()}
+                      >
+                        <span className="text-xs italic">Sin clientes con acceso</span>
+                      </SidebarMenuSubButton>
+                    </SidebarMenuSubItem>
                   )}
                 </SidebarMenuSub>
               )}
