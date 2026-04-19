@@ -47,7 +47,7 @@ firebase-debug.log
 firestore-debug.log
 
 # Ignorar carpetas de sistema accidentales
-Users/
+/Users/
 
 # Firebase cache
 .firebase/
