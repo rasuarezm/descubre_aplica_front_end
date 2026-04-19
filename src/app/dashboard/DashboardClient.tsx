@@ -152,7 +152,7 @@ export default function DashboardClient() {
         .finally(() => setDescubreSummaryLoading(false));
     }
 
-    if (tieneAplica && userProfile?.customer_id) {
+    if ((tieneAplica || !!userProfile?.customer_id) && userProfile?.customer_id) {
       setAplicaSummaryLoading(true);
       apiClient
         .get<Opportunity[]>(`/get_opportunities?customer_id=${userProfile.customer_id}`)
@@ -230,7 +230,8 @@ export default function DashboardClient() {
   }
   
   if (userProfile?.role === 'customer') {
-    if (!tieneDescubre && !tieneAplica) {
+    const isAplicaUser = tieneAplica || !!userProfile?.customer_id;
+    if (!tieneDescubre && !isAplicaUser) {
       return (
         <div className="flex flex-col items-center justify-center min-h-[calc(100vh-theme(spacing.28))] text-center">
           <Users className="h-12 w-12 text-muted-foreground" />
@@ -380,7 +381,7 @@ export default function DashboardClient() {
             </Link>
           )}
 
-          {tieneAplica && userProfile.customer_id && (
+          {isAplicaUser && userProfile.customer_id && (
             <Link href={`/dashboard/customers/${userProfile.customer_id}`}>
               <Card className="group hover:shadow-lg hover:border-accent/50 transition-all duration-300 cursor-pointer h-full">
                 <CardHeader className="pb-3">
