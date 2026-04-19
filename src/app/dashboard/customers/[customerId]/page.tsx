@@ -460,6 +460,19 @@ export default function CustomerDetailPage() {
     };
   }, [fetchData]);
 
+  // Bloquear acceso del administrador Bidtory a zonas sin acceso concedido
+  useEffect(() => {
+    if (!customer || !userProfile) return;
+    if (userProfile.role === 'admin' && customer.bidtory_access?.granted !== true) {
+      toast({
+        title: "Acceso denegado",
+        description: "Este cliente no ha concedido acceso a su zona.",
+        variant: "destructive",
+      });
+      router.replace('/dashboard');
+    }
+  }, [customer, userProfile, router, toast]);
+
   // Polling automático mientras algún documento esté siendo procesado por la IA.
   // Cubre RUP, estados financieros y certificaciones de experiencia.
   const isAnyDocExtracting = customerDocuments.some(
