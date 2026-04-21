@@ -460,10 +460,13 @@ export default function CustomerDetailPage() {
     };
   }, [fetchData]);
 
-  // Bloquear acceso del administrador Bidtory a zonas sin acceso concedido
+  // Bloquear acceso del administrador Bidtory a zonas sin acceso concedido (cuenta u oportunidades)
   useEffect(() => {
     if (!customer || !userProfile) return;
-    if (userProfile.role === 'admin' && customer.bidtory_access?.granted !== true) {
+    const adminHasBidtoryAccess =
+      customer.bidtory_access?.granted === true ||
+      (customer.bidtory_access?.opportunity_grant_count ?? 0) > 0;
+    if (userProfile.role === 'admin' && !adminHasBidtoryAccess) {
       toast({
         title: "Acceso denegado",
         description: "Este cliente no ha concedido acceso a su zona.",

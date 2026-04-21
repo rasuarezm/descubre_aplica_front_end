@@ -61,7 +61,10 @@ export function AppSidebar() {
     try {
       let customers: Customer[] = await apiClient.get('/get_customers');
       customers = customers.filter(
-        (c) => !c.is_archived && c.bidtory_access?.granted === true
+        (c) =>
+          !c.is_archived &&
+          (c.bidtory_access?.granted === true ||
+            (c.bidtory_access?.opportunity_grant_count ?? 0) > 0)
       );
       customers.sort((a, b) => a.name.localeCompare(b.name));
       setCustomerSubItems(customers.map(c => ({ href: `/dashboard/customers/${c.id}`, label: c.name })));
