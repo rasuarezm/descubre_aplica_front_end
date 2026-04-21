@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/auth-context";
 import type { Customer } from "@/types";
-import { Users, PlusCircle, ArrowRight, Loader2, AlertCircle, Search, Briefcase, CheckCircle2, Settings } from "lucide-react";
+import { Users, PlusCircle, ArrowRight, Loader2, AlertCircle, Search, Briefcase, CheckCircle2, Settings, TrendingDown, UserCheck, Building2 } from "lucide-react";
 import { DashboardSkeleton } from "@/components/dashboard/DashboardSkeleton";
 import { Skeleton } from '@/components/ui/skeleton';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogClose } from "@/components/ui/dialog";
@@ -74,10 +74,34 @@ interface AplicaSummary {
   overdue: number;
 }
 
+interface AdminCustomer {
+  id: string;
+  name: string;
+  logo_url: string | null;
+  logo_signed_url: string | null;
+  owner_user_id: string | null;
+  is_archived: boolean;
+  created_at: string | null;
+  bidtory_access?: {
+    granted: boolean;
+    granted_at?: string | null;
+    level?: string | null;
+  } | null;
+  subscription?: {
+    nivel_suscripcion?: string | null;
+    estado_pago?: string | null;
+    fecha_inicio_suscripcion?: string | null;
+    fecha_proximo_pago?: string | null;
+    is_active?: boolean;
+    subscription_state?: string | null;
+    missing_reason?: string | null;
+  } | null;
+}
+
 export default function DashboardClient() {
   const { userProfile, getIdToken, loading: authLoading } = useAuth();
   const { tieneDescubre, tieneAplica, loading: descubreLoading, descubreData } = useDescubre();
-  const [customers, setCustomers] = useState<Customer[]>([]);
+  const [adminCustomers, setAdminCustomers] = useState<AdminCustomer[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -91,42 +115,31 @@ export default function DashboardClient() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [newCustomerData, setNewCustomerData] = useState({ name: '', description: '' });
 
-  const fetchCustomers = useCallback(async () => {
+  const fetchAdminCustomers = useCallback(async () => {
     setLoading(true);
     setError(null);
-    
-    try {
-      const data: any[] = await apiClient.get('/get_customers');
-      
-      const mappedCustomers: Customer[] = data.map(c => ({
-        id: String(c.id),
-        name: c.name,
-        profileInfo: c.description,
-        logoUrl: c.logo_url,
-        logo_signed_url: c.logo_signed_url
-      }));
-      
-      mappedCustomers.sort((a, b) => a.name.localeCompare(b.name));
 
-      setCustomers(mappedCustomers);
+    try {
+      const data = await apiClient.get<{ customers: AdminCustomer[]; meta: object }>('/get_admin_customers');
+      setAdminCustomers(data.customers ?? []);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Ocurrió un error desconocido.";
-      setError(errorMessage);
-      toast({ title: "Error", description: errorMessage, variant: "destructive" });
+      const msg = err instanceof Error ? err.message : 'Error desconocido.';
+      setError(msg);
+      toast({ title: 'Error', description: msg, variant: 'destructive' });
     } finally {
       setLoading(false);
     }
   }, [toast]);
-  
+
   useEffect(() => {
     if (!authLoading && !descubreLoading) {
       if (userProfile?.role === 'admin') {
-        fetchCustomers();
+        fetchAdminCustomers();
       } else {
         setLoading(false);
       }
     }
-  }, [userProfile, authLoading, descubreLoading, fetchCustomers]);
+  }, [userProfile, authLoading, descubreLoading, fetchAdminCustomers]);
 
   useEffect(() => {
     if (authLoading || descubreLoading) return;
@@ -205,7 +218,7 @@ export default function DashboardClient() {
         
         setIsCreateZoneDialogOpen(false);
         setNewCustomerData({ name: '', description: '' });
-        fetchCustomers();
+        fetchAdminCustomers();
     } catch (error) {
         const errorMessage = error instanceof Error ? error.message : 'Ocurrió un error desconocido';
         toast({ title: 'Error al Crear', description: errorMessage, variant: 'destructive' });
@@ -471,98 +484,197 @@ export default function DashboardClient() {
 
 
   if (userProfile?.role === 'admin') {
-      return (
-        <div className="space-y-8">
-          <Dialog open={isCreateZoneDialogOpen} onOpenChange={setIsCreateZoneDialogOpen}>
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle>Crear Nueva Zona de Cliente</DialogTitle>
-                <DialogDescription>
-                  Complete los detalles a continuación para crear una nueva zona privada para un cliente.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="grid gap-6 py-4">
-                <div className="grid gap-2">
-                  <Label htmlFor="name">Nombre del Cliente</Label>
-                  <Input id="name" value={newCustomerData.name} onChange={(e) => setNewCustomerData({...newCustomerData, name: e.target.value})} placeholder="Nombre de la empresa del cliente" className="bg-muted/50 border-secondary focus:border-accent focus:ring-accent" />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="description">Descripción</Label>
-                  <Textarea id="description" value={newCustomerData.description} onChange={(e) => setNewCustomerData({...newCustomerData, description: e.target.value})} placeholder="Una breve descripción del cliente." className="bg-muted/50 border-secondary focus:border-accent focus:ring-accent" />
-                </div>
-              </div>
-              <DialogFooter>
-                <DialogClose asChild>
-                  <Button variant="outline">Cancelar</Button>
-                </DialogClose>
-                <Button onClick={handleCreateCustomer} disabled={isSubmitting}>
-                  {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  {isSubmitting ? 'Creando...' : 'Crear Cliente'}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+    const totalActivos = adminCustomers.length;
+    const conServicio = adminCustomers.filter((c) => c.bidtory_access?.granted === true).length;
+    const autonomas = adminCustomers.filter((c) => c.bidtory_access?.granted !== true).length;
+    const vencidas = adminCustomers.filter((c) => c.subscription?.subscription_state === 'vencido').length;
 
-          <div className="flex items-center justify-between">
-            <h1 className="text-3xl font-headline tracking-tight">Zonas de Clientes</h1>
-            <Button onClick={() => setIsCreateZoneDialogOpen(true)}>
-              <PlusCircle className="mr-2 h-4 w-4" /> Crear Nueva Zona
+    const clientesConServicio = adminCustomers.filter((c) => c.bidtory_access?.granted === true);
+    const clientesVencidos = adminCustomers.filter(
+      (c) => c.subscription?.subscription_state === 'vencido' && c.bidtory_access?.granted !== true
+    );
+
+    const subscriptionBadge = (state: string | null | undefined) => {
+      const map: Record<string, { label: string; className: string }> = {
+        al_dia: { label: 'Al dia', className: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
+        por_vencer: { label: 'Por vencer', className: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' },
+        vencido: { label: 'Vencido', className: 'bg-destructive/10 text-destructive' },
+        prueba_gratuita: { label: 'Prueba', className: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' },
+        sin_fecha: { label: 'Sin fecha', className: 'bg-muted text-muted-foreground' },
+        inactivo: { label: 'Inactivo', className: 'bg-muted text-muted-foreground' },
+        desconocido: { label: 'Sin datos', className: 'bg-muted text-muted-foreground' },
+      };
+      const entry = map[state ?? ''] ?? map.desconocido;
+      return (
+        <span className={cn('inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium', entry.className)}>
+          {entry.label}
+        </span>
+      );
+    };
+
+    return (
+      <div className="space-y-8">
+        <Dialog open={isCreateZoneDialogOpen} onOpenChange={setIsCreateZoneDialogOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Crear Nueva Zona de Cliente</DialogTitle>
+              <DialogDescription>
+                Complete los detalles para crear una nueva zona privada para un cliente.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-6 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="name">Nombre del Cliente</Label>
+                <Input id="name" value={newCustomerData.name} onChange={(e) => setNewCustomerData({ ...newCustomerData, name: e.target.value })} placeholder="Nombre de la empresa" className="bg-muted/50 border-secondary focus:border-accent focus:ring-accent" />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="description">Descripción</Label>
+                <Textarea id="description" value={newCustomerData.description} onChange={(e) => setNewCustomerData({ ...newCustomerData, description: e.target.value })} placeholder="Breve descripción del cliente." className="bg-muted/50 border-secondary focus:border-accent focus:ring-accent" />
+              </div>
+            </div>
+            <DialogFooter>
+              <DialogClose asChild><Button variant="outline">Cancelar</Button></DialogClose>
+              <Button onClick={handleCreateCustomer} disabled={isSubmitting}>
+                {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isSubmitting ? 'Creando...' : 'Crear Cliente'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <h1 className="text-3xl font-headline tracking-tight">Panel Principal</h1>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/dashboard/settings/users">
+                <Users className="mr-2 h-4 w-4" /> Usuarios
+              </Link>
+            </Button>
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/dashboard/settings/bidtory-access">
+                <Settings className="mr-2 h-4 w-4" /> Control de Acceso
+              </Link>
+            </Button>
+            <Button size="sm" onClick={() => setIsCreateZoneDialogOpen(true)}>
+              <PlusCircle className="mr-2 h-4 w-4" /> Crear Zona
             </Button>
           </div>
-
-          {customers.length === 0 ? (
-            <Card className="text-center py-12">
-              <CardHeader>
-                <Users className="mx-auto h-12 w-12 text-muted-foreground" />
-                <CardTitle className="mt-4 text-2xl">No se encontraron Zonas de Clientes</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <CardDescription>Inicie creando una nueva zona privada para su primer cliente.</CardDescription>
-                <Button className="mt-6" onClick={() => setIsCreateZoneDialogOpen(true)}>
-                  <PlusCircle className="mr-2 h-4 w-4" /> Crear Zona de Cliente
-                </Button>
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {customers.map((customer: Customer) => {
-                return (
-                  <Card key={customer.id} className="flex flex-col hover:shadow-lg transition-shadow duration-300">
-                    <CardHeader className="flex flex-row items-start gap-4 space-y-0 pb-4">
-                      <img
-                        src={customerLogoImgSrc(
-                          customer.logo_signed_url,
-                          `https://placehold.co/80x80.png?text=${customer.name.charAt(0)}`
-                        )}
-                        alt={`${customer.name} logo`}
-                        width={60}
-                        height={60}
-                        className="rounded-lg border object-cover"
-                        data-ai-hint="company logo"
-                        key={customer.logo_signed_url}
-                        referrerPolicy="no-referrer"
-                      />
-                      <div className="flex-1">
-                        <CardTitle className="text-xl font-semibold">{customer.name}</CardTitle>
-                        <CardDescription className="text-sm line-clamp-2">{customer.profileInfo}</CardDescription>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="flex-grow">
-                    </CardContent>
-                    <CardContent className="pt-0">
-                      <Link href={`/dashboard/customers/${customer.id}`} passHref>
-                        <Button variant="outline" className="w-full">
-                          Ver Zona <ArrowRight className="ml-2 h-4 w-4" />
-                        </Button>
-                      </Link>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </div>
-          )}
         </div>
-      );
+
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          {[
+            { label: 'Empresas activas', value: totalActivos, icon: Building2, className: '' },
+            { label: 'Con servicio activo', value: conServicio, icon: UserCheck, className: conServicio > 0 ? 'text-accent' : '' },
+            { label: 'Autónomas', value: autonomas, icon: Users, className: '' },
+            { label: 'Suscripción vencida', value: vencidas, icon: TrendingDown, className: vencidas > 0 ? 'text-destructive' : '' },
+          ].map(({ label, value, icon: Icon, className }) => (
+            <Card key={label} className="p-4">
+              <div className="mb-2 flex items-center justify-between">
+                <span className="text-xs text-muted-foreground">{label}</span>
+                <Icon className={cn('h-4 w-4 text-muted-foreground', className)} />
+              </div>
+              <p className={cn('font-headline text-2xl font-bold', className)}>{value}</p>
+            </Card>
+          ))}
+        </div>
+
+        {clientesConServicio.length > 0 && (
+          <div className="space-y-4">
+            <h2 className="text-lg font-semibold">Con servicio activo</h2>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {clientesConServicio.map((c) => (
+                <Card key={c.id} className="flex flex-col transition-shadow duration-300 hover:shadow-lg">
+                  <CardHeader className="flex flex-row items-start gap-4 space-y-0 pb-3">
+                    <img
+                      src={customerLogoImgSrc(c.logo_signed_url, `https://placehold.co/80x80.png?text=${c.name.charAt(0)}`)}
+                      alt={`${c.name} logo`}
+                      width={48}
+                      height={48}
+                      className="rounded-lg border object-cover"
+                      referrerPolicy="no-referrer"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <CardTitle className="truncate text-base font-semibold">{c.name}</CardTitle>
+                      <div className="mt-1 flex flex-wrap gap-1">
+                        {c.subscription?.nivel_suscripcion && (
+                          <span className="text-[11px] capitalize text-muted-foreground">{c.subscription.nivel_suscripcion}</span>
+                        )}
+                      </div>
+                    </div>
+                    {subscriptionBadge(c.subscription?.subscription_state)}
+                  </CardHeader>
+                  {c.bidtory_access?.granted_at && (
+                    <CardContent className="pb-3 pt-0">
+                      <p className="text-[11px] text-muted-foreground">
+                        Acceso desde {new Date(c.bidtory_access.granted_at).toLocaleDateString('es-CO', { year: 'numeric', month: 'short', day: 'numeric' })}
+                      </p>
+                    </CardContent>
+                  )}
+                  <CardContent className="mt-auto pt-0">
+                    <Link href={`/dashboard/customers/${c.id}`} passHref>
+                      <Button variant="outline" size="sm" className="w-full">
+                        Ver Zona <ArrowRight className="ml-2 h-3 w-3" />
+                      </Button>
+                    </Link>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {clientesVencidos.length > 0 && (
+          <div className="space-y-4">
+            <h2 className="text-lg font-semibold text-destructive">Suscripción vencida</h2>
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+              {clientesVencidos.map((c) => (
+                <Card key={c.id} className="flex flex-col border-destructive/30">
+                  <CardHeader className="flex flex-row items-start gap-4 space-y-0 pb-3">
+                    <img
+                      src={customerLogoImgSrc(c.logo_signed_url, `https://placehold.co/80x80.png?text=${c.name.charAt(0)}`)}
+                      alt={`${c.name} logo`}
+                      width={48}
+                      height={48}
+                      className="rounded-lg border object-cover opacity-60"
+                      referrerPolicy="no-referrer"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <CardTitle className="truncate text-base font-semibold text-muted-foreground">{c.name}</CardTitle>
+                      {c.subscription?.nivel_suscripcion && (
+                        <span className="text-[11px] capitalize text-muted-foreground">{c.subscription.nivel_suscripcion}</span>
+                      )}
+                    </div>
+                    {subscriptionBadge(c.subscription?.subscription_state)}
+                  </CardHeader>
+                  {c.subscription?.fecha_proximo_pago && (
+                    <CardContent className="pb-3 pt-0">
+                      <p className="text-[11px] text-muted-foreground">
+                        Venció el {new Date(c.subscription.fecha_proximo_pago).toLocaleDateString('es-CO', { year: 'numeric', month: 'short', day: 'numeric' })}
+                      </p>
+                    </CardContent>
+                  )}
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {adminCustomers.length === 0 && (
+          <Card className="py-12 text-center">
+            <CardHeader>
+              <Users className="mx-auto h-12 w-12 text-muted-foreground" />
+              <CardTitle className="mt-4 text-2xl">Sin empresas registradas</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <CardDescription>Cree la primera zona privada para un cliente.</CardDescription>
+              <Button className="mt-6" onClick={() => setIsCreateZoneDialogOpen(true)}>
+                <PlusCircle className="mr-2 h-4 w-4" /> Crear Zona de Cliente
+              </Button>
+            </CardContent>
+          </Card>
+        )}
+      </div>
+    );
   }
 
   // Fallback for when user is not admin and not a redirectable customer
