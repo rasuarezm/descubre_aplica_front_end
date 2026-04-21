@@ -1333,8 +1333,22 @@ const sortedRequiredDocs = useMemo(() => {
                           <CheckCircle className="h-3.5 w-3.5" />
                           Acceso completo a nivel cuenta
                         </Badge>
-                        <p className="text-xs text-muted-foreground">
-                          Bidtory ya tiene acceso a toda su zona. No es necesario autorizar oportunidades individuales.
+                        <p
+                          className={cn(
+                            'text-xs leading-relaxed border-l-2 pl-2.5',
+                            'border-amber-500/80 text-amber-950 dark:border-amber-400/70 dark:text-amber-100',
+                          )}
+                        >
+                          Los consultores de Bidtory pueden ver{' '}
+                          <span className="font-medium text-foreground">todas</span> sus oportunidades y la
+                          documentación asociada. Si desea limitar el acceso a licitaciones concretas,{' '}
+                          <Link
+                            href="/dashboard/settings/bidtory-access"
+                            className="font-medium text-accent underline-offset-2 hover:underline"
+                          >
+                            revoque el acceso global en Ajustes
+                          </Link>{' '}
+                          y conceda acceso solo a las oportunidades que elija desde esta página.
                         </p>
                       </>
                     ) : oppGranted ? (
@@ -1365,8 +1379,12 @@ const sortedRequiredDocs = useMemo(() => {
                           <ShieldOff className="h-3.5 w-3.5" />
                           Sin acceso
                         </Badge>
-                        <p className="text-xs text-muted-foreground">
-                          Bidtory no puede ver esta oportunidad. Autorícela para recibir soporte específico.
+                        <p className="text-xs leading-relaxed text-muted-foreground">
+                          Si desea apoyo de los consultores de Bidtory para preparar y dar seguimiento a esta licitación,
+                          puede concederles acceso{' '}
+                          <span className="font-medium text-foreground">únicamente a esta oportunidad</span> y a la
+                          documentación asociada. Use el botón inferior cuando lo considere oportuno; podrá revocar el
+                          permiso en cualquier momento.
                         </p>
                         <Button
                           variant="default"
