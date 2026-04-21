@@ -1360,8 +1360,9 @@ const sortedRequiredDocs = useMemo(() => {
                           <CheckCircle className="h-3.5 w-3.5" />
                           Acceso autorizado
                         </Badge>
-                        <p className="text-xs text-muted-foreground">
-                          Bidtory puede ver esta oportunidad para brindarle soporte.
+                        <p className="text-xs leading-relaxed text-muted-foreground">
+                          El equipo de Bidtory puede ver esta oportunidad y la documentación asociada
+                          (incluido el análisis de IA, si aplica) para brindarle soporte.
                         </p>
                         <Button
                           variant="outline"
