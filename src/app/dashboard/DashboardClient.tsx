@@ -485,13 +485,17 @@ export default function DashboardClient() {
 
   if (userProfile?.role === 'admin') {
     const totalActivos = adminCustomers.length;
-    const conServicio = adminCustomers.filter((c) => c.bidtory_access?.granted === true).length;
-    const autonomas = adminCustomers.filter((c) => c.bidtory_access?.granted !== true).length;
+    const hasBidtoryAccess = (c: Customer) =>
+      c.bidtory_access?.granted === true ||
+      (c.bidtory_access?.opportunity_grant_count ?? 0) > 0;
+
+    const conServicio = adminCustomers.filter(hasBidtoryAccess).length;
+    const autonomas = adminCustomers.filter((c) => !hasBidtoryAccess(c)).length;
     const vencidas = adminCustomers.filter((c) => c.subscription?.subscription_state === 'vencido').length;
 
-    const clientesConServicio = adminCustomers.filter((c) => c.bidtory_access?.granted === true);
+    const clientesConServicio = adminCustomers.filter(hasBidtoryAccess);
     const clientesVencidos = adminCustomers.filter(
-      (c) => c.subscription?.subscription_state === 'vencido' && c.bidtory_access?.granted !== true
+      (c) => c.subscription?.subscription_state === 'vencido' && !hasBidtoryAccess(c)
     );
 
     const subscriptionBadge = (state: string | null | undefined) => {
