@@ -191,6 +191,7 @@ export interface Opportunity {
   work_breakdown_structure?: WBS;
   has_unread_adenda_analysis?: boolean; // Flag para una comprobación rápida
   is_archived?: boolean;
+  bidtory_access?: BidtoryAccessInfo | null;
 }
 
 export interface OpportunityStatusInfo {

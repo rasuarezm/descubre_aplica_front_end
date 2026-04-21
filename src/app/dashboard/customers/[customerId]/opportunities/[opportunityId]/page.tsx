@@ -14,7 +14,7 @@ import Link from "next/link";
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, CalendarDays, Loader2, AlertCircle, Edit, PlusCircle, Trash2, CalendarIcon, DollarSign, Clock, CheckCircle, Pencil, AlertTriangle, MoreVertical, Archive, Trophy, XCircle, Trash, CalendarClock, Target } from "lucide-react";
+import { ArrowLeft, CalendarDays, Loader2, AlertCircle, Edit, PlusCircle, Trash2, CalendarIcon, DollarSign, Clock, CheckCircle, Pencil, AlertTriangle, MoreVertical, Archive, Trophy, XCircle, Trash, CalendarClock, Target, ShieldCheck, ShieldOff } from "lucide-react";
 import type { Opportunity, Customer, DocumentItem, OpportunityStatusInfo, RequiredDocument, UserProfile, ProposalDocument, ProposalDocumentStatusInfo, ImportantDate, OpportunityComment, IaRequiredDocument, AdendaAnalysis } from '@/types';
 import { useAuth } from '@/contexts/auth-context';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog';
@@ -139,6 +139,9 @@ export default function OpportunityDetailPage() {
   
   const [showArchiveConfirm, setShowArchiveConfirm] = useState(false);
   const [isArchiving, setIsArchiving] = useState(false);
+  const [showBidtoryGrantDialog, setShowBidtoryGrantDialog] = useState(false);
+  const [showBidtoryRevokeDialog, setShowBidtoryRevokeDialog] = useState(false);
+  const [isBidtorySubmitting, setIsBidtorySubmitting] = useState(false);
 
   const [iaLiveProgress, setIaLiveProgress] = useState<{ progress: number; step: string } | null>(null);
 
@@ -746,6 +749,46 @@ const sortedRequiredDocs = useMemo(() => {
     }
   };
 
+  const handleBidtoryGrant = async () => {
+    if (!customerId || !opportunityId) return;
+    setIsBidtorySubmitting(true);
+    try {
+      await apiClient.post('/grant_bidtory_access', {
+        customer_id: customerId,
+        level: 'opportunity',
+        opportunity_id: opportunityId,
+      });
+      toast({ title: 'Acceso concedido a Bidtory para esta oportunidad' });
+      await fetchData(false);
+      setShowBidtoryGrantDialog(false);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Ocurrió un error desconocido.';
+      toast({ title: 'Error', description: msg, variant: 'destructive' });
+    } finally {
+      setIsBidtorySubmitting(false);
+    }
+  };
+
+  const handleBidtoryRevoke = async () => {
+    if (!customerId || !opportunityId) return;
+    setIsBidtorySubmitting(true);
+    try {
+      await apiClient.post('/revoke_bidtory_access', {
+        customer_id: customerId,
+        level: 'opportunity',
+        opportunity_id: opportunityId,
+      });
+      toast({ title: 'Acceso de Bidtory revocado para esta oportunidad' });
+      await fetchData(false);
+      setShowBidtoryRevokeDialog(false);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Ocurrió un error desconocido.';
+      toast({ title: 'Error', description: msg, variant: 'destructive' });
+    } finally {
+      setIsBidtorySubmitting(false);
+    }
+  };
+
   const formatCurrency = (value: number) => {
     return new Intl.NumberFormat('es-CO', {
       style: 'currency',
@@ -1268,6 +1311,78 @@ const sortedRequiredDocs = useMemo(() => {
                 )}
               </CardContent>
             </Card>
+            {userProfile?.role === 'customer' && canManageOpportunity && (() => {
+              const accountGranted = customer.bidtory_access?.granted === true;
+              const oppGranted = opportunity.bidtory_access?.granted === true;
+
+              return (
+                <Card className="mt-6">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-sm font-medium flex items-center gap-2">
+                      <BidtoryRadarColorIcon className="h-4 w-4 shrink-0" />
+                      Acceso Bidtory
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    {accountGranted ? (
+                      <>
+                        <Badge
+                          variant="secondary"
+                          className="border-transparent bg-emerald-600 text-white hover:bg-emerald-600 gap-1.5 px-3 py-1"
+                        >
+                          <CheckCircle className="h-3.5 w-3.5" />
+                          Acceso completo a nivel cuenta
+                        </Badge>
+                        <p className="text-xs text-muted-foreground">
+                          Bidtory ya tiene acceso a toda su zona. No es necesario autorizar oportunidades individuales.
+                        </p>
+                      </>
+                    ) : oppGranted ? (
+                      <>
+                        <Badge
+                          variant="secondary"
+                          className="border-transparent bg-emerald-600 text-white hover:bg-emerald-600 gap-1.5 px-3 py-1"
+                        >
+                          <CheckCircle className="h-3.5 w-3.5" />
+                          Acceso autorizado
+                        </Badge>
+                        <p className="text-xs text-muted-foreground">
+                          Bidtory puede ver esta oportunidad para brindarle soporte.
+                        </p>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="w-full text-destructive border-destructive/40 hover:bg-destructive/10"
+                          onClick={() => setShowBidtoryRevokeDialog(true)}
+                        >
+                          <ShieldOff className="mr-2 h-3.5 w-3.5" />
+                          Revocar acceso
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        <Badge variant="secondary" className="gap-1.5 px-3 py-1">
+                          <ShieldOff className="h-3.5 w-3.5" />
+                          Sin acceso
+                        </Badge>
+                        <p className="text-xs text-muted-foreground">
+                          Bidtory no puede ver esta oportunidad. Autorícela para recibir soporte específico.
+                        </p>
+                        <Button
+                          variant="default"
+                          size="sm"
+                          className="w-full"
+                          onClick={() => setShowBidtoryGrantDialog(true)}
+                        >
+                          <ShieldCheck className="mr-2 h-3.5 w-3.5" />
+                          Autorizar a Bidtory
+                        </Button>
+                      </>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })()}
           </aside>
         </div>
       </div>
@@ -1463,6 +1578,45 @@ const sortedRequiredDocs = useMemo(() => {
               {isArchiving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {isArchiving ? 'Archivando...' : 'Archivar'}
             </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={showBidtoryGrantDialog} onOpenChange={setShowBidtoryGrantDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Autorizar acceso a Bidtory?</AlertDialogTitle>
+            <AlertDialogDescription>
+              El equipo de Bidtory podrá ver esta oportunidad, sus documentos y análisis para brindarle soporte. Puede revocar este acceso en cualquier momento.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isBidtorySubmitting}>Cancelar</AlertDialogCancel>
+            <Button type="button" disabled={isBidtorySubmitting} onClick={() => void handleBidtoryGrant()}>
+              {isBidtorySubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Autorizar'}
+            </Button>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={showBidtoryRevokeDialog} onOpenChange={setShowBidtoryRevokeDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Revocar acceso de Bidtory?</AlertDialogTitle>
+            <AlertDialogDescription>
+              El equipo de Bidtory perderá acceso a esta oportunidad de forma inmediata.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isBidtorySubmitting}>Cancelar</AlertDialogCancel>
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={isBidtorySubmitting}
+              onClick={() => void handleBidtoryRevoke()}
+            >
+              {isBidtorySubmitting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Revocar acceso'}
+            </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
