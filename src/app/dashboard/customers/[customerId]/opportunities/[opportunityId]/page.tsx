@@ -14,7 +14,7 @@ import Link from "next/link";
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { useToast } from '@/hooks/use-toast';
-import { ArrowLeft, CalendarDays, Loader2, AlertCircle, Edit, PlusCircle, Trash2, CalendarIcon, DollarSign, Clock, CheckCircle, Pencil, AlertTriangle, MoreVertical, Archive, Trophy, XCircle, Trash, CalendarClock, Target, ShieldCheck, ShieldOff } from "lucide-react";
+import { ArrowLeft, CalendarDays, Loader2, AlertCircle, Edit, PlusCircle, Trash2, CalendarIcon, DollarSign, Clock, CheckCircle, Info, Pencil, AlertTriangle, MoreVertical, Archive, Trophy, XCircle, Trash, CalendarClock, Target, ShieldCheck, ShieldOff } from "lucide-react";
 import type { Opportunity, Customer, DocumentItem, OpportunityStatusInfo, RequiredDocument, UserProfile, ProposalDocument, ProposalDocumentStatusInfo, ImportantDate, OpportunityComment, IaRequiredDocument, AdendaAnalysis } from '@/types';
 import { useAuth } from '@/contexts/auth-context';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog';
@@ -142,6 +142,8 @@ export default function OpportunityDetailPage() {
   const [showBidtoryGrantDialog, setShowBidtoryGrantDialog] = useState(false);
   const [showBidtoryRevokeDialog, setShowBidtoryRevokeDialog] = useState(false);
   const [isBidtorySubmitting, setIsBidtorySubmitting] = useState(false);
+  const [isRequestingServiceFromOpp, setIsRequestingServiceFromOpp] = useState(false);
+  const [serviceRequestStatusFromOpp, setServiceRequestStatusFromOpp] = useState<'idle' | 'created' | 'already_pending'>('idle');
 
   const [iaLiveProgress, setIaLiveProgress] = useState<{ progress: number; step: string } | null>(null);
 
@@ -333,6 +335,10 @@ const sortedRequiredDocs = useMemo(() => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
   }, [fetchData]);
+
+  useEffect(() => {
+    setServiceRequestStatusFromOpp('idle');
+  }, [opportunityId]);
   
   useEffect(() => {
     if (!isAnalyzingAdenda) return;
@@ -786,6 +792,23 @@ const sortedRequiredDocs = useMemo(() => {
       toast({ title: 'Error', description: msg, variant: 'destructive' });
     } finally {
       setIsBidtorySubmitting(false);
+    }
+  };
+
+  const handleRequestServiceFromOpp = async () => {
+    setIsRequestingServiceFromOpp(true);
+    try {
+      const result = await apiClient.post<{ status: string }>('/request_bidtory_service', {});
+      if (result.status === 'already_pending') {
+        setServiceRequestStatusFromOpp('already_pending');
+      } else {
+        setServiceRequestStatusFromOpp('created');
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : 'Ocurrió un error desconocido.';
+      toast({ title: 'Error', description: msg, variant: 'destructive' });
+    } finally {
+      setIsRequestingServiceFromOpp(false);
     }
   };
 
@@ -1311,97 +1334,141 @@ const sortedRequiredDocs = useMemo(() => {
                 )}
               </CardContent>
             </Card>
-            {userProfile?.role === 'customer' && canManageOpportunity && (() => {
-              const accountGranted = customer.bidtory_access?.granted === true;
-              const oppGranted = opportunity.bidtory_access?.granted === true;
-
-              return (
-                <Card className="mt-6">
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-sm font-medium flex items-center gap-2">
-                      <BidtoryRadarColorIcon className="h-4 w-4 shrink-0" />
-                      Acceso Bidtory
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    {accountGranted ? (
-                      <>
-                        <Badge
-                          variant="secondary"
-                          className="border-transparent bg-emerald-600 text-white hover:bg-emerald-600 gap-1.5 px-3 py-1"
-                        >
-                          <CheckCircle className="h-3.5 w-3.5" />
-                          Acceso completo a nivel cuenta
-                        </Badge>
-                        <p
-                          className={cn(
-                            'text-xs leading-relaxed border-l-2 pl-2.5',
-                            'border-amber-500/80 text-amber-950 dark:border-amber-400/70 dark:text-amber-100',
-                          )}
-                        >
-                          Los consultores de Bidtory pueden ver{' '}
-                          <span className="font-medium text-foreground">todas</span> sus oportunidades y la
-                          documentación asociada. Si desea limitar el acceso a licitaciones concretas,{' '}
-                          <Link
-                            href="/dashboard/settings/bidtory-access"
-                            className="font-medium text-accent underline-offset-2 hover:underline"
-                          >
-                            revoque el acceso global en Ajustes
-                          </Link>{' '}
-                          y conceda acceso solo a las oportunidades que elija desde esta página.
-                        </p>
-                      </>
-                    ) : oppGranted ? (
-                      <>
-                        <Badge
-                          variant="secondary"
-                          className="border-transparent bg-emerald-600 text-white hover:bg-emerald-600 gap-1.5 px-3 py-1"
-                        >
-                          <CheckCircle className="h-3.5 w-3.5" />
-                          Acceso autorizado
-                        </Badge>
-                        <p className="text-xs leading-relaxed text-muted-foreground">
-                          El equipo de Bidtory puede ver esta oportunidad y la documentación asociada
-                          (incluido el análisis de IA, si aplica) para brindarle soporte.
-                        </p>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="w-full text-destructive border-destructive/40 hover:bg-destructive/10"
-                          onClick={() => setShowBidtoryRevokeDialog(true)}
-                        >
-                          <ShieldOff className="mr-2 h-3.5 w-3.5" />
-                          Revocar acceso
-                        </Button>
-                      </>
-                    ) : (
-                      <>
-                        <Badge variant="secondary" className="gap-1.5 px-3 py-1">
-                          <ShieldOff className="h-3.5 w-3.5" />
-                          Sin acceso
-                        </Badge>
-                        <p className="text-xs leading-relaxed text-muted-foreground">
-                          Si desea apoyo de los consultores de Bidtory para preparar y dar seguimiento a esta licitación,
-                          puede concederles acceso{' '}
-                          <span className="font-medium text-foreground">únicamente a esta oportunidad</span> y a la
-                          documentación asociada. Use el botón inferior cuando lo considere oportuno; podrá revocar el
-                          permiso en cualquier momento.
-                        </p>
+            {userProfile?.role === 'customer' && canManageOpportunity && (
+              <Card className="mt-6">
+                <CardHeader className="pb-3">
+                  <CardTitle className="text-sm font-medium flex items-center gap-2">
+                    <BidtoryRadarColorIcon className="h-4 w-4 shrink-0" />
+                    Acceso Bidtory
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {customer?.bidtory_service_enabled !== true ? (
+                    <>
+                      <Badge variant="secondary" className="gap-1.5 px-3 py-1">
+                        <ShieldOff className="h-3.5 w-3.5" />
+                        Servicio no activado
+                      </Badge>
+                      <p className="text-xs leading-relaxed text-muted-foreground">
+                        El equipo de Bidtory puede apoyarle en la preparación y seguimiento de
+                        esta licitación. Para habilitarlo, solicite la activación del servicio.
+                      </p>
+                      {serviceRequestStatusFromOpp === 'idle' && (
                         <Button
                           variant="default"
                           size="sm"
                           className="w-full"
-                          onClick={() => setShowBidtoryGrantDialog(true)}
+                          disabled={isRequestingServiceFromOpp}
+                          onClick={() => void handleRequestServiceFromOpp()}
                         >
-                          <ShieldCheck className="mr-2 h-3.5 w-3.5" />
-                          Autorizar a Bidtory
+                          {isRequestingServiceFromOpp ? (
+                            <>
+                              <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />
+                              Enviando...
+                            </>
+                          ) : (
+                            'Solicitar activación'
+                          )}
                         </Button>
+                      )}
+                      {serviceRequestStatusFromOpp === 'created' && (
+                        <div className="flex items-center gap-2 text-xs text-emerald-600">
+                          <CheckCircle className="h-3.5 w-3.5 shrink-0" />
+                          Solicitud enviada. Le contactaremos a la brevedad.
+                        </div>
+                      )}
+                      {serviceRequestStatusFromOpp === 'already_pending' && (
+                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                          <Info className="h-3.5 w-3.5 shrink-0" />
+                          Ya existe una solicitud en proceso. Le contactaremos pronto.
+                        </div>
+                      )}
+                    </>
+                  ) : (() => {
+                    const accountGranted = customer.bidtory_access?.granted === true;
+                    const oppGranted = opportunity.bidtory_access?.granted === true;
+                    return (
+                      <>
+                        {accountGranted ? (
+                          <>
+                            <Badge
+                              variant="secondary"
+                              className="border-transparent bg-emerald-600 text-white hover:bg-emerald-600 gap-1.5 px-3 py-1"
+                            >
+                              <CheckCircle className="h-3.5 w-3.5" />
+                              Acceso completo a nivel cuenta
+                            </Badge>
+                            <p
+                              className={cn(
+                                'text-xs leading-relaxed border-l-2 pl-2.5',
+                                'border-amber-500/80 text-amber-950 dark:border-amber-400/70 dark:text-amber-100',
+                              )}
+                            >
+                              Los consultores de Bidtory pueden ver{' '}
+                              <span className="font-medium text-foreground">todas</span> sus oportunidades y la
+                              documentación asociada. Si desea limitar el acceso a licitaciones concretas,{' '}
+                              <Link
+                                href="/dashboard/settings/bidtory-access"
+                                className="font-medium text-accent underline-offset-2 hover:underline"
+                              >
+                                revoque el acceso global en Ajustes
+                              </Link>{' '}
+                              y conceda acceso solo a las oportunidades que elija desde esta página.
+                            </p>
+                          </>
+                        ) : oppGranted ? (
+                          <>
+                            <Badge
+                              variant="secondary"
+                              className="border-transparent bg-emerald-600 text-white hover:bg-emerald-600 gap-1.5 px-3 py-1"
+                            >
+                              <CheckCircle className="h-3.5 w-3.5" />
+                              Acceso autorizado
+                            </Badge>
+                            <p className="text-xs leading-relaxed text-muted-foreground">
+                              El equipo de Bidtory puede ver esta oportunidad y la documentación asociada
+                              (incluido el análisis de IA, si aplica) para brindarle soporte.
+                            </p>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="w-full text-destructive border-destructive/40 hover:bg-destructive/10"
+                              onClick={() => setShowBidtoryRevokeDialog(true)}
+                            >
+                              <ShieldOff className="mr-2 h-3.5 w-3.5" />
+                              Revocar acceso
+                            </Button>
+                          </>
+                        ) : (
+                          <>
+                            <Badge variant="secondary" className="gap-1.5 px-3 py-1">
+                              <ShieldOff className="h-3.5 w-3.5" />
+                              Sin acceso
+                            </Badge>
+                            <p className="text-xs leading-relaxed text-muted-foreground">
+                              Si desea apoyo de los consultores de Bidtory para preparar y dar seguimiento a esta licitación,
+                              puede concederles acceso{' '}
+                              <span className="font-medium text-foreground">únicamente a esta oportunidad</span> y a la
+                              documentación asociada. Use el botón inferior cuando lo considere oportuno; podrá revocar el
+                              permiso en cualquier momento.
+                            </p>
+                            <Button
+                              variant="default"
+                              size="sm"
+                              className="w-full"
+                              onClick={() => setShowBidtoryGrantDialog(true)}
+                            >
+                              <ShieldCheck className="mr-2 h-3.5 w-3.5" />
+                              Autorizar a Bidtory
+                            </Button>
+                          </>
+                        )}
                       </>
-                    )}
-                  </CardContent>
-                </Card>
-              );
-            })()}
+                    );
+                  })()}
+                </CardContent>
+              </Card>
+            )}
           </aside>
         </div>
       </div>
