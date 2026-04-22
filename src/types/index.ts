@@ -55,6 +55,7 @@ export interface Customer {
   logo_signed_url?: string | null; // Temporary public URL for viewing
   is_archived?: boolean;
   bidtory_access?: BidtoryAccessInfo | null;
+  bidtory_service_enabled?: boolean | null;
 }
 
 export interface RequiredDocument {
