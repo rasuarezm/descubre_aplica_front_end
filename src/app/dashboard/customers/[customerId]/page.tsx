@@ -366,6 +366,12 @@ export default function CustomerDetailPage() {
     }
     return false;
   }, [userProfile]);
+
+  /** Admin con acceso Bidtory solo por oportunidad (sin grant global) → vista de zona limitada. */
+  const adminHasAccountAccess = useMemo(
+    () => userProfile?.role !== 'admin' || customer?.bidtory_access?.granted === true,
+    [userProfile?.role, customer?.bidtory_access?.granted],
+  );
   // --- End of Permissions Logic ---
 
   const fetchData = useCallback(async (showLoadingSpinner = true) => {
@@ -388,7 +394,7 @@ export default function CustomerDetailPage() {
       ] = await Promise.all([
         apiClient.get<Customer[]>('/get_customers'),
         apiClient.get<Opportunity[]>(`/get_opportunities?${opportunitiesParams.toString()}`).catch(() => []),
-        apiClient.get<any[]>(`/get_documents?customer_id=${customerId}`),
+        apiClient.get<any[]>(`/get_documents?customer_id=${customerId}`).catch(() => []),
         apiClient.get<OpportunityStatusInfo>('/get_opportunity_statuses'),
       ]);
 
@@ -969,12 +975,14 @@ const handleUploadGeneralDocument = async () => {
           </div>
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button variant="outline" asChild className="border-primary/40 bg-background text-primary shadow-sm hover:!bg-primary/10 hover:!text-primary">
-            <Link href={`/dashboard/customers/${customerId}/pipeline`}>
-              <LayoutDashboard className="mr-2 h-4 w-4" /> Ver Pipeline
-            </Link>
-          </Button>
-          {canCreateAndEdit && (
+          {adminHasAccountAccess && (
+            <Button variant="outline" asChild className="border-primary/40 bg-background text-primary shadow-sm hover:!bg-primary/10 hover:!text-primary">
+              <Link href={`/dashboard/customers/${customerId}/pipeline`}>
+                <LayoutDashboard className="mr-2 h-4 w-4" /> Ver Pipeline
+              </Link>
+            </Button>
+          )}
+          {canCreateAndEdit && adminHasAccountAccess && (
             <Dialog open={isLogoDialogOpen} onOpenChange={setIsLogoDialogOpen}>
               <DialogTrigger asChild>
                 <Button variant="ghost" className="text-primary hover:!bg-primary/10 hover:!text-primary">
@@ -1020,7 +1028,7 @@ const handleUploadGeneralDocument = async () => {
             </Dialog>
           )}
           
-          {canAnalyzeTender && (
+          {canAnalyzeTender && adminHasAccountAccess && (
             <Dialog open={isAnalysisModalOpen} onOpenChange={setIsAnalysisModalOpen}>
                 <DialogTrigger asChild>
                     <Button
@@ -1103,66 +1111,68 @@ const handleUploadGeneralDocument = async () => {
         </div>
       </div>
       
-      {/* Summary — mismos datos, contenedor unificado */}
-      <section
-        aria-label="Resumen de oportunidades"
-        className="overflow-hidden rounded-xl border border-border bg-card shadow-sm"
-      >
-        <div className="grid grid-cols-1 divide-y divide-border md:grid-cols-2 md:divide-y lg:grid-cols-5 lg:divide-x lg:divide-y-0">
-          <div className="border-l-4 border-l-border p-4 sm:p-5">
-            <div className="flex flex-row items-center justify-between gap-2 pb-2">
-              <h3 className="text-sm font-medium">Próximo Vencimiento</h3>
-              <CalendarClock className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
-            </div>
-            <div className="pt-0.5">
-              {summaryStats.nextToExpire ? (
-                <div>
-                  <div className="text-2xl font-bold text-primary">
-                    {format(new Date(summaryStats.nextToExpire.deadline!), 'dd MMM yyyy, p', {
-                      locale: es,
-                    })}
+      {/* Summary — mismos datos, contenedor unificado (solo con acceso a cuenta) */}
+      {adminHasAccountAccess && (
+        <section
+          aria-label="Resumen de oportunidades"
+          className="overflow-hidden rounded-xl border border-border bg-card shadow-sm"
+        >
+          <div className="grid grid-cols-1 divide-y divide-border md:grid-cols-2 md:divide-y lg:grid-cols-5 lg:divide-x lg:divide-y-0">
+            <div className="border-l-4 border-l-border p-4 sm:p-5">
+              <div className="flex flex-row items-center justify-between gap-2 pb-2">
+                <h3 className="text-sm font-medium">Próximo Vencimiento</h3>
+                <CalendarClock className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+              </div>
+              <div className="pt-0.5">
+                {summaryStats.nextToExpire ? (
+                  <div>
+                    <div className="text-2xl font-bold text-primary">
+                      {format(new Date(summaryStats.nextToExpire.deadline!), 'dd MMM yyyy, p', {
+                        locale: es,
+                      })}
+                    </div>
+                    <p className="text-xs text-muted-foreground truncate">{summaryStats.nextToExpire.title}</p>
                   </div>
-                  <p className="text-xs text-muted-foreground truncate">{summaryStats.nextToExpire.title}</p>
-                </div>
-              ) : (
-                <p className="text-sm text-muted-foreground pt-2">No hay vencimientos próximos.</p>
-              )}
+                ) : (
+                  <p className="text-sm text-muted-foreground pt-2">No hay vencimientos próximos.</p>
+                )}
+              </div>
+            </div>
+            <div className="border-l-4 border-l-border p-4 sm:p-5">
+              <div className="flex flex-row items-center justify-between gap-2 pb-2">
+                <h3 className="text-sm font-medium">Oportunidades Activas</h3>
+                <Target className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+              </div>
+              <div className="text-2xl font-bold">{filteredOpportunities.length}</div>
+              <p className="text-xs text-muted-foreground">Total de oportunidades en curso</p>
+            </div>
+            <div className="border-l-4 border-l-highlight p-4 sm:p-5">
+              <div className="flex flex-row items-center justify-between gap-2 pb-2">
+                <h3 className="text-sm font-medium">Próximas a Vencer</h3>
+                <AlertTriangle className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+              </div>
+              <div className="text-2xl font-bold">{summaryStats.upcomingCount}</div>
+              <p className="text-xs text-muted-foreground">Vencen en 8-14 días</p>
+            </div>
+            <div className="border-l-4 border-l-urgency p-4 sm:p-5">
+              <div className="flex flex-row items-center justify-between gap-2 pb-2">
+                <h3 className="text-sm font-medium">Urgentes</h3>
+                <Clock className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+              </div>
+              <div className="text-2xl font-bold text-urgency">{summaryStats.urgentCount}</div>
+              <p className="text-xs text-muted-foreground">Vencen en &lt; 8 días</p>
+            </div>
+            <div className="border-l-4 border-l-accent p-4 sm:p-5 md:col-span-2 lg:col-span-1">
+              <div className="flex flex-row items-center justify-between gap-2 pb-2">
+                <h3 className="text-sm font-medium">Valor en Juego</h3>
+                <DollarSign className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
+              </div>
+              <div className="text-2xl font-bold text-accent">{formatCurrency(summaryStats.pipelineValue)}</div>
+              <p className="text-xs text-muted-foreground">Suma de oportunidades activas</p>
             </div>
           </div>
-          <div className="border-l-4 border-l-border p-4 sm:p-5">
-            <div className="flex flex-row items-center justify-between gap-2 pb-2">
-              <h3 className="text-sm font-medium">Oportunidades Activas</h3>
-              <Target className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
-            </div>
-            <div className="text-2xl font-bold">{filteredOpportunities.length}</div>
-            <p className="text-xs text-muted-foreground">Total de oportunidades en curso</p>
-          </div>
-          <div className="border-l-4 border-l-highlight p-4 sm:p-5">
-            <div className="flex flex-row items-center justify-between gap-2 pb-2">
-              <h3 className="text-sm font-medium">Próximas a Vencer</h3>
-              <AlertTriangle className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
-            </div>
-            <div className="text-2xl font-bold">{summaryStats.upcomingCount}</div>
-            <p className="text-xs text-muted-foreground">Vencen en 8-14 días</p>
-          </div>
-          <div className="border-l-4 border-l-urgency p-4 sm:p-5">
-            <div className="flex flex-row items-center justify-between gap-2 pb-2">
-              <h3 className="text-sm font-medium">Urgentes</h3>
-              <Clock className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
-            </div>
-            <div className="text-2xl font-bold text-urgency">{summaryStats.urgentCount}</div>
-            <p className="text-xs text-muted-foreground">Vencen en &lt; 8 días</p>
-          </div>
-          <div className="border-l-4 border-l-accent p-4 sm:p-5 md:col-span-2 lg:col-span-1">
-            <div className="flex flex-row items-center justify-between gap-2 pb-2">
-              <h3 className="text-sm font-medium">Valor en Juego</h3>
-              <DollarSign className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
-            </div>
-            <div className="text-2xl font-bold text-accent">{formatCurrency(summaryStats.pipelineValue)}</div>
-            <p className="text-xs text-muted-foreground">Suma de oportunidades activas</p>
-          </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Opportunities Section */}
       <section
@@ -1209,7 +1219,7 @@ const handleUploadGeneralDocument = async () => {
                   : 'Pruebe a seleccionar otro estado o cree una nueva oportunidad.'}
               </CardDescription>
               
-              {canAnalyzeTender && statusFilter !== 'archived' && (
+              {canAnalyzeTender && adminHasAccountAccess && statusFilter !== 'archived' && (
                 <Button
                   className="mt-6 bg-accent text-accent-foreground shadow-sm hover:bg-accent/90 focus-visible:ring-accent"
                   onClick={handleOpenAnalysisModal}
@@ -1379,99 +1389,109 @@ const handleUploadGeneralDocument = async () => {
         )}
       </section>
 
-      {/* Documents Library Section */}
-      <section aria-labelledby="customer-zone-documents-heading" className="space-y-4 border-t border-border pt-8">
-          <h2 id="customer-zone-documents-heading" className="text-2xl font-semibold font-headline">
-            Biblioteca de Documentos
-          </h2>
-          <Accordion type="multiple" defaultValue={['experience', 'rup', 'financial_statements', 'other']} className="w-full">
-              {Object.entries(documentCategories).map(([key, category]) => (
-                  (category.documents.length > 0 || canCreateAndEdit) && (
-                      <AccordionItem value={key} key={key}>
-                          <AccordionTrigger className="text-lg font-semibold hover:no-underline">
-                              <div className="flex items-center gap-3">
-                                  <category.icon className="h-6 w-6 text-primary" />
-                                  <span>{category.title}</span>
-                                  <Badge variant="secondary">{category.documents.length}</Badge>
-                              </div>
-                          </AccordionTrigger>
-                          <AccordionContent>
-                            {canCreateAndEdit && (
-                              <div className="flex justify-end mb-4">
-                                  <Button size="sm" onClick={() => handleOpenAddDialog(key as CustomerDocument['category'])}>
-                                      <PlusCircle className="mr-2 h-4 w-4" />
-                                      Añadir Documento
-                                  </Button>
-                              </div>
-                            )}
-
-                            {/* Widget de indicadores financieros para RUP y EE.FF. */}
-                            {'showFinancialWidget' in category && category.showFinancialWidget && (
-                              <FinancialProfileWidget
-                                key={`fin-${customerId}-${key}-${docLibraryRevision}`}
-                                customerId={customerId}
-                                categoryDocuments={category.documents}
-                                sourceType={category.sourceType}
-                              />
-                            )}
-
-                            {/* Lista de contratos del RUP con vinculación de certificaciones */}
-                            {key === 'rup' && (
-                              <RupContractsWidget
-                                key={`rupc-${customerId}-${docLibraryRevision}`}
-                                customerId={customerId}
-                                rupDocs={category.documents}
-                                experienceDocs={experienceDocuments}
-                                onLinkedDocIdsChange={setLinkedCertDocIds}
-                                onSuggestionsChange={setRupSuggestions}
-                              />
-                            )}
-
-                              {category.documents.length > 0 ? (
-                                <ul className="space-y-3 mt-4">
-                                {category.documents.map(doc => {
-                                  const isExperience = key === 'experience';
-                                  const isLinked = linkedCertDocIds.has(String(doc.id));
-                                  const extractedData: CertificationExtractedData | null = (() => {
-                                    if (!isExperience || !doc.extracted_contract_data) return null;
-                                    try {
-                                      return typeof doc.extracted_contract_data === 'string'
-                                        ? JSON.parse(doc.extracted_contract_data)
-                                        : doc.extracted_contract_data;
-                                    } catch { return null; }
-                                  })();
-
-                                  return (
-                                    <ExperienceDocRow
-                                      key={doc.id}
-                                      doc={doc}
-                                      isExperience={isExperience}
-                                      isLinked={isLinked}
-                                      extractedData={extractedData}
-                                      suggestedContract={rupSuggestions.get(String(doc.id)) ?? null}
-                                      canCreateAndEdit={canCreateAndEdit}
-                                      canDelete={canDelete}
-                                      getStatusIcon={getStatusIcon}
-                                      onDelete={() => handleOpenDeleteConfirm(doc)}
-                                      onFileChange={(e) => handleFileChange(doc.id, e)}
-                                      onReextract={handleReextractCertification}
-                                      fmtCOP={fmtCOP}
-                                      fmtDate={fmtDate}
-                                    />
-                                  );
-                                })}
-                                </ul>
-                              ) : (
-                                <div className="text-center py-4 text-muted-foreground">
-                                    No hay documentos en esta categoría.
+      {/* Documents Library Section — oculta para admin con acceso solo por oportunidad */}
+      {adminHasAccountAccess && (
+        <section aria-labelledby="customer-zone-documents-heading" className="space-y-4 border-t border-border pt-8">
+            <h2 id="customer-zone-documents-heading" className="text-2xl font-semibold font-headline">
+              Biblioteca de Documentos
+            </h2>
+            <Accordion type="multiple" defaultValue={['experience', 'rup', 'financial_statements', 'other']} className="w-full">
+                {Object.entries(documentCategories).map(([key, category]) => (
+                    (category.documents.length > 0 || canCreateAndEdit) && (
+                        <AccordionItem value={key} key={key}>
+                            <AccordionTrigger className="text-lg font-semibold hover:no-underline">
+                                <div className="flex items-center gap-3">
+                                    <category.icon className="h-6 w-6 text-primary" />
+                                    <span>{category.title}</span>
+                                    <Badge variant="secondary">{category.documents.length}</Badge>
+                                </div>
+                            </AccordionTrigger>
+                            <AccordionContent>
+                              {canCreateAndEdit && (
+                                <div className="flex justify-end mb-4">
+                                    <Button size="sm" onClick={() => handleOpenAddDialog(key as CustomerDocument['category'])}>
+                                        <PlusCircle className="mr-2 h-4 w-4" />
+                                        Añadir Documento
+                                    </Button>
                                 </div>
                               )}
-                          </AccordionContent>
-                      </AccordionItem>
-                  )
-              ))}
-          </Accordion>
-      </section>
+
+                              {/* Widget de indicadores financieros para RUP y EE.FF. */}
+                              {'showFinancialWidget' in category && category.showFinancialWidget && (
+                                <FinancialProfileWidget
+                                  key={`fin-${customerId}-${key}-${docLibraryRevision}`}
+                                  customerId={customerId}
+                                  categoryDocuments={category.documents}
+                                  sourceType={category.sourceType}
+                                />
+                              )}
+
+                              {/* Lista de contratos del RUP con vinculación de certificaciones */}
+                              {key === 'rup' && (
+                                <RupContractsWidget
+                                  key={`rupc-${customerId}-${docLibraryRevision}`}
+                                  customerId={customerId}
+                                  rupDocs={category.documents}
+                                  experienceDocs={experienceDocuments}
+                                  onLinkedDocIdsChange={setLinkedCertDocIds}
+                                  onSuggestionsChange={setRupSuggestions}
+                                />
+                              )}
+
+                                {category.documents.length > 0 ? (
+                                  <ul className="space-y-3 mt-4">
+                                  {category.documents.map(doc => {
+                                    const isExperience = key === 'experience';
+                                    const isLinked = linkedCertDocIds.has(String(doc.id));
+                                    const extractedData: CertificationExtractedData | null = (() => {
+                                      if (!isExperience || !doc.extracted_contract_data) return null;
+                                      try {
+                                        return typeof doc.extracted_contract_data === 'string'
+                                          ? JSON.parse(doc.extracted_contract_data)
+                                          : doc.extracted_contract_data;
+                                      } catch { return null; }
+                                    })();
+
+                                    return (
+                                      <ExperienceDocRow
+                                        key={doc.id}
+                                        doc={doc}
+                                        isExperience={isExperience}
+                                        isLinked={isLinked}
+                                        extractedData={extractedData}
+                                        suggestedContract={rupSuggestions.get(String(doc.id)) ?? null}
+                                        canCreateAndEdit={canCreateAndEdit}
+                                        canDelete={canDelete}
+                                        getStatusIcon={getStatusIcon}
+                                        onDelete={() => handleOpenDeleteConfirm(doc)}
+                                        onFileChange={(e) => handleFileChange(doc.id, e)}
+                                        onReextract={handleReextractCertification}
+                                        fmtCOP={fmtCOP}
+                                        fmtDate={fmtDate}
+                                      />
+                                    );
+                                  })}
+                                  </ul>
+                                ) : (
+                                  <div className="text-center py-4 text-muted-foreground">
+                                      No hay documentos en esta categoría.
+                                  </div>
+                                )}
+                            </AccordionContent>
+                        </AccordionItem>
+                    )
+                ))}
+            </Accordion>
+        </section>
+      )}
+      {!adminHasAccountAccess && (
+        <section className="space-y-4 border-t border-border pt-8" aria-label="Acceso limitado a documentos generales">
+          <div className="rounded-lg border border-border bg-muted/30 p-4 text-sm text-muted-foreground">
+            Tiene acceso a oportunidades específicas de este cliente. El perfil financiero y documentos generales no están
+            disponibles con este nivel de acceso.
+          </div>
+        </section>
+      )}
       
       <Dialog open={isAddDocDialogOpen} onOpenChange={setIsAddDocDialogOpen}>
         <DialogContent>
