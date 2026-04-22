@@ -45,6 +45,10 @@ export default function BidtoryAccessClient() {
   const [showGrantDialog, setShowGrantDialog] = useState(false);
   const [showRevokeDialog, setShowRevokeDialog] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRequestingService, setIsRequestingService] = useState(false);
+  const [serviceRequestStatus, setServiceRequestStatus] = useState<
+    "idle" | "created" | "already_pending"
+  >("idle");
 
   const fetchData = useCallback(async () => {
     const cid = userProfile?.customer_id;
@@ -153,6 +157,27 @@ export default function BidtoryAccessClient() {
   };
 
   const granted = customer?.bidtory_access?.granted === true;
+  const serviceEnabled = customer?.bidtory_service_enabled === true;
+
+  const handleRequestService = async () => {
+    setIsRequestingService(true);
+    try {
+      const result = await apiClient.post<{ status: string }>(
+        "/request_bidtory_service",
+        {},
+      );
+      if (result.status === "already_pending") {
+        setServiceRequestStatus("already_pending");
+      } else {
+        setServiceRequestStatus("created");
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Ocurrió un error desconocido.";
+      toast({ title: "Error", description: msg, variant: "destructive" });
+    } finally {
+      setIsRequestingService(false);
+    }
+  };
 
   if (authLoading || (!userProfile && !error && loading)) {
     return (
@@ -208,56 +233,105 @@ export default function BidtoryAccessClient() {
         </Card>
       )}
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Estado del acceso</CardTitle>
-          <CardDescription>
-            Permiso de acceso a nivel cuenta para el equipo de Bidtory.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {granted ? (
-            <Badge
-              variant="secondary"
-              className="border-transparent bg-emerald-600 text-white hover:bg-emerald-600 gap-1.5 px-3 py-1"
-            >
-              <CheckCircle2 className="h-3.5 w-3.5" />
-              Acceso concedido
-            </Badge>
-          ) : (
+      {!serviceEnabled ? (
+        <Card>
+          <CardHeader>
+            <CardTitle>Servicio Bidtory</CardTitle>
+            <CardDescription>
+              Gestione el acceso del equipo Bidtory a su zona.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
             <Badge variant="secondary" className="gap-1.5 px-3 py-1">
               <ShieldOff className="h-3.5 w-3.5" />
-              Sin acceso
+              Servicio no activado
             </Badge>
-          )}
+            <p className="text-sm text-muted-foreground">
+              El servicio Bidtory no está habilitado para su empresa aún. Para
+              activarlo y poder delegar acceso a su zona, contáctenos.
+            </p>
+            {serviceRequestStatus === "idle" && (
+              <Button
+                variant="default"
+                disabled={isRequestingService || !!error || !customer}
+                onClick={() => void handleRequestService()}
+              >
+                {isRequestingService ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Enviando...
+                  </>
+                ) : (
+                  "Solicitar activación"
+                )}
+              </Button>
+            )}
+            {serviceRequestStatus === "created" && (
+              <div className="flex items-center gap-2 text-sm text-emerald-600">
+                <CheckCircle2 className="h-4 w-4" />
+                Solicitud enviada. Le contactaremos a la brevedad.
+              </div>
+            )}
+            {serviceRequestStatus === "already_pending" && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <CheckCircle2 className="h-4 w-4" />
+                Ya existe una solicitud en proceso. Le contactaremos pronto.
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      ) : (
+        <Card>
+          <CardHeader>
+            <CardTitle>Estado del acceso</CardTitle>
+            <CardDescription>
+              Permiso de acceso a nivel cuenta para el equipo de Bidtory.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {granted ? (
+              <Badge
+                variant="secondary"
+                className="border-transparent bg-emerald-600 text-white hover:bg-emerald-600 gap-1.5 px-3 py-1"
+              >
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                Acceso concedido
+              </Badge>
+            ) : (
+              <Badge variant="secondary" className="gap-1.5 px-3 py-1">
+                <ShieldOff className="h-3.5 w-3.5" />
+                Sin acceso
+              </Badge>
+            )}
 
-          <p className="text-sm text-muted-foreground">
-            {granted
-              ? "El equipo de Bidtory tiene acceso a su zona. Pueden ver sus oportunidades y documentos para brindarle soporte."
-              : "El equipo de Bidtory no tiene acceso a su zona. Solo usted y sus usuarios pueden ver su información."}
-          </p>
+            <p className="text-sm text-muted-foreground">
+              {granted
+                ? "El equipo de Bidtory tiene acceso a su zona. Pueden ver sus oportunidades y documentos para brindarle soporte."
+                : "El equipo de Bidtory no tiene acceso a su zona. Solo usted y sus usuarios pueden ver su información."}
+            </p>
 
-          {granted ? (
-            <Button
-              variant="destructive"
-              onClick={() => setShowRevokeDialog(true)}
-              disabled={!!error || !customer}
-            >
-              <ShieldOff className="mr-2 h-4 w-4" />
-              Revocar Acceso
-            </Button>
-          ) : (
-            <Button
-              variant="default"
-              onClick={() => setShowGrantDialog(true)}
-              disabled={!!error || !customer}
-            >
-              <ShieldCheck className="mr-2 h-4 w-4" />
-              Conceder Acceso
-            </Button>
-          )}
-        </CardContent>
-      </Card>
+            {granted ? (
+              <Button
+                variant="destructive"
+                onClick={() => setShowRevokeDialog(true)}
+                disabled={!!error || !customer}
+              >
+                <ShieldOff className="mr-2 h-4 w-4" />
+                Revocar Acceso
+              </Button>
+            ) : (
+              <Button
+                variant="default"
+                onClick={() => setShowGrantDialog(true)}
+                disabled={!!error || !customer}
+              >
+                <ShieldCheck className="mr-2 h-4 w-4" />
+                Conceder Acceso
+              </Button>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       <AlertDialog open={showGrantDialog} onOpenChange={setShowGrantDialog}>
         <AlertDialogContent>
