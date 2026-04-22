@@ -12,9 +12,9 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { MoreHorizontal, ArrowLeft, Building, Loader2, AlertCircle, Archive, ArchiveRestore, CheckCircle2, ShieldOff } from 'lucide-react';
+import { MoreHorizontal, ArrowLeft, Building, Loader2, AlertCircle, Archive, ArchiveRestore, CheckCircle2, ShieldOff, ShieldCheck } from 'lucide-react';
 import apiClient from '@/lib/api-client';
 import { customerLogoImgSrc } from '@/lib/gcs-display';
 
@@ -35,6 +35,8 @@ export default function CustomersClient() {
     
     const [customerToRestore, setCustomerToRestore] = useState<Customer | null>(null);
     const [isRestoring, setIsRestoring] = useState(false);
+    const [customerToToggleService, setCustomerToToggleService] = useState<Customer | null>(null);
+    const [isTogglingService, setIsTogglingService] = useState(false);
 
     const fetchData = useCallback(async (mode: ViewMode) => {
         setLoading(true);
@@ -93,6 +95,24 @@ export default function CustomersClient() {
             }
         }
     };
+
+    const handleToggleService = async (customer: Customer, enable: boolean) => {
+        setIsTogglingService(true);
+        try {
+            await apiClient.post('/toggle_bidtory_service', {
+                customer_id: customer.id,
+                enabled: enable,
+            });
+            toast({ title: `Servicio Bidtory ${enable ? 'habilitado' : 'deshabilitado'} para ${customer.name}` });
+            await fetchData(viewMode);
+            setCustomerToToggleService(null);
+        } catch (err) {
+            const msg = err instanceof Error ? err.message : 'Ocurrió un error desconocido.';
+            toast({ title: 'Error', description: msg, variant: 'destructive' });
+        } finally {
+            setIsTogglingService(false);
+        }
+    };
     
     if (authLoading || (!userProfile && !error && loading)) {
         return (
@@ -128,6 +148,7 @@ export default function CustomersClient() {
                         actionLabel="Archivar Cliente"
                         actionIcon={Archive}
                         isRestore={false}
+                        onToggleService={(customer) => setCustomerToToggleService(customer)}
                     />
                 </TabsContent>
                 <TabsContent value="archived">
@@ -139,6 +160,7 @@ export default function CustomersClient() {
                         actionLabel="Restaurar Cliente"
                         actionIcon={ArchiveRestore}
                         isRestore={true}
+                        onToggleService={(customer) => setCustomerToToggleService(customer)}
                     />
                 </TabsContent>
             </Tabs>
@@ -178,6 +200,52 @@ export default function CustomersClient() {
                     </AlertDialogFooter>
                 </AlertDialogContent>
             </AlertDialog>
+
+            <AlertDialog
+                open={!!customerToToggleService}
+                onOpenChange={(open) => !open && setCustomerToToggleService(null)}
+            >
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>
+                            {customerToToggleService?.bidtory_service_enabled
+                                ? `¿Deshabilitar servicio para ${customerToToggleService?.name}?`
+                                : `¿Habilitar servicio para ${customerToToggleService?.name}?`}
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                            {customerToToggleService?.bidtory_service_enabled
+                                ? 'El cliente ya no podrá ver los botones de autorización de acceso Bidtory. Los accesos ya concedidos permanecen hasta que se revoquen explícitamente.'
+                                : 'El cliente podrá ver y usar los controles de autorización de acceso Bidtory en su portal.'}
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={isTogglingService}>Cancelar</AlertDialogCancel>
+                        <Button
+                            type="button"
+                            disabled={isTogglingService}
+                            variant={customerToToggleService?.bidtory_service_enabled ? 'destructive' : 'default'}
+                            onClick={() =>
+                                customerToToggleService &&
+                                void handleToggleService(
+                                    customerToToggleService,
+                                    !customerToToggleService.bidtory_service_enabled,
+                                )
+                            }
+                        >
+                            {isTogglingService ? (
+                                <>
+                                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                    {customerToToggleService?.bidtory_service_enabled ? 'Deshabilitando...' : 'Habilitando...'}
+                                </>
+                            ) : customerToToggleService?.bidtory_service_enabled ? (
+                                'Deshabilitar'
+                            ) : (
+                                'Habilitar'
+                            )}
+                        </Button>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 }
@@ -190,9 +258,10 @@ interface CustomerTableProps {
     actionLabel: string;
     actionIcon: React.ElementType;
     isRestore: boolean;
+    onToggleService: (customer: Customer) => void;
 }
 
-function CustomerTable({ customers, isLoading, error, onActionClick, actionLabel, actionIcon: ActionIcon, isRestore }: CustomerTableProps) {
+function CustomerTable({ customers, isLoading, error, onActionClick, actionLabel, actionIcon: ActionIcon, isRestore, onToggleService }: CustomerTableProps) {
     if (isLoading) {
         return (
             <div className="flex items-center justify-center py-10">
@@ -252,17 +321,31 @@ function CustomerTable({ customers, isLoading, error, onActionClick, actionLabel
                                     <TableCell className="font-medium">{customer.name}</TableCell>
                                     <TableCell>{customer.profileInfo}</TableCell>
                                     <TableCell>
-                                        {customer.bidtory_access?.granted === true ? (
-                                            <Badge className="border-transparent bg-emerald-600 text-white hover:bg-emerald-600 gap-1.5">
-                                                <CheckCircle2 className="h-3 w-3" />
-                                                Con acceso
-                                            </Badge>
-                                        ) : (
-                                            <Badge variant="secondary" className="gap-1.5">
-                                                <ShieldOff className="h-3 w-3" />
-                                                Sin acceso
-                                            </Badge>
-                                        )}
+                                        <div className="flex flex-col gap-1">
+                                            {customer.bidtory_service_enabled ? (
+                                                <Badge className="border-transparent bg-emerald-600 text-white hover:bg-emerald-600 gap-1.5 w-fit">
+                                                    <CheckCircle2 className="h-3 w-3" />
+                                                    Servicio activo
+                                                </Badge>
+                                            ) : (
+                                                <Badge variant="secondary" className="gap-1.5 w-fit">
+                                                    <ShieldOff className="h-3 w-3" />
+                                                    Sin servicio
+                                                </Badge>
+                                            )}
+                                            {customer.bidtory_access?.granted === true && (
+                                                <Badge variant="outline" className="gap-1.5 w-fit text-xs">
+                                                    <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+                                                    Acceso concedido
+                                                </Badge>
+                                            )}
+                                            {(customer.bidtory_access?.opportunity_grant_count ?? 0) > 0 && (
+                                                <Badge variant="outline" className="gap-1.5 w-fit text-xs">
+                                                    <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+                                                    {customer.bidtory_access?.opportunity_grant_count} oportunidad(es)
+                                                </Badge>
+                                            )}
+                                        </div>
                                     </TableCell>
                                     <TableCell>
                                         <DropdownMenu>
@@ -273,6 +356,24 @@ function CustomerTable({ customers, isLoading, error, onActionClick, actionLabel
                                                 </Button>
                                             </DropdownMenuTrigger>
                                             <DropdownMenuContent align="end">
+                                                {!isRestore && (
+                                                    <>
+                                                        <DropdownMenuItem onSelect={() => onToggleService(customer)}>
+                                                            {customer.bidtory_service_enabled ? (
+                                                                <>
+                                                                    <ShieldOff className="mr-2 h-4 w-4" />
+                                                                    Deshabilitar Servicio Bidtory
+                                                                </>
+                                                            ) : (
+                                                                <>
+                                                                    <ShieldCheck className="mr-2 h-4 w-4" />
+                                                                    Habilitar Servicio Bidtory
+                                                                </>
+                                                            )}
+                                                        </DropdownMenuItem>
+                                                        <DropdownMenuSeparator />
+                                                    </>
+                                                )}
                                                 <DropdownMenuItem onSelect={() => onActionClick(customer)}>
                                                     <ActionIcon className="mr-2 h-4 w-4" />
                                                     {actionLabel}
