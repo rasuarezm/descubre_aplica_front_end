@@ -1350,8 +1350,9 @@ const sortedRequiredDocs = useMemo(() => {
                         Servicio no activado
                       </Badge>
                       <p className="text-xs leading-relaxed text-muted-foreground">
-                        El equipo de Bidtory puede apoyarle en la preparación y seguimiento de
-                        esta licitación. Para habilitarlo, solicite la activación del servicio.
+                        ¿Quiere que Bidtory le ayude a preparar y dar seguimiento a esta licitación
+                        y a la propuesta asociada? Solicite información sobre el servicio; le
+                        contactaremos para concretar el alcance.
                       </p>
                       {serviceRequestStatusFromOpp === 'idle' && (
                         <Button
@@ -1367,7 +1368,7 @@ const sortedRequiredDocs = useMemo(() => {
                               Enviando...
                             </>
                           ) : (
-                            'Solicitar activación'
+                            'Solicitar información'
                           )}
                         </Button>
                       )}

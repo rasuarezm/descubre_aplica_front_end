@@ -247,8 +247,9 @@ export default function BidtoryAccessClient() {
               Servicio no activado
             </Badge>
             <p className="text-sm text-muted-foreground">
-              El servicio Bidtory no está habilitado para su empresa aún. Para
-              activarlo y poder delegar acceso a su zona, contáctenos.
+              ¿Quiere que Bidtory le ayude a preparar y dar seguimiento a sus
+              licitaciones y propuestas? Solicite información sobre el servicio;
+              le contactaremos para concretar el alcance.
             </p>
             {serviceRequestStatus === "idle" && (
               <Button
@@ -262,7 +263,7 @@ export default function BidtoryAccessClient() {
                     Enviando...
                   </>
                 ) : (
-                  "Solicitar activación"
+                  "Solicitar información"
                 )}
               </Button>
             )}
@@ -285,7 +286,9 @@ export default function BidtoryAccessClient() {
           <CardHeader>
             <CardTitle>Estado del acceso</CardTitle>
             <CardDescription>
-              Permiso de acceso a nivel cuenta para el equipo de Bidtory.
+              {granted
+                ? "Permiso de acceso a nivel cuenta para el equipo de Bidtory."
+                : "El servicio para su cuenta ya está activo; el acceso del equipo queda a su decisión."}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -300,14 +303,14 @@ export default function BidtoryAccessClient() {
             ) : (
               <Badge variant="secondary" className="gap-1.5 px-3 py-1">
                 <ShieldOff className="h-3.5 w-3.5" />
-                Sin acceso
+                Acceso aún no concedido
               </Badge>
             )}
 
             <p className="text-sm text-muted-foreground">
               {granted
                 ? "El equipo de Bidtory tiene acceso a su zona. Pueden ver sus oportunidades y documentos para brindarle soporte."
-                : "El equipo de Bidtory no tiene acceso a su zona. Solo usted y sus usuarios pueden ver su información."}
+                : "Tras su solicitud, Bidtory habilitó el servicio para su empresa. Cuando desee que nuestro equipo le apoye de forma directa en su zona, conceda el acceso a nivel cuenta; hasta entonces, solo usted y sus usuarios ven la información. Podrá revocar el permiso en cualquier momento."}
             </p>
 
             {granted ? (
