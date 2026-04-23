@@ -1350,7 +1350,7 @@ const sortedRequiredDocs = useMemo(() => {
                         Servicio no activado
                       </Badge>
                       <p className="text-xs leading-relaxed text-muted-foreground">
-                        ¿Quiere que Bidtory le ayude a preparar y dar seguimiento a esta licitación
+                        ¿Quiere que el equipo de Bidtory le ayude a preparar y dar seguimiento a esta licitación
                         y a la propuesta asociada? Solicite información sobre el servicio; le
                         contactaremos para concretar el alcance.
                       </p>

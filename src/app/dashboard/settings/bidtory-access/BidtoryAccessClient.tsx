@@ -247,7 +247,7 @@ export default function BidtoryAccessClient() {
               Servicio no activado
             </Badge>
             <p className="text-sm text-muted-foreground">
-              ¿Quiere que Bidtory le ayude a preparar y dar seguimiento a sus
+              ¿Quiere que el equipo de Bidtory le ayude a preparar y dar seguimiento a sus
               licitaciones y propuestas? Solicite información sobre el servicio;
               le contactaremos para concretar el alcance.
             </p>
