@@ -1464,6 +1464,10 @@ const sortedRequiredDocs = useMemo(() => {
                             </Button>
                           </>
                         )}
+
+                        <p className="text-[11px] leading-relaxed text-muted-foreground">
+                          Aplican condiciones de negociación acordadas entre las partes.
+                        </p>
                       </>
                     );
                   })()}

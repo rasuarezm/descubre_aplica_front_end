@@ -378,6 +378,10 @@ export default function BidtoryAccessClient() {
                 Conceder Acceso
               </Button>
             )}
+
+            <p className="text-xs text-muted-foreground">
+              Aplican condiciones de negociación acordadas entre las partes.
+            </p>
           </CardContent>
         </Card>
       )}
