@@ -82,10 +82,13 @@ interface AdminCustomer {
   owner_user_id: string | null;
   is_archived: boolean;
   created_at: string | null;
+  bidtory_service_enabled?: boolean | null;
   bidtory_access?: {
     granted: boolean;
     granted_at?: string | null;
     level?: string | null;
+    opportunity_grant_count?: number | null;
+    can_create_opportunities?: boolean | null;
   } | null;
   subscription?: {
     nivel_suscripcion?: string | null;
@@ -614,7 +617,16 @@ export default function DashboardClient() {
                       </p>
                     </CardContent>
                   )}
-                  <CardContent className="mt-auto pt-0">
+                  <CardContent className="mt-auto pt-0 space-y-2">
+                    {c.bidtory_access?.can_create_opportunities && (
+                      <Badge
+                        variant="secondary"
+                        className="border-transparent bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-400 gap-1.5 px-2 py-0.5 text-[11px] w-full justify-center"
+                      >
+                        <PlusCircle className="h-3 w-3" />
+                        Puede crear oportunidades
+                      </Badge>
+                    )}
                     <Link href={`/dashboard/customers/${c.id}`} passHref>
                       <Button variant="outline" size="sm" className="w-full">
                         Ver Zona <ArrowRight className="ml-2 h-3 w-3" />

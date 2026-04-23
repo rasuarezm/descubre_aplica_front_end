@@ -45,6 +45,8 @@ export interface BidtoryAccessInfo {
   revoked_by?: string | null;
   level?: "account" | "opportunity" | null;
   opportunity_grant_count?: number | null;
+  can_create_opportunities?: boolean | null;
+  can_create_opportunities_granted_at?: string | null;
 }
 
 export interface Customer {
