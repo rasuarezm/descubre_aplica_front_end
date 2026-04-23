@@ -115,6 +115,9 @@ export default function DashboardClient() {
 
   const { toast } = useToast();
   const [isCreateZoneDialogOpen, setIsCreateZoneDialogOpen] = useState(false);
+  const [createOppForCustomer, setCreateOppForCustomer] = useState<AdminCustomer | null>(null);
+  const [newOppData, setNewOppData] = useState({ name: '', description: '', deadline: '' });
+  const [isSubmittingOpp, setIsSubmittingOpp] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [newCustomerData, setNewCustomerData] = useState({ name: '', description: '' });
 
@@ -227,6 +230,55 @@ export default function DashboardClient() {
         toast({ title: 'Error al Crear', description: errorMessage, variant: 'destructive' });
     } finally {
         setIsSubmitting(false);
+    }
+  };
+
+  const handleCreateOpportunity = async () => {
+    if (!createOppForCustomer || !newOppData.name.trim()) {
+      toast({
+        title: "Error de validación",
+        description: "El nombre de la oportunidad es obligatorio.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (newOppData.deadline) {
+      const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+      const parsed = new Date(newOppData.deadline);
+      if (!dateRegex.test(newOppData.deadline) || isNaN(parsed.getTime())) {
+        toast({
+          title: "Error de validación",
+          description: "La fecha límite no tiene un formato válido.",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
+    setIsSubmittingOpp(true);
+    try {
+      await apiClient.post('/create_opportunity', {
+        customer_id: createOppForCustomer.id,
+        name: newOppData.name.trim(),
+        description: newOppData.description.trim(),
+        ...(newOppData.deadline ? { deadline: `${newOppData.deadline}T00:00:00` } : {}),
+      });
+
+      toast({
+        title: "Oportunidad creada",
+        description: `"${newOppData.name}" agregada al pipeline de ${createOppForCustomer.name}.`,
+      });
+
+      setCreateOppForCustomer(null);
+      setNewOppData({ name: '', description: '', deadline: '' });
+
+      void fetchAdminCustomers();
+    } catch (error) {
+      const msg = error instanceof Error ? error.message : 'Ocurrió un error desconocido';
+      toast({ title: 'Error al crear', description: msg, variant: 'destructive' });
+    } finally {
+      setIsSubmittingOpp(false);
     }
   };
 
@@ -488,9 +540,10 @@ export default function DashboardClient() {
 
   if (userProfile?.role === 'admin') {
     const totalActivos = adminCustomers.length;
-    const hasBidtoryAccess = (c: Customer) =>
+    const hasBidtoryAccess = (c: AdminCustomer) =>
       c.bidtory_access?.granted === true ||
-      (c.bidtory_access?.opportunity_grant_count ?? 0) > 0;
+      (c.bidtory_access?.opportunity_grant_count ?? 0) > 0 ||
+      c.bidtory_access?.can_create_opportunities === true;
 
     const conServicio = adminCustomers.filter(hasBidtoryAccess).length;
     const autonomas = adminCustomers.filter((c) => !hasBidtoryAccess(c)).length;
@@ -544,6 +597,66 @@ export default function DashboardClient() {
               <Button onClick={handleCreateCustomer} disabled={isSubmitting}>
                 {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 {isSubmitting ? 'Creando...' : 'Crear Cliente'}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        <Dialog
+          open={!!createOppForCustomer}
+          onOpenChange={(open) => {
+            if (!open) {
+              setCreateOppForCustomer(null);
+              setNewOppData({ name: '', description: '', deadline: '' });
+            }
+          }}
+        >
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle>Crear oportunidad</DialogTitle>
+              <DialogDescription>
+                {createOppForCustomer?.name} — nueva oportunidad en su pipeline.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="grid gap-4 py-4">
+              <div className="grid gap-2">
+                <Label htmlFor="opp-name">Nombre *</Label>
+                <Input
+                  id="opp-name"
+                  value={newOppData.name}
+                  onChange={(e) => setNewOppData({ ...newOppData, name: e.target.value })}
+                  placeholder="Nombre de la licitación"
+                  className="bg-muted/50 border-secondary focus:border-accent focus:ring-accent"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="opp-description">Descripción</Label>
+                <Textarea
+                  id="opp-description"
+                  value={newOppData.description}
+                  onChange={(e) => setNewOppData({ ...newOppData, description: e.target.value })}
+                  placeholder="Breve descripción de la licitación."
+                  className="bg-muted/50 border-secondary focus:border-accent focus:ring-accent"
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="opp-deadline">Fecha límite</Label>
+                <Input
+                  id="opp-deadline"
+                  type="date"
+                  value={newOppData.deadline}
+                  onChange={(e) => setNewOppData({ ...newOppData, deadline: e.target.value })}
+                  className="bg-muted/50 border-secondary focus:border-accent focus:ring-accent"
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <DialogClose asChild>
+                <Button variant="outline" disabled={isSubmittingOpp}>Cancelar</Button>
+              </DialogClose>
+              <Button onClick={handleCreateOpportunity} disabled={isSubmittingOpp}>
+                {isSubmittingOpp && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                {isSubmittingOpp ? 'Creando...' : 'Crear oportunidad'}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -627,11 +740,30 @@ export default function DashboardClient() {
                         Puede crear oportunidades
                       </Badge>
                     )}
-                    <Link href={`/dashboard/customers/${c.id}`} passHref>
-                      <Button variant="outline" size="sm" className="w-full">
-                        Ver Zona <ArrowRight className="ml-2 h-3 w-3" />
-                      </Button>
-                    </Link>
+                    <div className="flex gap-2">
+                      {c.bidtory_access?.can_create_opportunities && (
+                        <Button
+                          size="sm"
+                          className="flex-1"
+                          onClick={() => {
+                            setNewOppData({ name: '', description: '', deadline: '' });
+                            setCreateOppForCustomer(c);
+                          }}
+                        >
+                          <PlusCircle className="mr-1.5 h-3 w-3" />
+                          Crear oportunidad
+                        </Button>
+                      )}
+                      <Link
+                        href={`/dashboard/customers/${c.id}`}
+                        passHref
+                        className={c.bidtory_access?.can_create_opportunities ? 'flex-1' : 'w-full'}
+                      >
+                        <Button variant="outline" size="sm" className="w-full">
+                          Ver Zona <ArrowRight className="ml-2 h-3 w-3" />
+                        </Button>
+                      </Link>
+                    </div>
                   </CardContent>
                 </Card>
               ))}
