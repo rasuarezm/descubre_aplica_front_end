@@ -51,7 +51,7 @@ export function HomeClient() {
               href="#descubre"
               className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
-              Descubre
+              Productos
             </Link>
             <Link
               href="#como-funciona"
@@ -119,7 +119,7 @@ export function HomeClient() {
                   className="rounded-md px-3 py-3 text-base font-medium text-foreground hover:bg-muted"
                   onClick={() => setMobileNavOpen(false)}
                 >
-                  Descubre
+                  Productos
                 </Link>
                 <Link
                   href="#como-funciona"
