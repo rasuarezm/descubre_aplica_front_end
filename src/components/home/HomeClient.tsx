@@ -48,7 +48,7 @@ export function HomeClient() {
             aria-label="Secciones de la página"
           >
             <Link
-              href="#el-sistema"
+              href="#descubre"
               className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
             >
               Descubre
@@ -115,7 +115,7 @@ export function HomeClient() {
             >
               <nav className="container mx-auto flex flex-col gap-1 px-4 py-4">
                 <Link
-                  href="#el-sistema"
+                  href="#descubre"
                   className="rounded-md px-3 py-3 text-base font-medium text-foreground hover:bg-muted"
                   onClick={() => setMobileNavOpen(false)}
                 >
@@ -143,7 +143,7 @@ export function HomeClient() {
 
       <main className="flex-1">
         {/* Hero */}
-        <section className="w-full bg-background pt-20 pb-12 md:pt-28 md:pb-16">
+        <section className="w-full bg-background pt-24 pb-16 md:pt-36 md:pb-24">
           <div className="container mx-auto px-4 md:px-6">
             <div className="grid items-center gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] lg:gap-x-6 lg:gap-y-10">
               <div className="order-1 flex flex-col lg:order-none">
@@ -198,7 +198,7 @@ export function HomeClient() {
                       alt="Vista de oportunidades en Bidtory Descubre"
                       width={1400}
                       height={1050}
-                      className="h-auto w-full rounded-xl border border-border shadow-md"
+                      className="h-auto w-full rounded-2xl border border-border/70 shadow-xl ring-1 ring-black/5 transition-shadow duration-300 hover:shadow-2xl"
                       priority
                       sizes="(max-width: 1024px) 100vw, 48vw"
                     />
@@ -241,7 +241,7 @@ export function HomeClient() {
 
         {/* El sistema */}
         <section
-          id="el-sistema"
+          id="descubre"
           className="w-full bg-muted/40 py-20 md:py-28"
         >
           <div className="container mx-auto px-4 md:px-6">
@@ -257,8 +257,8 @@ export function HomeClient() {
               </p>
             </div>
 
-            <div className="mx-auto mt-12 grid max-w-4xl items-center gap-4 md:grid-cols-[1fr_auto_1fr]">
-              <div className="rounded-xl border border-border border-l-4 border-l-accent bg-card p-7 shadow-sm">
+            <div className="mx-auto mt-12 grid max-w-5xl items-center gap-4 md:grid-cols-[1fr_auto_1fr]">
+              <div className="rounded-xl border border-border border-l-4 border-l-accent bg-card p-8 shadow-sm transition-shadow duration-200 hover:shadow-md">
                 <Image
                   src="/logo-bidtory-descubre-neg.svg"
                   alt="Bidtory Descubre"
@@ -293,7 +293,7 @@ export function HomeClient() {
                 </Badge>
               </div>
 
-              <div className="flex flex-col items-center gap-1 py-4">
+              <div className="flex flex-none flex-col items-center gap-1 py-4">
                 <ChevronRight
                   className="hidden h-6 w-6 text-muted-foreground/50 md:block"
                   aria-hidden
@@ -303,7 +303,7 @@ export function HomeClient() {
                 </span>
               </div>
 
-              <div className="rounded-xl border border-border border-l-4 border-l-foreground bg-card p-7 shadow-sm">
+              <div className="rounded-xl border border-border border-l-4 border-l-foreground bg-card p-8 shadow-sm transition-shadow duration-200 hover:shadow-md">
                 <Image
                   src="/logo-bidtory-aplica-neg.svg"
                   alt="Bidtory Aplica"
