@@ -118,13 +118,13 @@ export function FeatureScroll() {
               'flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all duration-200 border',
               i === activeIndex
                 ? 'bg-accent text-accent-foreground border-accent shadow-md shadow-accent/20'
-                : 'border-white/15 text-foreground/60 hover:text-foreground hover:border-white/30 bg-transparent'
+                : 'border-border text-foreground/60 hover:text-foreground hover:border-border/80 bg-transparent'
             )}
           >
             <span
               className={cn(
                 'w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold shrink-0',
-                i === activeIndex ? 'bg-accent-foreground/20' : 'bg-white/10'
+                i === activeIndex ? 'bg-accent-foreground/20' : 'bg-muted'
               )}
             >
               {f.step}
@@ -184,7 +184,7 @@ export function FeatureScroll() {
                             'rounded-full transition-all duration-200 h-2.5',
                             idx === subImageIndex
                               ? 'w-7 bg-accent'
-                              : 'w-2.5 bg-white/20 hover:bg-white/40'
+                              : 'w-2.5 bg-muted-foreground/30 hover:bg-muted-foreground/60'
                           )}
                           aria-label={`Mostrar vista ${idx + 1} de ${f.images!.length}`}
                           aria-current={idx === subImageIndex ? 'true' : undefined}
@@ -265,7 +265,7 @@ export function FeatureScroll() {
                     'rounded-full transition-all duration-200',
                     i === activeIndex
                       ? 'w-6 h-2 bg-accent'
-                      : 'w-2 h-2 bg-white/25 hover:bg-white/50'
+                      : 'w-2 h-2 bg-muted-foreground/30 hover:bg-muted-foreground/60'
                   )}
                   aria-label={`Ir al paso ${i + 1}`}
                 />
