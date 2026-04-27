@@ -367,6 +367,14 @@ export default function CustomerDetailPage() {
     return false;
   }, [userProfile]);
 
+  /** Admin Bidtory con permiso específico de crear oportunidades (sin acceso completo a zona). */
+  const adminCanCreateOpportunity = useMemo(
+    () =>
+      userProfile?.role === 'admin' &&
+      customer?.bidtory_access?.can_create_opportunities === true,
+    [userProfile?.role, customer?.bidtory_access?.can_create_opportunities],
+  );
+
   /** Admin con acceso Bidtory solo por oportunidad (sin grant global) → vista de zona limitada. */
   const adminHasAccountAccess = useMemo(
     () => userProfile?.role !== 'admin' || customer?.bidtory_access?.granted === true,
@@ -471,7 +479,8 @@ export default function CustomerDetailPage() {
     if (!customer || !userProfile) return;
     const adminHasBidtoryAccess =
       customer.bidtory_access?.granted === true ||
-      (customer.bidtory_access?.opportunity_grant_count ?? 0) > 0;
+      (customer.bidtory_access?.opportunity_grant_count ?? 0) > 0 ||
+      customer.bidtory_access?.can_create_opportunities === true;
     if (userProfile.role === 'admin' && !adminHasBidtoryAccess) {
       toast({
         title: "Acceso denegado",
@@ -1028,7 +1037,7 @@ const handleUploadGeneralDocument = async () => {
             </Dialog>
           )}
           
-          {canAnalyzeTender && adminHasAccountAccess && (
+          {canAnalyzeTender && (adminHasAccountAccess || adminCanCreateOpportunity) && (
             <Dialog open={isAnalysisModalOpen} onOpenChange={setIsAnalysisModalOpen}>
                 <DialogTrigger asChild>
                     <Button
@@ -1219,7 +1228,7 @@ const handleUploadGeneralDocument = async () => {
                   : 'Pruebe a seleccionar otro estado o cree una nueva oportunidad.'}
               </CardDescription>
               
-              {canAnalyzeTender && adminHasAccountAccess && statusFilter !== 'archived' && (
+              {canAnalyzeTender && (adminHasAccountAccess || adminCanCreateOpportunity) && statusFilter !== 'archived' && (
                 <Button
                   className="mt-6 bg-accent text-accent-foreground shadow-sm hover:bg-accent/90 focus-visible:ring-accent"
                   onClick={handleOpenAnalysisModal}
