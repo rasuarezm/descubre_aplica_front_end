@@ -48,7 +48,7 @@ const features: FeatureItem[] = [
     logo: '/logo-bidtory-aplica-pos.svg',
     title: 'Paso 2: Lleva al pipeline con un clic',
     description:
-      'Cuando Descubre identifica una oportunidad relevante, usted la lleva a Bidtory Aplica en un clic. Su pipeline Kanban muestra el estado de todas sus licitaciones activas: prospecto, en desarrollo, enviada, ganada.',
+      'Cuando Descubre identifica una oportunidad relevante, usted la lleva a Bidtory Aplica en un clic. Su pipeline Kanban muestra el estado de sus licitaciones activas —por ejemplo prospecto, en desarrollo, enviada y cierre del proceso— con una vista clara para todo el equipo.',
     cta: null,
     image: '/2-Bidtory%20Aplica-PipelinePasos.webp',
   },

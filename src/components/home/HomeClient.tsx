@@ -6,17 +6,7 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FeatureScroll } from "@/components/home/FeatureScroll";
-import {
-  ArrowRight,
-  Menu,
-  X,
-  Zap,
-  FileText,
-  Users,
-  Bell,
-  Search,
-  ChevronRight,
-} from "lucide-react";
+import { ArrowRight, Menu, X, Zap, ChevronRight } from "lucide-react";
 
 export function HomeClient() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
@@ -162,12 +152,18 @@ export function HomeClient() {
                   Contratación pública · Fondos de fomento · Colombia
                 </span>
                 <h1 className="font-headline text-5xl font-semibold leading-[1.1] tracking-tight text-foreground md:text-6xl lg:text-[4.25rem]">
-                  Encuentre las licitaciones que su empresa puede ganar.
+                  Su radar inteligente para licitaciones estratégicas.
                 </h1>
                 <p className="mt-5 max-w-lg text-lg leading-relaxed text-muted-foreground">
-                  Bidtory monitorea SECOP II y fondos de fomento con IA, puntúa
-                  cada convocatoria según su perfil y la lleva directo a su
-                  equipo de trabajo.
+                  Bidtory es la suite integral que combina un radar de
+                  oportunidades con IA que busca por usted (Descubre) y un
+                  espacio de trabajo colaborativo (Aplica).
+                </p>
+                <p className="mt-3 max-w-lg text-lg leading-relaxed text-muted-foreground">
+                  Así su equipo puede gestionar cada proceso —desde la
+                  validación de requisitos, la construcción de la oferta y la
+                  formulación de preguntas hasta el cierre del mismo— con
+                  precisión y control.
                 </p>
                 <div className="mt-8 flex flex-wrap gap-3">
                   <Button
@@ -213,50 +209,32 @@ export function HomeClient() {
           </div>
         </section>
 
-        {/* Trust bar */}
+        {/* Barra de cobertura: solo fuentes / marco institucional (referencia diseño) */}
         <section
-          className="border-y border-border/60 bg-muted/30 py-4"
-          aria-label="Señales de confianza"
+          className="border-y border-border bg-white py-10 md:py-12 dark:bg-background"
+          aria-labelledby="home-trust-sources-heading"
         >
-          <div className="container mx-auto flex flex-wrap items-center justify-center gap-x-8 gap-y-3 px-4 md:px-6">
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Search className="h-3.5 w-3.5 shrink-0 text-accent" aria-hidden />
-              SECOP II oficial
-            </div>
-            <span
-              className="hidden h-4 w-px bg-border md:block"
-              aria-hidden
-            />
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Zap className="h-3.5 w-3.5 shrink-0 text-accent" aria-hidden />
-              Gemini AI (Google)
-            </div>
-            <span
-              className="hidden h-4 w-px bg-border md:block"
-              aria-hidden
-            />
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Bell className="h-3.5 w-3.5 shrink-0 text-accent" aria-hidden />
-              Alertas diarias
-            </div>
-            <span
-              className="hidden h-4 w-px bg-border md:block"
-              aria-hidden
-            />
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <Users className="h-3.5 w-3.5 shrink-0 text-accent" aria-hidden />
-              Equipos de hasta 5 personas
-            </div>
-            <span
-              className="hidden h-4 w-px bg-border md:block"
-              aria-hidden
-            />
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <FileText
-                className="h-3.5 w-3.5 shrink-0 text-accent"
-                aria-hidden
-              />
-              Análisis de pliegos con IA
+          <div className="container mx-auto px-4 md:px-6">
+            <p
+              id="home-trust-sources-heading"
+              className="mb-8 text-center text-[11px] font-semibold uppercase tracking-[0.2em] text-muted-foreground md:text-xs"
+            >
+              Fuentes de datos oficiales e integraciones
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-6 opacity-60 grayscale transition-[opacity,filter] duration-500 hover:opacity-100 hover:grayscale-0 md:gap-x-14 md:gap-y-8">
+              {[
+                "SECOP II",
+                "Colombia Compra Eficiente",
+                "Fondos de fomento",
+                "Cooperación internacional",
+              ].map((name) => (
+                <span
+                  key={name}
+                  className="font-headline text-center text-base font-semibold tracking-tight text-foreground/85 md:text-lg"
+                >
+                  {name}
+                </span>
+              ))}
             </div>
           </div>
         </section>
@@ -270,10 +248,12 @@ export function HomeClient() {
             <div className="mb-16 text-center">
               <p className="mb-3 text-sm font-medium text-accent">El sistema</p>
               <h2 className="font-headline text-3xl font-semibold tracking-tight text-foreground md:text-4xl">
-                Dos módulos. Un solo flujo.
+                El ecosistema de licitación inteligente
               </h2>
               <p className="mx-auto mt-3 max-w-xl text-center text-muted-foreground">
-                Descubra una oportunidad y llévela al pipeline con un clic.
+                Dos herramientas conectadas para acompañar a su equipo desde la
+                detección de oportunidades hasta la preparación y el cierre de
+                cada proceso, con trazabilidad.
               </p>
             </div>
 
@@ -290,14 +270,14 @@ export function HomeClient() {
                   Bidtory Descubre
                 </h3>
                 <p className="mb-5 text-sm text-muted-foreground">
-                  Descubrimiento inteligente — su radar de convocatorias con IA
+                  Inteligencia y monitoreo
                 </p>
                 <ul className="space-y-2.5">
                   {[
-                    "Scoring Gemini por perfil de empresa",
-                    "Alertas diarias por email",
-                    "SECOP II + fondos de fomento",
-                    "Dashboard de oportunidades",
+                    "Monitoreo de convocatorias (incluido SECOP II y fondos de fomento)",
+                    "Priorización con IA según el perfil de su empresa",
+                    "Alertas para no perder plazos ni cambios relevantes",
+                    "Vista clara de oportunidades y su contexto",
                   ].map((text) => (
                     <li
                       key={text}
@@ -335,14 +315,14 @@ export function HomeClient() {
                   Bidtory Aplica
                 </h3>
                 <p className="mb-5 text-sm text-muted-foreground">
-                  Gestión y formulación — su pipeline de licitaciones
+                  Gestión y pipeline
                 </p>
                 <ul className="space-y-2.5">
                   {[
-                    "Pipeline Kanban de oportunidades",
-                    "Análisis de pliegos con IA",
-                    "Checklist de documentos",
-                    "Colaboración de equipo",
+                    "Pipeline de oportunidades con estados claros",
+                    "Análisis asistido de pliegos y requisitos",
+                    "Checklist y documentos de la propuesta",
+                    "Bitácora para coordinar jurídica, técnica y gestión",
                   ].map((text) => (
                     <li
                       key={text}
@@ -369,11 +349,12 @@ export function HomeClient() {
           <div className="container mx-auto mb-16 max-w-4xl px-4 text-center md:px-6">
             <p className="mb-3 text-sm font-medium text-accent">Cómo funciona</p>
             <h2 className="font-headline text-3xl font-semibold tracking-tight text-foreground md:text-4xl">
-              Del hallazgo a la propuesta ganadora
+              Su flujo de trabajo, de punta a punta
             </h2>
             <p className="mx-auto mt-3 max-w-xl text-muted-foreground">
-              Un flujo continuo desde que detectamos la oportunidad hasta que su
-              equipo presenta la propuesta.
+              Un recorrido continuo: desde que una convocatoria encaja con su
+              perfil hasta que su equipo prepara la propuesta, documenta el
+              trabajo y deja trazabilidad para revisión interna o auditorías.
             </p>
           </div>
           <FeatureScroll />
@@ -386,24 +367,27 @@ export function HomeClient() {
               <span className="text-4xl font-semibold tracking-tight text-foreground">
                 Diario
               </span>
-              <span className="mt-1.5 text-sm text-muted-foreground">
-                Monitoreo de convocatorias activas
+              <span className="mt-1.5 max-w-[220px] text-sm leading-snug text-muted-foreground">
+                Actualización frecuente de convocatorias según sus criterios y
+                alertas.
               </span>
             </div>
             <div className="flex flex-col items-center py-6 text-center md:py-0 md:px-10">
               <span className="text-4xl font-semibold tracking-tight text-foreground">
                 &lt; 10 min
               </span>
-              <span className="mt-1.5 text-sm text-muted-foreground">
-                Para ver sus primeras oportunidades
+              <span className="mt-1.5 max-w-[220px] text-sm leading-snug text-muted-foreground">
+                Para orientar su perfil y revisar oportunidades alineadas con
+                su empresa.
               </span>
             </div>
             <div className="flex flex-col items-center py-6 text-center md:py-0 md:px-10">
-              <span className="text-4xl font-semibold tracking-tight text-foreground">
-                3 capas
+              <span className="text-3xl font-semibold tracking-tight text-foreground md:text-4xl">
+                Varias fuentes
               </span>
-              <span className="mt-1.5 text-sm text-muted-foreground">
-                Contratación pública · Fomento · Cooperación
+              <span className="mt-1.5 max-w-[240px] text-sm leading-snug text-muted-foreground">
+                Contratación pública, fondos de fomento y cooperación
+                internacional en un solo flujo.
               </span>
             </div>
           </div>
