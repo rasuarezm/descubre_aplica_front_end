@@ -80,8 +80,6 @@ export function RegistroClient() {
 
   const [recaptchaReady, setRecaptchaReady] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [success, setSuccess] = useState(false);
-  const [successEmail, setSuccessEmail] = useState("");
 
   const [form, setForm] = useState({
     email: "",
@@ -285,44 +283,6 @@ export function RegistroClient() {
       setIsSubmitting(false);
     }
   };
-
-  if (success) {
-    return (
-      <LegalLayout>
-        <Script
-          src={`https://www.google.com/recaptcha/api.js?render=${RECAPTCHA_SITE_KEY}`}
-          strategy="lazyOnload"
-        />
-        <div className="container mx-auto max-w-lg px-4 py-12">
-          <Card className="border-border/80 shadow-sm">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-center text-green-600 dark:text-green-400">
-                ¡Registro casi completo!
-              </CardTitle>
-              <CardContent className="pt-4 text-center space-y-4">
-                <p>
-                  Le hemos enviado un correo a <strong>{successEmail}</strong>{" "}
-                  para verificar su dirección.
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Por favor, haga clic en el enlace de ese correo. Una vez
-                  verificado, inicie sesión para activar su cuenta y acceder a
-                  Bidtory.
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  Será redirigido a la página de inicio de sesión en unos
-                  segundos...
-                </p>
-                <Link href="/login">
-                  <Button>Ir a Iniciar Sesión</Button>
-                </Link>
-              </CardContent>
-            </CardHeader>
-          </Card>
-        </div>
-      </LegalLayout>
-    );
-  }
 
   return (
     <LegalLayout>
