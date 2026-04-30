@@ -256,22 +256,11 @@ export function RegistroClient() {
         email_verificacion_requerida?: boolean;
       }>("/v1/client_profile", payload);
 
-      if (data.success && data.email_verificacion_requerida !== false) {
-        setSuccess(true);
-        setSuccessEmail(form.email);
-        toast({
-          title: "Registro casi completo",
-          description:
-            "Le hemos enviado un correo para verificar su dirección. Por favor, haga clic en el enlace.",
-        });
-        setTimeout(() => router.push("/login"), 5000);
-      } else {
-        toast({
-          title: "Registro exitoso",
-          description: data.message || "Redirigiendo al dashboard...",
-        });
-        router.push("/dashboard");
-      }
+      toast({
+        title: "¡Bienvenido a Bidtory!",
+        description: data.message || "Su cuenta ha sido creada exitosamente.",
+      });
+      router.push("/dashboard/descubre");
     } catch (err) {
       let message = "Error en el proceso de registro.";
       if (err instanceof FirebaseError) {

@@ -38,6 +38,15 @@ export default function DashboardLayout({
         <AppSidebar />
         <SidebarInset>
           <AppHeader />
+          {user && !user.emailVerified && (
+            <div className="border-b border-amber-200 bg-amber-50 dark:border-amber-800 dark:bg-amber-950/40 px-6 py-3">
+              <p className="text-sm text-amber-800 dark:text-amber-300">
+                <strong>Verifique su correo electrónico</strong> — Le enviamos un enlace a{" "}
+                <span className="font-medium">{user.email}</span>. Necesita verificarlo
+                para recibir alertas de oportunidades.
+              </p>
+            </div>
+          )}
           <main className="flex-1 overflow-auto p-6">
             {children}
           </main>
