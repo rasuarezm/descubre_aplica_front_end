@@ -512,7 +512,7 @@ export function RegistroClient() {
                               e.target.value.replace(/[^0-9]/g, "").slice(0, 1)
                             )
                           }
-                          placeholder="1"
+                          placeholder="0-9"
                           maxLength={1}
                           className={
                             errors.digitoVerificacion ? "border-destructive" : ""
@@ -568,7 +568,7 @@ export function RegistroClient() {
                       }
                       placeholder="300 123 4567 o 601 234 5678"
                       inputMode="numeric"
-                      autoComplete="tel-national"
+                      autoComplete="off"
                       maxLength={12}
                       className={
                         errors.telefonoFacturacion ? "border-destructive" : ""
@@ -582,7 +582,8 @@ export function RegistroClient() {
                   </div>
                   <div>
                     <Label htmlFor="direccionFacturacion">
-                      Dirección de Facturación
+                      Dirección de Facturación{" "}
+                      <span className="text-destructive">*</span>
                     </Label>
                     <Input
                       id="direccionFacturacion"
