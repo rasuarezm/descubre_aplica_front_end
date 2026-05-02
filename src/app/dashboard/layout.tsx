@@ -24,6 +24,20 @@ export default function DashboardLayout({
     }
   }, [user, loading, router]);
 
+  useEffect(() => {
+    if (!user || user.emailVerified) return;
+
+    const interval = setInterval(async () => {
+      try {
+        await user.reload();
+      } catch {
+        // silencioso — puede fallar si hay problemas de red
+      }
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, [user, user?.emailVerified]);
+
   if (loading || !user) {
     return (
       <div className="flex items-center justify-center min-h-screen">
