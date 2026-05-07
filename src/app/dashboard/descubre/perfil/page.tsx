@@ -49,13 +49,25 @@ function fuenteEtiqueta(f: FuenteSecop, index?: number): string {
 }
 
 const MODALIDADES_SECOP = [
-  'Licitación Pública',
-  'Selección Abreviada',
-  'Concurso de Méritos',
-  'Mínima Cuantía',
-  'Régimen Especial',
-  'Acuerdo Marco de Precios',
+  { id: 'licitacion_publica', nombre_visible: 'Licitación Pública' },
+  { id: 'seleccion_abreviada', nombre_visible: 'Selección Abreviada' },
+  { id: 'concurso_meritos', nombre_visible: 'Concurso de Méritos' },
+  { id: 'minima_cuantia', nombre_visible: 'Mínima Cuantía' },
+  { id: 'regimen_especial', nombre_visible: 'Régimen Especial' },
+  { id: 'acuerdo_marco', nombre_visible: 'Acuerdo Marco de Precios' },
 ];
+
+const MODALIDAD_LABEL_TO_ID = new Map(
+  MODALIDADES_SECOP.map((modalidad) => [modalidad.nombre_visible, modalidad.id]),
+);
+
+function normalizeModalidadIds(values: string[] | undefined): string[] {
+  const normalized = (values ?? [])
+    .map((value) => MODALIDAD_LABEL_TO_ID.get(value) ?? value)
+    .filter((value) => MODALIDADES_SECOP.some((modalidad) => modalidad.id === value));
+
+  return Array.from(new Set(normalized));
+}
 
 export default function DescubrePerfilPage() {
   const { descubreData, loading, tieneDescubre, refreshDescubreProfile } = useDescubre();
@@ -91,7 +103,7 @@ export default function DescubrePerfilPage() {
         ubicaciones_preferidas: linesToArray(typeof form.ubicaciones_preferidas === 'string' ? form.ubicaciones_preferidas : arrayToLines(form.ubicaciones_preferidas)),
         entidades_interes: linesToArray(typeof form.entidades_interes === 'string' ? form.entidades_interes : arrayToLines(form.entidades_interes)),
         send_notifications: linesToArray(typeof form.send_notifications === 'string' ? form.send_notifications : arrayToLines(form.send_notifications)),
-        modalidades_preferidas: form.modalidades_preferidas || [],
+        modalidades_preferidas: normalizeModalidadIds(form.modalidades_preferidas),
       };
 
       if (descubreData?.plan_actual?.features_habilitadas?.palabra_clave_dorada_config && form.palabras_clave_doradas !== undefined) {
@@ -288,20 +300,26 @@ export default function DescubrePerfilPage() {
             <div className="space-y-2">
               <Label>Modalidades SECOP preferidas</Label>
               <div className="flex flex-wrap gap-3 pt-2">
-                {MODALIDADES_SECOP.map((mod) => {
-                  const selected = form.modalidades_preferidas?.includes(mod) ?? false;
+                {MODALIDADES_SECOP.map((modalidad) => {
+                  const selectedModalidades = normalizeModalidadIds(form.modalidades_preferidas);
+                  const selected = selectedModalidades.includes(modalidad.id);
                   return (
-                    <label key={mod} className="flex items-center gap-2 cursor-pointer text-sm">
+                    <label key={modalidad.id} className="flex items-center gap-2 cursor-pointer text-sm">
                       <input
                         type="checkbox"
                         checked={selected}
                         onChange={(e) => {
-                          const arr = form.modalidades_preferidas ?? [];
-                          updateField('modalidades_preferidas', e.target.checked ? [...arr, mod] : arr.filter((m) => m !== mod));
+                          const arr = normalizeModalidadIds(form.modalidades_preferidas);
+                          updateField(
+                            'modalidades_preferidas',
+                            e.target.checked
+                              ? Array.from(new Set([...arr, modalidad.id]))
+                              : arr.filter((id) => id !== modalidad.id),
+                          );
                         }}
                         className="rounded border-input"
                       />
-                      {mod}
+                      {modalidad.nombre_visible}
                     </label>
                   );
                 })}
