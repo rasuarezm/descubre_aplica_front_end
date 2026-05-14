@@ -4,6 +4,11 @@ import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useDescubre } from '@/contexts/descubre-context';
 import descubreApiClient, { ApiError } from '@/lib/descubre-api-client';
+import {
+  codigoFuenteParaDisplay,
+  getFuenteDocumentId,
+  nombreFuenteSecop,
+} from '@/lib/descubre-fuente-utils';
 import type { DescubreClienteProfile, FuenteSecop } from '@/types';
 import {
   Card, CardContent, CardDescription, CardHeader, CardTitle,
@@ -29,23 +34,6 @@ function linesToArray(text: string): string[] {
 /** Mientras el usuario edita el textarea: conserva saltos de línea y espacios por línea. */
 function splitLinesRaw(text: string): string[] {
   return text.split('\n');
-}
-
-function fuenteId(f: FuenteSecop, index?: number): string {
-  return f.id_documento_fuente || f.id_fuente || f.id || (index !== undefined ? `idx-${index}` : '');
-}
-
-function fuenteEtiqueta(f: FuenteSecop, index?: number): string {
-  const id = fuenteId(f, index);
-  return (
-    f.nombre_visible ||
-    f.nombre_descriptivo_fuente ||
-    f.descripcion_corta ||
-    f.descripcion_fuente ||
-    f.url ||
-    id ||
-    'Fuente'
-  );
 }
 
 const MODALIDADES_SECOP = [
@@ -214,8 +202,8 @@ export default function DescubrePerfilPage() {
   const fuentesDisponibles = descubreData?.fuentes_secop_disponibles_para_suscripcion ?? [];
   const limiteAlcanzado = fuentesSuscritas.length >= maxFuentes;
   const fuentesNoSuscritas = fuentesDisponibles.filter((f) => {
-    const fid = fuenteId(f);
-    return !fuentesSuscritas.some((s) => fuenteId(s) === fid);
+    const fid = getFuenteDocumentId(f);
+    return !fuentesSuscritas.some((s) => getFuenteDocumentId(s) === fid);
   });
 
   return (
@@ -361,13 +349,17 @@ export default function DescubrePerfilPage() {
             {fuentesSuscritas.length > 0 ? (
               <ul className="space-y-2">
                 {fuentesSuscritas.map((f, i) => {
-                  const fid = fuenteId(f, i);
+                  const fid = getFuenteDocumentId(f, i);
                   const isProcessing = actionInProgress === fid;
+                  const codigo = codigoFuenteParaDisplay(fid);
                   return (
                     <li key={`suscrita-${fid}`} className="flex items-center justify-between gap-2 py-2 border-b border-border last:border-0">
-                      <div className="flex items-center gap-2 text-sm min-w-0">
-                        <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
-                        <span className="truncate">{fuenteEtiqueta(f, i)}</span>
+                      <div className="flex items-start gap-2 text-sm min-w-0 flex-1">
+                        <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0 mt-0.5" />
+                        <div className="min-w-0">
+                          <p className="truncate font-medium leading-snug">{nombreFuenteSecop(f, i)}</p>
+                          <p className="truncate font-mono text-xs text-muted-foreground">{codigo}</p>
+                        </div>
                       </div>
                       <Button
                         variant="outline"
@@ -392,11 +384,15 @@ export default function DescubrePerfilPage() {
                 <p className="text-sm font-medium mb-3">Fuentes disponibles</p>
                 <ul className="space-y-2">
                   {fuentesNoSuscritas.map((f, i) => {
-                    const fid = fuenteId(f, i);
+                    const fid = getFuenteDocumentId(f, i);
                     const isProcessing = actionInProgress === fid;
+                    const codigo = codigoFuenteParaDisplay(fid);
                     return (
                       <li key={`disponible-${fid}`} className="flex items-center justify-between gap-2 py-2 px-3 rounded-md bg-muted/50">
-                        <span className="text-sm truncate flex-1 min-w-0">{fuenteEtiqueta(f, i)}</span>
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-medium leading-snug">{nombreFuenteSecop(f, i)}</p>
+                          <p className="truncate font-mono text-xs text-muted-foreground">{codigo}</p>
+                        </div>
                         <Button
                           variant="default"
                           size="sm"
