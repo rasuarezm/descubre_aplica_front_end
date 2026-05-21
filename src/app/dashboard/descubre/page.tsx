@@ -28,7 +28,8 @@ import {
   MapPin,
   Tag,
   Clock,
-  Mail,
+  X,
+  ChevronDown,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getUrgencyInfo, parseDescubreFechaLimiteOfertas, type UrgencyInfo } from '@/lib/date-utils';
@@ -293,7 +294,7 @@ function DescubreKpiRow({ kpis, fuentes }: { kpis: DescubreKpiSnapshot; fuentes:
           + {nToday} hoy · {nHigh} de alta afinidad
         </p>
         <p className="relative mt-1 text-[10px] leading-snug text-secondary-foreground/65">
-          Sobre las últimas cargadas en esta pantalla (p. ej. 30), no el histórico completo.
+          Oportunidades activas de los últimos 60 días en esta pantalla.
         </p>
       </div>
 
@@ -479,6 +480,8 @@ export default function DescubreDashboardPage() {
   const [loadingOportunidades, setLoadingOportunidades] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [segment, setSegment] = useState<DescubreSegment>('all');
+  const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
+  const [showDismissed, setShowDismissed] = useState(false);
 
   const loadOportunidades = useCallback(async () => {
     setLoadingOportunidades(true);
@@ -506,11 +509,52 @@ export default function DescubreDashboardPage() {
     void loadOportunidades();
   }, [contextLoading, tieneDescubre, loadOportunidades]);
 
+  useEffect(() => {
+    if (data?.oportunidades) {
+      setDismissedIds(
+        new Set(
+          data.oportunidades
+            .filter((o) => o.dismissed === true && o.doc_id)
+            .map((o) => o.doc_id as string),
+        ),
+      );
+    }
+  }, [data]);
+
+  const handleDismiss = useCallback(async (docId: string, dismiss: boolean) => {
+    setDismissedIds((prev) => {
+      const next = new Set(prev);
+      if (dismiss) next.add(docId);
+      else next.delete(docId);
+      return next;
+    });
+    try {
+      await descubreApiClient.post('/v1/dismiss_opportunity', { doc_id: docId, dismissed: dismiss });
+    } catch {
+      setDismissedIds((prev) => {
+        const next = new Set(prev);
+        if (dismiss) next.delete(docId);
+        else next.add(docId);
+        return next;
+      });
+    }
+  }, []);
+
   const oportunidades = data?.oportunidades ?? [];
 
-  const enrichedList = useMemo(
+  const enrichedOportunidades = useMemo(
     () => oportunidades.map(enrichDescubreOpportunity),
     [oportunidades],
+  );
+
+  const oportunidadesActivas = useMemo(
+    () => enrichedOportunidades.filter((op) => op.doc_id && !dismissedIds.has(op.doc_id)),
+    [enrichedOportunidades, dismissedIds],
+  );
+
+  const oportunidadesDescartadas = useMemo(
+    () => enrichedOportunidades.filter((op) => op.doc_id && dismissedIds.has(op.doc_id)),
+    [enrichedOportunidades, dismissedIds],
   );
 
   const descubreKpis = useMemo((): DescubreKpiSnapshot => {
@@ -518,7 +562,7 @@ export default function DescubreDashboardPage() {
     let nClosing = 0;
     let nToday = 0;
     const scores: number[] = [];
-    for (const e of enrichedList) {
+    for (const e of oportunidadesActivas) {
       if (e.isHighAffinity) nHigh += 1;
       if (e.isClosingWithin7d) nClosing += 1;
       if (isFechaProcesamientoTodayBogota(e.fecha_procesamiento)) nToday += 1;
@@ -527,27 +571,27 @@ export default function DescubreDashboardPage() {
     const avgEncaje =
       scores.length > 0 ? scores.reduce((a, b) => a + b, 0) / scores.length : null;
     return {
-      nTotal: enrichedList.length,
+      nTotal: oportunidadesActivas.length,
       nHigh,
       nClosing,
       nToday,
       avgEncaje,
     };
-  }, [enrichedList]);
+  }, [oportunidadesActivas]);
 
   const filteredEnriched = useMemo(() => {
-    if (segment === 'high') return enrichedList.filter((e) => e.isHighAffinity);
-    if (segment === 'closing') return enrichedList.filter((e) => e.isClosingWithin7d);
-    return enrichedList;
-  }, [enrichedList, segment]);
+    if (segment === 'high') return oportunidadesActivas.filter((e) => e.isHighAffinity);
+    if (segment === 'closing') return oportunidadesActivas.filter((e) => e.isClosingWithin7d);
+    return oportunidadesActivas;
+  }, [oportunidadesActivas, segment]);
 
   const segmentCounts = useMemo(
     () => ({
-      all: enrichedList.length,
-      high: enrichedList.filter((e) => e.isHighAffinity).length,
-      closing: enrichedList.filter((e) => e.isClosingWithin7d).length,
+      all: oportunidadesActivas.length,
+      high: oportunidadesActivas.filter((e) => e.isHighAffinity).length,
+      closing: oportunidadesActivas.filter((e) => e.isClosingWithin7d).length,
     }),
-    [enrichedList],
+    [oportunidadesActivas],
   );
 
   if (contextLoading || loadingOportunidades) {
@@ -690,13 +734,8 @@ export default function DescubreDashboardPage() {
             >
               Oportunidades recientes
             </h2>
-            <p className="flex gap-2 text-sm leading-relaxed text-muted-foreground">
-              <Mail className="mt-0.5 h-3.5 w-3.5 shrink-0 text-muted-foreground/80" aria-hidden />
-              <span>
-                Se muestran las últimas{' '}
-                <strong className="font-medium text-foreground/90">30</strong> oportunidades. Las
-                anteriores las recibirá por correo.
-              </span>
+            <p className="text-sm leading-relaxed text-muted-foreground">
+              <span>Oportunidades de los últimos 60 días, ordenadas por fecha de cierre.</span>
             </p>
           </div>
 
@@ -711,15 +750,43 @@ export default function DescubreDashboardPage() {
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 min-[1800px]:grid-cols-5">
               {filteredEnriched.map((enriched, i) => (
                 <OportunidadCard
-                  key={
-                    enriched.titulo
-                      ? `${enriched.titulo}-${i}-${enriched.link_directo ?? enriched.fallback_search_url ?? ''}`
-                      : i
-                  }
+                  key={enriched.doc_id ?? `active-${i}`}
                   enriched={enriched}
+                  onDismiss={() => {
+                    if (enriched.doc_id) void handleDismiss(enriched.doc_id, true);
+                  }}
                 />
               ))}
             </div>
+          )}
+
+          {oportunidadesDescartadas.length > 0 && (
+            <section className="space-y-4 border-t border-border pt-6">
+              <button
+                type="button"
+                className="flex items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-foreground"
+                onClick={() => setShowDismissed((v) => !v)}
+              >
+                <ChevronDown
+                  className={cn('h-4 w-4 transition-transform', showDismissed && 'rotate-180')}
+                />
+                Descartadas ({oportunidadesDescartadas.length})
+              </button>
+              {showDismissed && (
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+                  {oportunidadesDescartadas.map((enriched, i) => (
+                    <OportunidadCard
+                      key={`dismissed-${enriched.doc_id ?? i}`}
+                      enriched={enriched}
+                      onDismiss={() => {
+                        if (enriched.doc_id) void handleDismiss(enriched.doc_id, false);
+                      }}
+                      isDismissed
+                    />
+                  ))}
+                </div>
+              )}
+            </section>
           )}
         </section>
       ) : (
@@ -747,7 +814,15 @@ export default function DescubreDashboardPage() {
   );
 }
 
-function OportunidadCard({ enriched }: { enriched: EnrichedOportunidadDescubre }) {
+function OportunidadCard({
+  enriched,
+  onDismiss,
+  isDismissed = false,
+}: {
+  enriched: EnrichedOportunidadDescubre;
+  onDismiss: () => void;
+  isDismissed?: boolean;
+}) {
   const op = enriched;
   const showEntidad = isPremiumValue(op.entidad_contratante);
   const showValor = isPremiumValue(op.valor_estimado);
@@ -768,6 +843,7 @@ function OportunidadCard({ enriched }: { enriched: EnrichedOportunidadDescubre }
       className={cn(
         'flex flex-col overflow-hidden border-l-4 shadow-sm transition-shadow duration-300 hover:shadow-md',
         descubreCardLeftBorderClass(urgencyInfo),
+        isDismissed && 'opacity-60',
       )}
     >
       <CardHeader className="space-y-2 px-4 pb-2 pt-4">
@@ -867,6 +943,15 @@ function OportunidadCard({ enriched }: { enriched: EnrichedOportunidadDescubre }
           ) : (
             <p className="flex-1 text-center text-xs italic text-muted-foreground">Sin enlace</p>
           )}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full gap-1.5 text-xs text-muted-foreground hover:text-destructive"
+            onClick={onDismiss}
+          >
+            <X className="h-3.5 w-3.5" />
+            {isDismissed ? 'Restaurar' : 'No me interesa'}
+          </Button>
         </div>
         {isHighValue && (
           <a

@@ -527,6 +527,7 @@ export interface DescubreDashboardData {
 }
 
 export interface OportunidadDescubre {
+  doc_id?: string;
   titulo?: string;
   fecha_procesamiento?: string;
   modalidad_contratacion?: string;
@@ -541,6 +542,7 @@ export interface OportunidadDescubre {
   fallback_reference_process?: string;
   fallback_search_url?: string;
   cta_eligible?: boolean;
+  dismissed?: boolean;
 }
 
 export interface OportunidadesDescubreResponse {
