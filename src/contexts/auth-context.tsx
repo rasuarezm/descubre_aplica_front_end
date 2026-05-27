@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect, createContext, useContext, ReactNode, useMemo, useCallback } from 'react';
+import { useState, useEffect, useRef, createContext, useContext, ReactNode, useMemo, useCallback } from 'react';
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import type { UserProfile } from '@/types';
@@ -128,11 +128,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  const lastVisibilityProfileRefreshRef = useRef(0);
+  const PROFILE_REFRESH_ON_FOCUS_MIN_MS = 5 * 60 * 1000;
+
   useEffect(() => {
     const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible' && auth.currentUser) {
-        refreshUserProfile();
+      if (document.visibilityState !== 'visible' || !auth.currentUser) {
+        return;
       }
+      const now = Date.now();
+      if (now - lastVisibilityProfileRefreshRef.current < PROFILE_REFRESH_ON_FOCUS_MIN_MS) {
+        return;
+      }
+      lastVisibilityProfileRefreshRef.current = now;
+      void refreshUserProfile();
     };
 
     document.addEventListener('visibilitychange', handleVisibilityChange);

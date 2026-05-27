@@ -6,11 +6,7 @@ import { isSameDay } from 'date-fns';
 import { toZonedTime } from 'date-fns-tz';
 import { useDescubre } from '@/contexts/descubre-context';
 import descubreApiClient from '@/lib/descubre-api-client';
-import type {
-  FuenteSecop,
-  OportunidadDescubre,
-  OportunidadesDescubreResponse,
-} from '@/types';
+import type { FuenteSecop, OportunidadDescubre } from '@/types';
 import {
   Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle,
 } from '@/components/ui/card';
@@ -41,7 +37,36 @@ import {
 
 const BOGOTA_TZ = 'America/Bogota';
 
+const DESCUBRE_UI_STORAGE_KEY = 'bidtory_descubre_ui_v1';
+const DESCUBRE_SCROLL_STORAGE_KEY = 'bidtory_descubre_scroll_y';
+
 type DescubreSegment = 'all' | 'high' | 'closing';
+
+type DescubreUiPersisted = {
+  segment: DescubreSegment;
+  showDismissed: boolean;
+};
+
+function readDescubreUiState(): DescubreUiPersisted | null {
+  if (typeof window === 'undefined') return null;
+  try {
+    const raw = sessionStorage.getItem(DESCUBRE_UI_STORAGE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as DescubreUiPersisted;
+    if (
+      parsed &&
+      (parsed.segment === 'all' ||
+        parsed.segment === 'high' ||
+        parsed.segment === 'closing') &&
+      typeof parsed.showDismissed === 'boolean'
+    ) {
+      return parsed;
+    }
+  } catch {
+    /* ignore */
+  }
+  return null;
+}
 
 type EnrichedOportunidadDescubre = OportunidadDescubre & {
   hasFechaLimite: boolean;
@@ -475,39 +500,44 @@ function DescubreDashboardSkeleton() {
 }
 
 export default function DescubreDashboardPage() {
-  const { descubreData, loading: contextLoading, tieneDescubre } = useDescubre();
-  const [data, setData] = useState<OportunidadesDescubreResponse | null>(null);
-  const [loadingOportunidades, setLoadingOportunidades] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [segment, setSegment] = useState<DescubreSegment>('all');
-  const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
-  const [showDismissed, setShowDismissed] = useState(false);
+  const {
+    descubreData,
+    loading: contextLoading,
+    tieneDescubre,
+    oportunidadesData: data,
+    oportunidadesLoading,
+    oportunidadesError: error,
+    refreshOportunidades,
+  } = useDescubre();
 
-  const loadOportunidades = useCallback(async () => {
-    setLoadingOportunidades(true);
-    setError(null);
-    try {
-      const res = await descubreApiClient.get<OportunidadesDescubreResponse>('/v1/opportunities');
-      setData(res);
-    } catch (e) {
-      setError(
-        e instanceof Error ? e.message : 'No se pudieron cargar las oportunidades.',
-      );
-    } finally {
-      setLoadingOportunidades(false);
-    }
-  }, []);
+  const persistedUi = useMemo(() => readDescubreUiState(), []);
+  const [segment, setSegment] = useState<DescubreSegment>(
+    persistedUi?.segment ?? 'all',
+  );
+  const [dismissedIds, setDismissedIds] = useState<Set<string>>(new Set());
+  const [showDismissed, setShowDismissed] = useState(
+    persistedUi?.showDismissed ?? false,
+  );
 
   useEffect(() => {
-    if (contextLoading) {
-      return;
+    const payload: DescubreUiPersisted = { segment, showDismissed };
+    sessionStorage.setItem(DESCUBRE_UI_STORAGE_KEY, JSON.stringify(payload));
+  }, [segment, showDismissed]);
+
+  useEffect(() => {
+    const saved = sessionStorage.getItem(DESCUBRE_SCROLL_STORAGE_KEY);
+    if (saved) {
+      const y = parseInt(saved, 10);
+      if (!Number.isNaN(y) && y > 0) {
+        requestAnimationFrame(() => window.scrollTo(0, y));
+      }
     }
-    if (!tieneDescubre) {
-      setLoadingOportunidades(false);
-      return;
-    }
-    void loadOportunidades();
-  }, [contextLoading, tieneDescubre, loadOportunidades]);
+    const onScroll = () => {
+      sessionStorage.setItem(DESCUBRE_SCROLL_STORAGE_KEY, String(window.scrollY));
+    };
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
+  }, []);
 
   useEffect(() => {
     if (data?.oportunidades) {
@@ -594,7 +624,11 @@ export default function DescubreDashboardPage() {
     [oportunidadesActivas],
   );
 
-  if (contextLoading || loadingOportunidades) {
+  const showInitialSkeleton =
+    (contextLoading && !descubreData) ||
+    (oportunidadesLoading && !data && tieneDescubre);
+
+  if (showInitialSkeleton) {
     return <DescubreDashboardSkeleton />;
   }
 
@@ -715,7 +749,7 @@ export default function DescubreDashboardPage() {
                 type="button"
                 variant="secondary"
                 className="shrink-0"
-                onClick={loadOportunidades}
+                onClick={() => void refreshOportunidades({ background: false })}
               >
                 Reintentar
               </Button>
