@@ -15,6 +15,25 @@ export interface UrgencyInfo {
 
 const BOGOTA_TIME_ZONE = 'America/Bogota';
 
+/** Convierte un instante al calendario de Bogotá para comparaciones. */
+export function toBogotaTime(date: Date): Date {
+  return toZonedTime(date, BOGOTA_TIME_ZONE);
+}
+
+/** Formatea un instante para mostrar en hora de Bogotá (cronogramas, plazos). */
+export function formatBogotaDateTime(
+  date: Date,
+  pattern = "eeee, dd 'de' MMMM, yyyy 'a las' p",
+): string {
+  const zoned = toZonedTime(date, BOGOTA_TIME_ZONE);
+  return formatDate(zoned, pattern, { locale: es });
+}
+
+/** Compara si un instante ya pasó según el reloj de Bogotá. */
+export function isPastInBogota(date: Date): boolean {
+  return isPast(toZonedTime(date, BOGOTA_TIME_ZONE));
+}
+
 /**
  * Parsea `fecha_limite_ofertas` del API Descubre (p. ej. `dd/MM/yyyy HH:mm …` en hora Bogotá).
  * Colombia usa UTC−05:00 sin DST; el instante se normaliza para alimentar `getUrgencyInfo`.

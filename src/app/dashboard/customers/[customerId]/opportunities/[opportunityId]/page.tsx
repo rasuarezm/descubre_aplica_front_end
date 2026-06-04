@@ -31,7 +31,7 @@ import { format, isPast } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { CountdownTimer } from '@/components/opportunities/CountdownTimer';
-import { getUrgencyInfo, UrgencyInfo } from '@/lib/date-utils';
+import { getUrgencyInfo, UrgencyInfo, formatBogotaDateTime, isPastInBogota, toBogotaTime } from '@/lib/date-utils';
 import { Checkbox } from '@/components/ui/checkbox';
 import { BidtoryRadarColorIcon } from '@/components/icons/BidtoryRadarColorIcon';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -192,8 +192,10 @@ export default function OpportunityDetailPage() {
         .map((d, index) => ({ ...d, originalIndex: index, dateObj: new Date(d.date) }))
         .sort((a, b) => a.dateObj.getTime() - b.dateObj.getTime());
     
-    const now = new Date();
-    const nextUpcomingDate = sortedDates.find(d => d.dateObj >= now);
+    const nowInBogota = toBogotaTime(new Date());
+    const nextUpcomingDate = sortedDates.find(
+      (d) => toBogotaTime(d.dateObj).getTime() >= nowInBogota.getTime(),
+    );
 
     return {
         sortedDates,
@@ -1269,7 +1271,7 @@ const sortedRequiredDocs = useMemo(() => {
                     <h4 className="mb-3 text-sm font-semibold">Hitos y vencimientos</h4>
                     <ul className="space-y-4">
                       {importantDatesInfo.sortedDates.map((item, index) => {
-                        const hasPassed = isPast(item.dateObj);
+                        const hasPassed = isPastInBogota(item.dateObj);
                         const isNext = item.originalIndex === importantDatesInfo.nextDateId;
                         return (
                           <li key={index} className="flex items-start gap-3">
@@ -1292,9 +1294,7 @@ const sortedRequiredDocs = useMemo(() => {
                                 {item.label}
                               </p>
                               <p className="text-xs text-muted-foreground">
-                                {format(item.dateObj, "eeee, dd 'de' MMMM, yyyy 'a las' p", {
-                                  locale: es,
-                                })}
+                                {formatBogotaDateTime(item.dateObj)}
                               </p>
                             </div>
                           </li>
