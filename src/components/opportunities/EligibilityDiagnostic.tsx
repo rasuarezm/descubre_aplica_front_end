@@ -313,8 +313,8 @@ export function EligibilityDiagnostic({ opportunityId, customerId }: Eligibility
     setIsLoading(true);
     try {
       const data = await apiClient.post<EligibilityAnalysis>('/analyze_customer_eligibility', {
-        opportunity_id: parseInt(opportunityId, 10),
-        customer_id: parseInt(customerId, 10),
+        opportunity_id: opportunityId,
+        customer_id: customerId,
       });
       setResult(data);
       toast({ title: 'Diagnóstico completado', description: 'La elegibilidad del cliente ha sido analizada.' });
