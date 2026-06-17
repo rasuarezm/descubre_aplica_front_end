@@ -20,6 +20,27 @@ export function toBogotaTime(date: Date): Date {
   return toZonedTime(date, BOGOTA_TIME_ZONE);
 }
 
+/** Formatea un hito del cronograma; omite la hora si el pliego no la especificó. */
+export function formatBogotaImportantDate(date: Date, hasTime = true): string {
+  const zoned = toZonedTime(date, BOGOTA_TIME_ZONE);
+  if (hasTime) {
+    return formatDate(zoned, "eeee, dd 'de' MMMM, yyyy 'a las' p", { locale: es });
+  }
+  return formatDate(zoned, "eeee, dd 'de' MMMM, yyyy", { locale: es });
+}
+
+/** Si el pliego no trae hora, el hito vence al final de ese día calendario en Bogotá. */
+export function isPastImportantDate(date: Date, hasTime = true): boolean {
+  if (hasTime) {
+    return isPast(toZonedTime(date, BOGOTA_TIME_ZONE));
+  }
+  const zoned = toBogotaTime(date);
+  const now = toBogotaTime(new Date());
+  const eventDay = formatDate(zoned, 'yyyy-MM-dd');
+  const today = formatDate(now, 'yyyy-MM-dd');
+  return eventDay < today;
+}
+
 /** Formatea un instante para mostrar en hora de Bogotá (cronogramas, plazos). */
 export function formatBogotaDateTime(
   date: Date,

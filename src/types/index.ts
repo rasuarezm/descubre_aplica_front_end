@@ -69,6 +69,8 @@ export interface RequiredDocument {
 export interface ImportantDate {
   date: Date | string;
   label: string;
+  /** false cuando el pliego solo indica día (sin columna Hora). */
+  has_time?: boolean;
 }
 
 export interface IaRequiredDocument {

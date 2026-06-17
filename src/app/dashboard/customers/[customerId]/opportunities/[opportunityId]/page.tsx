@@ -31,7 +31,7 @@ import { format, isPast } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { CountdownTimer } from '@/components/opportunities/CountdownTimer';
-import { getUrgencyInfo, UrgencyInfo, formatBogotaDateTime, isPastInBogota, toBogotaTime } from '@/lib/date-utils';
+import { getUrgencyInfo, UrgencyInfo, formatBogotaImportantDate, isPastImportantDate, toBogotaTime } from '@/lib/date-utils';
 import { Checkbox } from '@/components/ui/checkbox';
 import { BidtoryRadarColorIcon } from '@/components/icons/BidtoryRadarColorIcon';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
@@ -665,7 +665,8 @@ const sortedRequiredDocs = useMemo(() => {
             date.setHours(hours, minutes, 0, 0);
             return {
                 date: date.toISOString(),
-                label: d.label.trim()
+                label: d.label.trim(),
+                has_time: true,
             };
         });
 
@@ -1271,7 +1272,8 @@ const sortedRequiredDocs = useMemo(() => {
                     <h4 className="mb-3 text-sm font-semibold">Hitos y vencimientos</h4>
                     <ul className="space-y-4">
                       {importantDatesInfo.sortedDates.map((item, index) => {
-                        const hasPassed = isPastInBogota(item.dateObj);
+                        const hasTime = item.has_time === true;
+                        const hasPassed = isPastImportantDate(item.dateObj, hasTime);
                         const isNext = item.originalIndex === importantDatesInfo.nextDateId;
                         return (
                           <li key={index} className="flex items-start gap-3">
@@ -1294,7 +1296,7 @@ const sortedRequiredDocs = useMemo(() => {
                                 {item.label}
                               </p>
                               <p className="text-xs text-muted-foreground">
-                                {formatBogotaDateTime(item.dateObj)}
+                                {formatBogotaImportantDate(item.dateObj, hasTime)}
                               </p>
                             </div>
                           </li>
