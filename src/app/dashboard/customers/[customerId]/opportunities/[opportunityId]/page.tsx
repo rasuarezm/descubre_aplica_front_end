@@ -1215,6 +1215,7 @@ const sortedRequiredDocs = useMemo(() => {
                   proposalDocumentStatuses={proposalDocumentStatuses}
                   tenderDocuments={tenderDocuments}
                   onRefreshData={() => fetchData(false)}
+                  onNavigateToChecklist={() => handleTabChange('checklist')}
                 />
               </TabsContent>
               <TabsContent

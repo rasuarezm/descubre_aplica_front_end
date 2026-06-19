@@ -107,7 +107,10 @@ export function TenderDocumentsSection({ userProfile, documents, categories, onU
               <FileArchive className="h-6 w-6" />
               Pliegos y Documentos de Referencia
             </CardTitle>
-            <CardDescription>Documentos de la licitación subidos por el administrador.</CardDescription>
+            <CardDescription>
+              Documentos de la licitación. Al subir el pliego definitivo (<em>Términos de Referencia</em>),
+              podrá generar la estructura de trabajo (WBS) desde la pestaña <strong>Propuesta</strong>.
+            </CardDescription>
           </div>
           {canManage && (
             <Dialog open={isUploadModalOpen} onOpenChange={setIsUploadModalOpen}>

@@ -204,6 +204,10 @@ export function WBSViewer({ wbs, opportunityName }: WBSViewerProps) {
                     Estructura de Desglose de Trabajo (WBS) - Borrador
                 </CardTitle>
                 <CardDescription>
+                    Borrador de estructura de trabajo generado con IA. Úselo como punto de partida
+                    para planificar su propuesta; no sustituye su criterio técnico ni financiero.
+                </CardDescription>
+                <CardDescription className="mt-1">
                     Generado el {format(new Date(wbs.generated_at), "dd 'de' MMMM, yyyy 'a las' p", { locale: es })}. 
                     Estado: <span className="capitalize font-medium">{wbs.status}</span>
                 </CardDescription>

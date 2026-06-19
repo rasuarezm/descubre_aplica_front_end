@@ -30,6 +30,7 @@ interface ProposalDocumentsSectionProps {
   proposalDocumentStatuses: ProposalDocumentStatusInfo | null;
   tenderDocuments: DocumentItem[];
   onRefreshData: () => void;
+  onNavigateToChecklist?: () => void;
 }
 
 type ModalMode = 'new' | 'version' | 'edit';
@@ -58,7 +59,7 @@ const getStatusClass = (status: string | undefined): string => {
 };
 
 
-export function ProposalDocumentsSection({ userProfile, opportunity, proposalDocuments, proposalDocumentStatuses, tenderDocuments, onRefreshData }: ProposalDocumentsSectionProps) {
+export function ProposalDocumentsSection({ userProfile, opportunity, proposalDocuments, proposalDocumentStatuses, tenderDocuments, onRefreshData, onNavigateToChecklist }: ProposalDocumentsSectionProps) {
   const { getIdToken } = useAuth();
   const { toast } = useToast();
   
@@ -434,6 +435,7 @@ export function ProposalDocumentsSection({ userProfile, opportunity, proposalDoc
               opportunityId={opportunity.id}
               tenderDocuments={tenderDocuments}
               onWbsGenerated={onRefreshData}
+              onNavigateToChecklist={onNavigateToChecklist}
             />
           )}
         </div>

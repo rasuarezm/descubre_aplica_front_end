@@ -12,7 +12,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Bot, Lightbulb, AlertTriangle, Loader2 } from 'lucide-react';
+import { Bot, Lightbulb, AlertTriangle, Loader2, Info } from 'lucide-react';
 import { Card, CardContent } from '../ui/card';
 import apiClient, { ApiError } from '@/lib/api-client';
 import {
@@ -21,13 +21,21 @@ import {
   markWbsGenerating,
 } from '@/lib/wbs-generating-state';
 
+type WbsUiState = 'conflict' | 'ready' | 'draft_only' | 'no_pliegos';
+
 interface WBSGeneratorProps {
   opportunityId: string;
   tenderDocuments: DocumentItem[];
   onWbsGenerated: () => void;
+  onNavigateToChecklist?: () => void;
 }
 
-export function WBSGenerator({ opportunityId, tenderDocuments, onWbsGenerated }: WBSGeneratorProps) {
+export function WBSGenerator({
+  opportunityId,
+  tenderDocuments,
+  onWbsGenerated,
+  onNavigateToChecklist,
+}: WBSGeneratorProps) {
   const { getIdToken } = useAuth();
   const { toast } = useToast();
 
@@ -48,17 +56,18 @@ export function WBSGenerator({ opportunityId, tenderDocuments, onWbsGenerated }:
 
   const isBusy = isLoading || isBackgroundGenerating;
 
-  const buttonVisibility = useMemo(() => {
-    const hasDraft = tenderDocuments.some(d => d.tender_document_category === 'Borrador de Terminos de Referencia');
-    const hasFinal = tenderDocuments.some(d => d.tender_document_category === 'Terminos de Referencia');
+  const wbsUiState = useMemo((): WbsUiState => {
+    const hasDraft = tenderDocuments.some(
+      (d) => d.tender_document_category === 'Borrador de Terminos de Referencia',
+    );
+    const hasFinal = tenderDocuments.some(
+      (d) => d.tender_document_category === 'Terminos de Referencia',
+    );
 
-    if (hasDraft && hasFinal) {
-      return { show: false, conflict: true, message: "Se ha detectado una versión borrador y una definitiva de los pliegos. Por favor, archive o elimine la versión borrador para poder generar la estructura de trabajo." };
-    }
-    if (hasFinal) {
-      return { show: true, conflict: false, message: "" };
-    }
-    return { show: false, conflict: false, message: "" };
+    if (hasDraft && hasFinal) return 'conflict';
+    if (hasFinal) return 'ready';
+    if (hasDraft) return 'draft_only';
+    return 'no_pliegos';
   }, [tenderDocuments]);
 
   const handleGenerateClick = async () => {
@@ -159,20 +168,69 @@ export function WBSGenerator({ opportunityId, tenderDocuments, onWbsGenerated }:
     );
   };
 
-  if (buttonVisibility.conflict) {
+  if (wbsUiState === 'conflict') {
     return (
       <Alert variant="destructive">
         <AlertTriangle className="h-4 w-4" />
-        <AlertTitle>Acción Requerida</AlertTitle>
-        <AlertDescription>
-          {buttonVisibility.message}
+        <AlertTitle>Acción requerida antes de generar el WBS</AlertTitle>
+        <AlertDescription className="space-y-2">
+          <p>
+            Hay un pliego borrador y uno definitivo activos al mismo tiempo. Para generar la
+            estructura de trabajo, el sistema debe usar una sola versión base: la definitiva.
+            Elimine el borrador desde <strong>Checklist → Pliegos y Documentos de Referencia</strong>{' '}
+            y vuelva a esta pestaña para continuar.
+          </p>
+          <p className="text-sm opacity-90">
+            Si acaba de subir el pliego definitivo, espere unos segundos, recargue la página y
+            verifique que solo quede activo el documento definitivo.
+          </p>
         </AlertDescription>
       </Alert>
     );
   }
 
-  if (!buttonVisibility.show) {
-    return null; // Don't render anything if conditions are not met and there's no conflict
+  if (wbsUiState === 'no_pliegos') {
+    return (
+      <Card className="bg-muted/30 border-dashed">
+        <CardContent className="pt-6 flex flex-col items-center text-center">
+          <Info className="h-10 w-10 text-muted-foreground mb-2" />
+          <h3 className="text-lg font-semibold">Estructura de trabajo (WBS)</h3>
+          <p className="text-sm text-muted-foreground mb-4 max-w-md">
+            Cuando suba el pliego definitivo (<em>Términos de Referencia</em>) en la pestaña{' '}
+            <strong>Checklist</strong>, podrá generar aquí un borrador de la estructura de trabajo
+            con IA. Esa estructura le ayuda a organizar fases, tareas y costos de ejecución para
+            armar su propuesta.
+          </p>
+          {onNavigateToChecklist && (
+            <Button variant="outline" onClick={onNavigateToChecklist}>
+              Ir a Checklist
+            </Button>
+          )}
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (wbsUiState === 'draft_only') {
+    return (
+      <Card className="bg-muted/30 border-dashed">
+        <CardContent className="pt-6 flex flex-col items-center text-center">
+          <Info className="h-10 w-10 text-muted-foreground mb-2" />
+          <h3 className="text-lg font-semibold">WBS disponible al subir el pliego definitivo</h3>
+          <p className="text-sm text-muted-foreground mb-4 max-w-md">
+            Usted tiene un borrador de pliego cargado. La generación de la estructura de trabajo se
+            habilita cuando suba la versión definitiva (<em>Términos de Referencia</em>) en{' '}
+            <strong>Checklist</strong>. El WBS se elabora a partir de los documentos oficiales de
+            la licitación, no del borrador preliminar.
+          </p>
+          {onNavigateToChecklist && (
+            <Button variant="outline" onClick={onNavigateToChecklist}>
+              Subir pliego definitivo
+            </Button>
+          )}
+        </CardContent>
+      </Card>
+    );
   }
 
   if (isBackgroundGenerating) {
@@ -182,7 +240,8 @@ export function WBSGenerator({ opportunityId, tenderDocuments, onWbsGenerated }:
           <Loader2 className="h-10 w-10 animate-spin text-highlight mb-2" />
           <h3 className="text-lg font-semibold">Generando borrador de WBS…</h3>
           <p className="text-sm text-muted-foreground mb-2 max-w-md">
-            Esto puede tardar varios minutos. Puede cambiar de pestaña; le avisaremos al terminar.
+            Este proceso puede tardar varios minutos. Puede continuar en otras pestañas; le
+            avisaremos cuando la estructura esté lista en <strong>Propuesta</strong>.
           </p>
         </CardContent>
       </Card>
@@ -194,13 +253,20 @@ export function WBSGenerator({ opportunityId, tenderDocuments, onWbsGenerated }:
       <Card className="bg-muted/50 border-dashed">
         <CardContent className="pt-6 flex flex-col items-center text-center">
             <Lightbulb className="h-10 w-10 text-highlight mb-2"/>
-            <h3 className="text-lg font-semibold">¿Necesita un punto de partida?</h3>
-            <p className="text-sm text-muted-foreground mb-4 max-w-md">
-                Analice los documentos de referencia con IA para generar un borrador de la Estructura de Desglose de Trabajo (WBS) y planificar su propuesta.
+            <h3 className="text-lg font-semibold">Genere su estructura de trabajo con IA</h3>
+            <p className="text-sm text-muted-foreground mb-2 max-w-md">
+                A partir de sus pliegos definitivos, la IA puede proponer un borrador de la
+                Estructura de Desglose de Trabajo (WBS): fases, tareas y costos orientados a la{' '}
+                <strong>ejecución del proyecto</strong> si la propuesta es adjudicada. Revíselo y
+                ajústelo antes de usarlo en su propuesta.
+            </p>
+            <p className="text-xs text-muted-foreground mb-4 max-w-md">
+                La calidad del borrador depende de la completitud de los documentos que seleccione
+                (pliego, anexos técnicos, adendas, etc.).
             </p>
             <Button onClick={handleGenerateClick} disabled={isBusy}>
                 {isBusy ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Bot className="mr-2 h-4 w-4" />}
-                {isBusy ? 'Cargando...' : 'Generar Borrador de WBS con IA'}
+                {isBusy ? 'Cargando...' : 'Generar borrador de WBS con IA'}
             </Button>
         </CardContent>
       </Card>
