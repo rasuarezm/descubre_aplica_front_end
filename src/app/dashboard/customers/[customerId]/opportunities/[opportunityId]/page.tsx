@@ -42,6 +42,7 @@ import {
   IA_ANALYSIS_ERROR_STATUSES,
   IA_ANALYSIS_IN_PROGRESS_STATUSES,
 } from '@/lib/ia-analysis-constants';
+import { useWbsBackgroundGeneration } from '@/hooks/use-wbs-background-generation';
 import { onSnapshot, doc as firestoreDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
@@ -289,6 +290,12 @@ const sortedRequiredDocs = useMemo(() => {
       fetchData();
     }
   }, [customerId, opportunityId, fetchData]);
+
+  useWbsBackgroundGeneration(
+    opportunityId,
+    !!opportunity?.work_breakdown_structure,
+    () => fetchData(false),
+  );
 
   useEffect(() => {
     if (!opportunity) return;

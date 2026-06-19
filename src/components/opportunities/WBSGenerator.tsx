@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useAuth } from '@/contexts/auth-context';
 import { useToast } from '@/hooks/use-toast';
 import type { DocumentItem, WbsCandidateDocument } from '@/types';
@@ -14,7 +14,12 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Bot, Lightbulb, AlertTriangle, Loader2 } from 'lucide-react';
 import { Card, CardContent } from '../ui/card';
-import apiClient from '@/lib/api-client';
+import apiClient, { ApiError } from '@/lib/api-client';
+import {
+  clearWbsGenerating,
+  isWbsGenerating,
+  markWbsGenerating,
+} from '@/lib/wbs-generating-state';
 
 interface WBSGeneratorProps {
   opportunityId: string;
@@ -27,12 +32,21 @@ export function WBSGenerator({ opportunityId, tenderDocuments, onWbsGenerated }:
   const { toast } = useToast();
 
   const [isLoading, setIsLoading] = useState(false);
+  const [isBackgroundGenerating, setIsBackgroundGenerating] = useState(() =>
+    isWbsGenerating(opportunityId),
+  );
   const [candidateDocs, setCandidateDocs] = useState<WbsCandidateDocument[]>([]);
   const [selectedDocIds, setSelectedDocIds] = useState<number[]>([]);
   const [strategicContext, setStrategicContext] = useState('');
   
   const [isSelectModalOpen, setIsSelectModalOpen] = useState(false);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+
+  useEffect(() => {
+    setIsBackgroundGenerating(isWbsGenerating(opportunityId));
+  }, [opportunityId]);
+
+  const isBusy = isLoading || isBackgroundGenerating;
 
   const buttonVisibility = useMemo(() => {
     const hasDraft = tenderDocuments.some(d => d.tender_document_category === 'Borrador de Terminos de Referencia');
@@ -104,15 +118,33 @@ export function WBSGenerator({ opportunityId, tenderDocuments, onWbsGenerated }:
         payload.strategic_context = strategicContext.trim();
     }
 
+    markWbsGenerating(opportunityId);
+    setIsBackgroundGenerating(true);
+
     try {
-        // Usamos apiClient.post en lugar de fetch directo
         await apiClient.post('/generate_wbs', payload);
 
-        // (apiClient ya lanza error si falla, así que no necesitas verificar response.status !== 201 manualmente)
-
+        clearWbsGenerating(opportunityId);
+        setIsBackgroundGenerating(false);
         toast({ title: "¡Éxito!", description: "El borrador del WBS ha sido generado." });
         onWbsGenerated();
     } catch (error) {
+        if (error instanceof ApiError) {
+          if (error.status === 409) {
+            clearWbsGenerating(opportunityId);
+            setIsBackgroundGenerating(false);
+            onWbsGenerated();
+            toast({
+              title: "WBS ya disponible",
+              description: "La estructura ya fue generada para esta oportunidad.",
+            });
+            return;
+          }
+          if (error.status === 400 || error.status === 403) {
+            clearWbsGenerating(opportunityId);
+            setIsBackgroundGenerating(false);
+          }
+        }
         toast({ title: "Error", description: (error as Error).message, variant: "destructive" });
     } finally {
         setIsLoading(false);
@@ -143,6 +175,20 @@ export function WBSGenerator({ opportunityId, tenderDocuments, onWbsGenerated }:
     return null; // Don't render anything if conditions are not met and there's no conflict
   }
 
+  if (isBackgroundGenerating) {
+    return (
+      <Card className="bg-muted/50 border-dashed">
+        <CardContent className="pt-6 flex flex-col items-center text-center">
+          <Loader2 className="h-10 w-10 animate-spin text-highlight mb-2" />
+          <h3 className="text-lg font-semibold">Generando borrador de WBS…</h3>
+          <p className="text-sm text-muted-foreground mb-2 max-w-md">
+            Esto puede tardar varios minutos. Puede cambiar de pestaña; le avisaremos al terminar.
+          </p>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <>
       <Card className="bg-muted/50 border-dashed">
@@ -152,9 +198,9 @@ export function WBSGenerator({ opportunityId, tenderDocuments, onWbsGenerated }:
             <p className="text-sm text-muted-foreground mb-4 max-w-md">
                 Analice los documentos de referencia con IA para generar un borrador de la Estructura de Desglose de Trabajo (WBS) y planificar su propuesta.
             </p>
-            <Button onClick={handleGenerateClick} disabled={isLoading}>
-                {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Bot className="mr-2 h-4 w-4" />}
-                {isLoading ? 'Cargando...' : 'Generar Borrador de WBS con IA'}
+            <Button onClick={handleGenerateClick} disabled={isBusy}>
+                {isBusy ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Bot className="mr-2 h-4 w-4" />}
+                {isBusy ? 'Cargando...' : 'Generar Borrador de WBS con IA'}
             </Button>
         </CardContent>
       </Card>
