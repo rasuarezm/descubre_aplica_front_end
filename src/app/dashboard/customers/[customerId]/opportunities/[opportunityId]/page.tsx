@@ -1216,6 +1216,7 @@ const sortedRequiredDocs = useMemo(() => {
                   tenderDocuments={tenderDocuments}
                   onRefreshData={() => fetchData(false)}
                   onNavigateToChecklist={() => handleTabChange('checklist')}
+                  wbsGenerationStatus={opportunity?.wbs_generation_status}
                 />
               </TabsContent>
               <TabsContent
@@ -1233,6 +1234,7 @@ const sortedRequiredDocs = useMemo(() => {
                   customerId={customerId}
                   tenderDocuments={tenderDocuments}
                   onRefreshData={() => fetchData(false)}
+                  observationsGenerationStatus={opportunity?.observations_generation_status}
                 />
               </TabsContent>
               <TabsContent

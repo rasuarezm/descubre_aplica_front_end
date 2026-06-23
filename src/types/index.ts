@@ -195,6 +195,8 @@ export interface Opportunity {
     qualifying_requirements?: QualifyingRequirements;
   };
   work_breakdown_structure?: WBS;
+  wbs_generation_status?: string;
+  observations_generation_status?: string;
   has_unread_adenda_analysis?: boolean; // Flag para una comprobación rápida
   is_archived?: boolean;
   bidtory_access?: BidtoryAccessInfo | null;

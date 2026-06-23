@@ -1,7 +1,6 @@
-
 "use client";
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import type { DocumentItem, Observation, ObservationsResult } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -11,15 +10,19 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Separator } from '@/components/ui/separator';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
+import { Progress } from '@/components/ui/progress';
 import { Bot, Copy, Check, Loader2, Scale, AlertTriangle, RotateCcw, Info, FileCheck2, FileClock } from 'lucide-react';
 import apiClient from '@/lib/api-client';
+import { db } from '@/lib/firebase';
+import { doc as firestoreDoc, onSnapshot } from 'firebase/firestore';
 
-const CATEGORY_FINAL  = 'Terminos de Referencia';
-const CATEGORY_DRAFT  = 'Borrador de Terminos de Referencia';
+const CATEGORY_FINAL = 'Terminos de Referencia';
+const CATEGORY_DRAFT = 'Borrador de Terminos de Referencia';
 
 interface ObservationsGeneratorProps {
   opportunityId: string;
   tenderDocuments: DocumentItem[];
+  observationsGenerationStatus?: string;
 }
 
 const TYPE_CONFIG: Record<string, { className: string }> = {
@@ -42,7 +45,7 @@ function DocRow({ doc, selectedDocIds, onChange }: {
   selectedDocIds: string[];
   onChange: (id: string, checked: boolean) => void;
 }) {
-  const docName = doc.fileName || (doc as any).filename || doc.name;
+  const docName = doc.fileName || (doc as DocumentItem & { filename?: string }).filename || doc.name;
   return (
     <div className="flex items-center space-x-3 p-2.5 rounded-md hover:bg-muted/60 transition-colors">
       <Checkbox
@@ -57,58 +60,119 @@ function DocRow({ doc, selectedDocIds, onChange }: {
   );
 }
 
-export function ObservationsGenerator({ opportunityId, tenderDocuments }: ObservationsGeneratorProps) {
+export function ObservationsGenerator({
+  opportunityId,
+  tenderDocuments,
+  observationsGenerationStatus,
+}: ObservationsGeneratorProps) {
   const { toast } = useToast();
 
-  const [isLoading, setIsLoading] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [obsProgress, setObsProgress] = useState<{ progress: number; step: string } | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDocIds, setSelectedDocIds] = useState<string[]>([]);
   const [result, setResult] = useState<ObservationsResult | null>(null);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
 
-  // Al montar el componente, intentar cargar la última observación guardada
+  const unsubscribeRef = useRef<(() => void) | null>(null);
+
+  // Al montar, carga la última observación guardada
   useEffect(() => {
     if (!opportunityId) return;
     apiClient.get<ObservationsResult>(`/get_observations?opportunity_id=${opportunityId}`)
-      .then(data => {
-        if (data) setResult(data);
-      })
-      .catch(() => {
-        // Sin observaciones previas — silencioso, no es un error crítico
-      });
+      .then(data => { if (data) setResult(data); })
+      .catch(() => {/* Sin observaciones previas — silencioso */});
   }, [opportunityId]);
 
-  // --- Clasificación de documentos por tipo de pliego ---
+  // Limpia el listener al desmontar
+  useEffect(() => {
+    return () => { unsubscribeRef.current?.(); };
+  }, []);
+
+  const startProgressListener = () => {
+    unsubscribeRef.current?.();
+
+    const unsub = onSnapshot(
+      firestoreDoc(db, 'opportunities', opportunityId),
+      async (snap) => {
+        if (!snap.exists()) return;
+        const data = snap.data();
+        const status = data?.observations_generation_status as string | undefined;
+        const progress = typeof data?.observations_generation_progress === 'number'
+          ? data.observations_generation_progress
+          : 0;
+        const step = typeof data?.observations_generation_step === 'string'
+          ? data.observations_generation_step
+          : 'Procesando...';
+
+        if (status === 'queued' || status === 'processing') {
+          setObsProgress({ progress, step });
+        } else if (status === 'completed') {
+          unsub();
+          unsubscribeRef.current = null;
+          setObsProgress(null);
+          setIsGenerating(false);
+
+          // Fetch del resultado desde Firestore (get_observations)
+          try {
+            const obsData = await apiClient.get<ObservationsResult>(
+              `/get_observations?opportunity_id=${opportunityId}`
+            );
+            if (obsData) {
+              setResult(obsData);
+              toast({
+                title: "Observaciones generadas",
+                description: `Se identificaron ${obsData.observations_count} hallazgo(s) en el pliego.`,
+              });
+            }
+          } catch {
+            toast({
+              title: "Observaciones listas",
+              description: "Las observaciones se generaron. Recargue la página si no aparecen.",
+            });
+          }
+        } else if (status === 'failed') {
+          unsub();
+          unsubscribeRef.current = null;
+          const errorMsg = data?.observations_generation_error || 'Error en la generación. Por favor, intente de nuevo.';
+          setObsProgress(null);
+          setIsGenerating(false);
+          toast({ title: "Error al generar observaciones", description: errorMsg, variant: "destructive" });
+        }
+      },
+      (error) => {
+        console.warn('[ObservationsGenerator] onSnapshot error:', error);
+      }
+    );
+
+    unsubscribeRef.current = unsub;
+  };
+
+  // Reanudar progreso si el usuario recargó mientras había generación en curso
+  useEffect(() => {
+    if (observationsGenerationStatus === 'queued' || observationsGenerationStatus === 'processing') {
+      setIsGenerating(true);
+      startProgressListener();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const { finalDocs, draftDocs, hasFinal, hasDraft } = useMemo(() => {
     const finalDocs = tenderDocuments.filter(d => d.tender_document_category === CATEGORY_FINAL);
     const draftDocs = tenderDocuments.filter(d => d.tender_document_category === CATEGORY_DRAFT);
-    // Otros documentos activos que no son ni borrador ni definitivo (adendas, anexos, etc.)
-    const otherDocs = tenderDocuments.filter(
-      d => d.tender_document_category !== CATEGORY_FINAL && d.tender_document_category !== CATEGORY_DRAFT
-    );
-    return {
-      finalDocs,
-      draftDocs,
-      otherDocs,
-      hasFinal: finalDocs.length > 0,
-      hasDraft: draftDocs.length > 0,
-    };
+    return { finalDocs, draftDocs, hasFinal: finalDocs.length > 0, hasDraft: draftDocs.length > 0 };
   }, [tenderDocuments]);
 
   const handleCheckboxChange = (id: string, checked: boolean) => {
     if (!id) return;
-    setSelectedDocIds((prev) =>
-      checked ? [...prev.filter((x) => x !== id), id] : prev.filter((docId) => docId !== id)
+    setSelectedDocIds(prev =>
+      checked ? [...prev.filter(x => x !== id), id] : prev.filter(docId => docId !== id)
     );
   };
 
   const handleOpenModal = () => {
     if (tenderDocuments.length === 0) {
-      toast({
-        title: "Sin documentos disponibles",
-        description: "No hay documentos del pliego cargados para analizar.",
-        variant: "destructive",
-      });
+      toast({ title: "Sin documentos disponibles", description: "No hay documentos del pliego cargados para analizar.", variant: "destructive" });
       return;
     }
     setSelectedDocIds([]);
@@ -117,34 +181,23 @@ export function ObservationsGenerator({ opportunityId, tenderDocuments }: Observ
 
   const handleConfirm = async () => {
     if (selectedDocIds.length === 0) {
-      toast({
-        title: "Selección requerida",
-        description: "Seleccione al menos un documento para continuar.",
-        variant: "destructive",
-      });
+      toast({ title: "Selección requerida", description: "Seleccione al menos un documento para continuar.", variant: "destructive" });
       return;
     }
     setIsModalOpen(false);
-    setIsLoading(true);
+    setIsGenerating(true);
 
     try {
-      const data = await apiClient.post<ObservationsResult>('/generate_observations', {
+      // POST retorna 202 — el resultado llega por Firestore onSnapshot
+      await apiClient.post('/generate_observations', {
         opportunity_id: opportunityId,
         document_ids: selectedDocIds,
       });
-      setResult(data);
-      toast({
-        title: "Observaciones generadas",
-        description: `Se identificaron ${data.observations_count} hallazgo(s) en el pliego.`,
-      });
+
+      startProgressListener();
     } catch (error) {
-      toast({
-        title: "Error al generar observaciones",
-        description: (error as Error).message,
-        variant: "destructive",
-      });
-    } finally {
-      setIsLoading(false);
+      setIsGenerating(false);
+      toast({ title: "Error al generar observaciones", description: (error as Error).message, variant: "destructive" });
     }
   };
 
@@ -195,14 +248,12 @@ export function ObservationsGenerator({ opportunityId, tenderDocuments }: Observ
                   {obs.reference}
                 </span>
               </div>
-
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-1">
                   Hallazgo
                 </p>
                 <p className="text-sm leading-relaxed">{obs.finding}</p>
               </div>
-
               <div className="bg-muted/50 rounded-md p-3 relative">
                 <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground mb-1">
                   Borrador de Pregunta a la Entidad
@@ -227,6 +278,28 @@ export function ObservationsGenerator({ opportunityId, tenderDocuments }: Observ
     );
   }
 
+  // --- Vista: Generando (progreso en tiempo real) ---
+  if (isGenerating) {
+    return (
+      <Card className="bg-muted/50 border-dashed">
+        <CardContent className="pt-6 flex flex-col items-center text-center gap-4">
+          <Loader2 className="h-10 w-10 animate-spin text-highlight" />
+          <h3 className="text-lg font-semibold">Analizando el pliego…</h3>
+          {obsProgress ? (
+            <div className="w-full max-w-sm space-y-2">
+              <Progress value={obsProgress.progress} className="h-2" />
+              <p className="text-sm text-muted-foreground">{obsProgress.step}</p>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground max-w-md">
+              Este proceso puede tardar varios minutos. Puede continuar en otras pestañas.
+            </p>
+          )}
+        </CardContent>
+      </Card>
+    );
+  }
+
   // --- Vista: Botón de generación ---
   return (
     <>
@@ -240,7 +313,6 @@ export function ObservationsGenerator({ opportunityId, tenderDocuments }: Observ
             de preguntas formales listos para enviar a la entidad contratante.
           </p>
 
-          {/* Aviso contextual según el estado del pliego */}
           {hasDraft && !hasFinal && (
             <div className="flex items-center gap-2 text-xs text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-md px-3 py-2 mb-4 max-w-md">
               <FileClock className="h-3.5 w-3.5 shrink-0" />
@@ -254,11 +326,9 @@ export function ObservationsGenerator({ opportunityId, tenderDocuments }: Observ
             </div>
           )}
 
-          <Button onClick={handleOpenModal} disabled={isLoading}>
-            {isLoading
-              ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" />Analizando pliego...</>
-              : <><Bot className="mr-2 h-4 w-4" />Generar Observaciones con IA</>
-            }
+          <Button onClick={handleOpenModal}>
+            <Bot className="mr-2 h-4 w-4" />
+            Generar Observaciones con IA
           </Button>
         </CardContent>
       </Card>
@@ -274,8 +344,6 @@ export function ObservationsGenerator({ opportunityId, tenderDocuments }: Observ
           </DialogHeader>
 
           <div className="space-y-1 py-4 max-h-[55vh] overflow-y-auto pr-2">
-
-            {/* Alerta cuando coexisten borrador y definitivo */}
             {hasFinal && hasDraft && (
               <Alert className="mb-3 border-blue-200 bg-blue-50 dark:bg-blue-900/20 dark:border-blue-800">
                 <Info className="h-4 w-4 text-blue-600 dark:text-blue-400" />
@@ -293,7 +361,6 @@ export function ObservationsGenerator({ opportunityId, tenderDocuments }: Observ
               </p>
             )}
 
-            {/* Grupo: Pliego Definitivo */}
             {finalDocs.length > 0 && (
               <div>
                 <div className="flex items-center gap-2 px-1 py-1.5 mb-1">
@@ -308,10 +375,8 @@ export function ObservationsGenerator({ opportunityId, tenderDocuments }: Observ
               </div>
             )}
 
-            {/* Separador entre grupos cuando coexisten */}
             {hasFinal && hasDraft && <Separator className="my-3" />}
 
-            {/* Grupo: Borrador */}
             {draftDocs.length > 0 && (
               <div>
                 <div className="flex items-center gap-2 px-1 py-1.5 mb-1">
@@ -326,7 +391,6 @@ export function ObservationsGenerator({ opportunityId, tenderDocuments }: Observ
               </div>
             )}
 
-            {/* Otros documentos activos (adendas, anexos, etc.) */}
             {(() => {
               const otherDocs = tenderDocuments.filter(
                 d => d.tender_document_category !== CATEGORY_FINAL && d.tender_document_category !== CATEGORY_DRAFT
@@ -346,7 +410,6 @@ export function ObservationsGenerator({ opportunityId, tenderDocuments }: Observ
                 </div>
               );
             })()}
-
           </div>
 
           <DialogFooter>

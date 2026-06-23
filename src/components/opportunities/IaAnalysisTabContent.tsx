@@ -23,6 +23,7 @@ interface IaAnalysisTabContentProps {
   opportunityId: string;
   customerId: string;
   tenderDocuments: DocumentItem[];
+  observationsGenerationStatus?: string;
   /** Vuelve a cargar la oportunidad (p. ej. si el análisis aún no aparece). */
   onRefreshData?: () => void;
 }
@@ -35,6 +36,7 @@ export function IaAnalysisTabContent({
   opportunityId,
   customerId,
   tenderDocuments,
+  observationsGenerationStatus,
   onRefreshData,
 }: IaAnalysisTabContentProps) {
 
@@ -293,6 +295,7 @@ export function IaAnalysisTabContent({
       <ObservationsGenerator
         opportunityId={opportunityId}
         tenderDocuments={tenderDocuments}
+        observationsGenerationStatus={observationsGenerationStatus}
       />
     </div>
   );

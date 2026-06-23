@@ -1,7 +1,6 @@
-
 "use client";
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useAuth } from '@/contexts/auth-context';
 import { useToast } from '@/hooks/use-toast';
 import type { DocumentItem, WbsCandidateDocument } from '@/types';
@@ -12,6 +11,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Progress } from '@/components/ui/progress';
 import { Bot, Lightbulb, AlertTriangle, Loader2, Info } from 'lucide-react';
 import { Card, CardContent } from '../ui/card';
 import apiClient, { ApiError } from '@/lib/api-client';
@@ -20,6 +20,8 @@ import {
   isWbsGenerating,
   markWbsGenerating,
 } from '@/lib/wbs-generating-state';
+import { db } from '@/lib/firebase';
+import { doc as firestoreDoc, onSnapshot } from 'firebase/firestore';
 
 type WbsUiState = 'conflict' | 'ready' | 'draft_only' | 'no_pliegos';
 
@@ -28,6 +30,7 @@ interface WBSGeneratorProps {
   tenderDocuments: DocumentItem[];
   onWbsGenerated: () => void;
   onNavigateToChecklist?: () => void;
+  wbsGenerationStatus?: string;
 }
 
 export function WBSGenerator({
@@ -35,6 +38,7 @@ export function WBSGenerator({
   tenderDocuments,
   onWbsGenerated,
   onNavigateToChecklist,
+  wbsGenerationStatus,
 }: WBSGeneratorProps) {
   const { getIdToken } = useAuth();
   const { toast } = useToast();
@@ -43,16 +47,82 @@ export function WBSGenerator({
   const [isBackgroundGenerating, setIsBackgroundGenerating] = useState(() =>
     isWbsGenerating(opportunityId),
   );
+  const [wbsProgress, setWbsProgress] = useState<{ progress: number; step: string } | null>(null);
   const [candidateDocs, setCandidateDocs] = useState<WbsCandidateDocument[]>([]);
   const [selectedDocIds, setSelectedDocIds] = useState<number[]>([]);
   const [strategicContext, setStrategicContext] = useState('');
-  
+
   const [isSelectModalOpen, setIsSelectModalOpen] = useState(false);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+
+  const unsubscribeRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
     setIsBackgroundGenerating(isWbsGenerating(opportunityId));
   }, [opportunityId]);
+
+  // Limpia el listener al desmontar
+  useEffect(() => {
+    return () => {
+      unsubscribeRef.current?.();
+    };
+  }, []);
+
+  const startProgressListener = () => {
+    // Limpia cualquier listener anterior
+    unsubscribeRef.current?.();
+
+    const unsub = onSnapshot(
+      firestoreDoc(db, 'opportunities', opportunityId),
+      (snap) => {
+        if (!snap.exists()) return;
+        const data = snap.data();
+        const status = data?.wbs_generation_status as string | undefined;
+        const progress = typeof data?.wbs_generation_progress === 'number'
+          ? data.wbs_generation_progress
+          : 0;
+        const step = typeof data?.wbs_generation_step === 'string'
+          ? data.wbs_generation_step
+          : 'Procesando...';
+
+        if (status === 'queued' || status === 'processing') {
+          setWbsProgress({ progress, step });
+        } else if (status === 'completed') {
+          unsub();
+          unsubscribeRef.current = null;
+          setWbsProgress(null);
+          clearWbsGenerating(opportunityId);
+          setIsBackgroundGenerating(false);
+          toast({ title: "¡WBS generado!", description: "El borrador de la estructura de trabajo está listo." });
+          onWbsGenerated();
+        } else if (status === 'failed') {
+          unsub();
+          unsubscribeRef.current = null;
+          const errorMsg = data?.wbs_generation_error || 'Error en la generación. Por favor, intente de nuevo.';
+          setWbsProgress(null);
+          clearWbsGenerating(opportunityId);
+          setIsBackgroundGenerating(false);
+          setIsLoading(false);
+          toast({ title: "Error al generar el WBS", description: errorMsg, variant: "destructive" });
+        }
+      },
+      (error) => {
+        console.warn('[WBSGenerator] onSnapshot error:', error);
+      }
+    );
+
+    unsubscribeRef.current = unsub;
+  };
+
+  // Reanudar progreso si el usuario recargó mientras había generación en curso
+  useEffect(() => {
+    if (wbsGenerationStatus === 'queued' || wbsGenerationStatus === 'processing') {
+      setIsBackgroundGenerating(true);
+      markWbsGenerating(opportunityId);
+      startProgressListener();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const isBusy = isLoading || isBackgroundGenerating;
 
@@ -63,7 +133,6 @@ export function WBSGenerator({
     const hasFinal = tenderDocuments.some(
       (d) => d.tender_document_category === 'Terminos de Referencia',
     );
-
     if (hasDraft && hasFinal) return 'conflict';
     if (hasFinal) return 'ready';
     if (hasDraft) return 'draft_only';
@@ -78,14 +147,10 @@ export function WBSGenerator({
       setIsLoading(false);
       return;
     }
-
-
     try {
-      // Usamos apiClient que ya está configurado con la URL base del Gateway
       const data = await apiClient.get<WbsCandidateDocument[]>(
         `/get_wbs_candidate_documents?opportunity_id=${opportunityId}`
       );
-      
       setCandidateDocs(data);
       setIsSelectModalOpen(true);
     } catch (error) {
@@ -107,39 +172,39 @@ export function WBSGenerator({
   const handleFinalConfirm = async () => {
     setIsConfirmModalOpen(false);
     setIsLoading(true);
-    const idToken = await getIdToken();
-    if (!idToken) {
-        toast({ title: "Error de Autenticación", variant: "destructive" });
-        setIsLoading(false);
-        return;
-    }
-    
+
     const payload: {
-        opportunity_id: string;
-        document_ids: number[];
-        strategic_context?: string;
+      opportunity_id: string;
+      document_ids: number[];
+      strategic_context?: string;
     } = {
-        opportunity_id: opportunityId,
-        document_ids: selectedDocIds,
+      opportunity_id: opportunityId,
+      document_ids: selectedDocIds,
     };
-    
     if (strategicContext.trim()) {
-        payload.strategic_context = strategicContext.trim();
+      payload.strategic_context = strategicContext.trim();
     }
 
     markWbsGenerating(opportunityId);
     setIsBackgroundGenerating(true);
 
     try {
-        await apiClient.post('/generate_wbs', payload);
+      // POST retorna 202 — la respuesta no contiene el WBS, solo confirma el encolamiento
+      await apiClient.post('/generate_wbs', payload);
 
-        clearWbsGenerating(opportunityId);
-        setIsBackgroundGenerating(false);
-        toast({ title: "¡Éxito!", description: "El borrador del WBS ha sido generado." });
-        onWbsGenerated();
+      // Inicia el listener de Firestore para mostrar progreso en tiempo real
+      startProgressListener();
     } catch (error) {
-        if (error instanceof ApiError) {
-          if (error.status === 409) {
+      if (error instanceof ApiError) {
+        if (error.status === 409) {
+          const reason = (error.data as { reason?: string })?.reason;
+          if (reason === 'in_progress') {
+            startProgressListener();
+            toast({
+              title: "Generación en curso",
+              description: "Su WBS ya está siendo procesado. Se le notificará cuando termine.",
+            });
+          } else {
             clearWbsGenerating(opportunityId);
             setIsBackgroundGenerating(false);
             onWbsGenerated();
@@ -147,23 +212,24 @@ export function WBSGenerator({
               title: "WBS ya disponible",
               description: "La estructura ya fue generada para esta oportunidad.",
             });
-            return;
           }
-          if (error.status === 400 || error.status === 403) {
-            clearWbsGenerating(opportunityId);
-            setIsBackgroundGenerating(false);
-          }
+          return;
         }
-        toast({ title: "Error", description: (error as Error).message, variant: "destructive" });
+        if (error.status === 400 || error.status === 403) {
+          clearWbsGenerating(opportunityId);
+          setIsBackgroundGenerating(false);
+        }
+      }
+      toast({ title: "Error", description: (error as Error).message, variant: "destructive" });
     } finally {
-        setIsLoading(false);
-        setSelectedDocIds([]);
-        setStrategicContext('');
+      setIsLoading(false);
+      setSelectedDocIds([]);
+      setStrategicContext('');
     }
   };
-  
+
   const handleCheckboxChange = (id: number, checked: boolean) => {
-    setSelectedDocIds(prev => 
+    setSelectedDocIds(prev =>
       checked ? [...prev, id] : prev.filter(docId => docId !== id)
     );
   };
@@ -233,16 +299,24 @@ export function WBSGenerator({
     );
   }
 
+  // Vista: generando (con progreso en tiempo real si hay listener activo, o spinner genérico como fallback)
   if (isBackgroundGenerating) {
     return (
       <Card className="bg-muted/50 border-dashed">
-        <CardContent className="pt-6 flex flex-col items-center text-center">
-          <Loader2 className="h-10 w-10 animate-spin text-highlight mb-2" />
+        <CardContent className="pt-6 flex flex-col items-center text-center gap-4">
+          <Loader2 className="h-10 w-10 animate-spin text-highlight" />
           <h3 className="text-lg font-semibold">Generando borrador de WBS…</h3>
-          <p className="text-sm text-muted-foreground mb-2 max-w-md">
-            Este proceso puede tardar varios minutos. Puede continuar en otras pestañas; le
-            avisaremos cuando la estructura esté lista en <strong>Propuesta</strong>.
-          </p>
+          {wbsProgress ? (
+            <div className="w-full max-w-sm space-y-2">
+              <Progress value={wbsProgress.progress} className="h-2" />
+              <p className="text-sm text-muted-foreground">{wbsProgress.step}</p>
+            </div>
+          ) : (
+            <p className="text-sm text-muted-foreground max-w-md">
+              Este proceso puede tardar varios minutos. Puede continuar en otras pestañas; le
+              avisaremos cuando la estructura esté lista en <strong>Propuesta</strong>.
+            </p>
+          )}
         </CardContent>
       </Card>
     );
@@ -252,26 +326,26 @@ export function WBSGenerator({
     <>
       <Card className="bg-muted/50 border-dashed">
         <CardContent className="pt-6 flex flex-col items-center text-center">
-            <Lightbulb className="h-10 w-10 text-highlight mb-2"/>
-            <h3 className="text-lg font-semibold">Genere su estructura de trabajo con IA</h3>
-            <p className="text-sm text-muted-foreground mb-2 max-w-md">
-                A partir de sus pliegos definitivos, la IA puede proponer un borrador de la
-                Estructura de Desglose de Trabajo (WBS): fases, tareas y costos orientados a la{' '}
-                <strong>ejecución del proyecto</strong> si la propuesta es adjudicada. Revíselo y
-                ajústelo antes de usarlo en su propuesta.
-            </p>
-            <p className="text-xs text-muted-foreground mb-4 max-w-md">
-                La calidad del borrador depende de la completitud de los documentos que seleccione
-                (pliego, anexos técnicos, adendas, etc.).
-            </p>
-            <Button onClick={handleGenerateClick} disabled={isBusy}>
-                {isBusy ? <Loader2 className="mr-2 h-4 w-4 animate-spin"/> : <Bot className="mr-2 h-4 w-4" />}
-                {isBusy ? 'Cargando...' : 'Generar borrador de WBS con IA'}
-            </Button>
+          <Lightbulb className="h-10 w-10 text-highlight mb-2" />
+          <h3 className="text-lg font-semibold">Genere su estructura de trabajo con IA</h3>
+          <p className="text-sm text-muted-foreground mb-2 max-w-md">
+            A partir de sus pliegos definitivos, la IA puede proponer un borrador de la
+            Estructura de Desglose de Trabajo (WBS): fases, tareas y costos orientados a la{' '}
+            <strong>ejecución del proyecto</strong> si la propuesta es adjudicada. Revíselo y
+            ajústelo antes de usarlo en su propuesta.
+          </p>
+          <p className="text-xs text-muted-foreground mb-4 max-w-md">
+            La calidad del borrador depende de la completitud de los documentos que seleccione
+            (pliego, anexos técnicos, adendas, etc.).
+          </p>
+          <Button onClick={handleGenerateClick} disabled={isBusy}>
+            {isBusy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Bot className="mr-2 h-4 w-4" />}
+            {isBusy ? 'Cargando...' : 'Generar borrador de WBS con IA'}
+          </Button>
         </CardContent>
       </Card>
-      
-      {/* Modal 1: Select Documents */}
+
+      {/* Modal 1: Selección de documentos */}
       <Dialog open={isSelectModalOpen} onOpenChange={setIsSelectModalOpen}>
         <DialogContent className="sm:max-w-xl">
           <DialogHeader>
@@ -282,32 +356,32 @@ export function WBSGenerator({
           </DialogHeader>
           <div className="space-y-4 py-4 max-h-[60vh] overflow-y-auto pr-2">
             <div>
-                <h4 className="font-medium text-sm mb-2">1. Seleccione Documentos</h4>
-                <div className="space-y-3 p-3 border rounded-md max-h-[25vh] overflow-y-auto">
-                    {candidateDocs.map(doc => (
-                    <div key={doc.id} className="flex items-center space-x-3">
-                        <Checkbox 
-                            id={`doc-${doc.id}`}
-                            onCheckedChange={(checked) => handleCheckboxChange(doc.id, !!checked)}
-                            checked={selectedDocIds.includes(doc.id)}
-                        />
-                        <Label htmlFor={`doc-${doc.id}`} className="cursor-pointer">
-                        <span className="font-medium">{doc.filename}</span>
-                        <span className="text-xs text-muted-foreground ml-2">({doc.category})</span>
-                        </Label>
-                    </div>
-                    ))}
-                </div>
+              <h4 className="font-medium text-sm mb-2">1. Seleccione Documentos</h4>
+              <div className="space-y-3 p-3 border rounded-md max-h-[25vh] overflow-y-auto">
+                {candidateDocs.map(doc => (
+                  <div key={doc.id} className="flex items-center space-x-3">
+                    <Checkbox
+                      id={`doc-${doc.id}`}
+                      onCheckedChange={(checked) => handleCheckboxChange(doc.id, !!checked)}
+                      checked={selectedDocIds.includes(doc.id)}
+                    />
+                    <Label htmlFor={`doc-${doc.id}`} className="cursor-pointer">
+                      <span className="font-medium">{doc.filename}</span>
+                      <span className="text-xs text-muted-foreground ml-2">({doc.category})</span>
+                    </Label>
+                  </div>
+                ))}
+              </div>
             </div>
             <div>
-                <Label htmlFor="strategic-context" className="font-medium text-sm">2. Contexto o Alcance Específico (Opcional)</Label>
-                <Textarea
-                    id="strategic-context"
-                    value={strategicContext}
-                    onChange={(e) => setStrategicContext(e.target.value)}
-                    placeholder="Indique si se va a aplicar a un lote específico, con un alcance particular o cualquier otra directriz estratégica que la IA deba considerar. Ejemplo: 'Enfocarse únicamente en el Lote 2: Implementación en sedes de Antioquia'."
-                    className="mt-2"
-                />
+              <Label htmlFor="strategic-context" className="font-medium text-sm">2. Contexto o Alcance Específico (Opcional)</Label>
+              <Textarea
+                id="strategic-context"
+                value={strategicContext}
+                onChange={(e) => setStrategicContext(e.target.value)}
+                placeholder="Indique si se va a aplicar a un lote específico, con un alcance particular o cualquier otra directriz estratégica que la IA deba considerar. Ejemplo: 'Enfocarse únicamente en el Lote 2: Implementación en sedes de Antioquia'."
+                className="mt-2"
+              />
             </div>
           </div>
           <DialogFooter>
@@ -318,8 +392,8 @@ export function WBSGenerator({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-      
-      {/* Modal 2: Confirmation */}
+
+      {/* Modal 2: Confirmación */}
       <AlertDialog open={isConfirmModalOpen} onOpenChange={setIsConfirmModalOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -339,5 +413,3 @@ export function WBSGenerator({
     </>
   );
 }
-
-    
