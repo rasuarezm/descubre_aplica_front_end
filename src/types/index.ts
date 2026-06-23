@@ -390,6 +390,7 @@ export interface FinancialIndicatorResult {
   status: EligibilityStatus;
   gap_description: string | null;
   remediation_suggestion: string | null;
+  year_disclaimer: string | null;
 }
 
 export interface FinancialEligibilityBlock {

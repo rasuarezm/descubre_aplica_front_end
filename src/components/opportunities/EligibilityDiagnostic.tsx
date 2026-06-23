@@ -107,9 +107,20 @@ function RemediationBox({ gap, suggestion }: { gap: string | null; suggestion: s
   );
 }
 
+function YearDisclaimerBox({ note }: { note: string | null }) {
+  if (!note) return null;
+  return (
+    <div className="mt-2 rounded-md bg-blue-50 dark:bg-blue-900/10 border border-blue-200 dark:border-blue-800 p-3">
+      <p className="text-xs text-blue-700 dark:text-blue-400">
+        <span className="font-semibold">Período asumido: </span>{note}
+      </p>
+    </div>
+  );
+}
+
 function FinancialIndicatorRow({ indicator }: { indicator: FinancialIndicatorResult }) {
-  const [expanded, setExpanded] = useState(indicator.status === 'no_cumple');
-  const hasDetails = !!indicator.gap_description || !!indicator.remediation_suggestion;
+  const [expanded, setExpanded] = useState(indicator.status === 'no_cumple' || !!indicator.year_disclaimer);
+  const hasDetails = !!indicator.gap_description || !!indicator.remediation_suggestion || !!indicator.year_disclaimer;
 
   return (
     <div className={cn(
@@ -159,7 +170,10 @@ function FinancialIndicatorRow({ indicator }: { indicator: FinancialIndicatorRes
         </div>
       </div>
       {expanded && hasDetails && (
-        <RemediationBox gap={indicator.gap_description} suggestion={indicator.remediation_suggestion} />
+        <>
+          <YearDisclaimerBox note={indicator.year_disclaimer} />
+          <RemediationBox gap={indicator.gap_description} suggestion={indicator.remediation_suggestion} />
+        </>
       )}
     </div>
   );
