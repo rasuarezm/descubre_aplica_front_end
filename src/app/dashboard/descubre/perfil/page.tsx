@@ -19,7 +19,17 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { Loader2, AlertCircle, ArrowLeft, Building2, Search, Bell, Rss, CheckCircle2, Plus, Minus } from 'lucide-react';
+import { Loader2, AlertCircle, ArrowLeft, Building2, Search, Bell, Rss, CheckCircle2, Plus, Minus, Sparkles } from 'lucide-react';
+
+interface ProfileSuggestions {
+  tipos_servicio?: string[];
+  palabras_clave_positivas?: string[];
+  palabras_clave_negativas?: string[];
+  valor_minimo_interes?: number;
+  ubicaciones_preferidas?: string[];
+  entidades_interes?: string[];
+  razon_general?: string;
+}
 
 function arrayToLines(arr: string[] | undefined): string {
   if (!arr || arr.length === 0) return '';
@@ -61,6 +71,7 @@ export default function DescubrePerfilPage() {
   const { descubreData, loading, tieneDescubre, refreshDescubreProfile } = useDescubre();
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
+  const [suggesting, setSuggesting] = useState(false);
   const [form, setForm] = useState<Partial<DescubreClienteProfile> | null>(null);
   const [actionInProgress, setActionInProgress] = useState<string | null>(null);
 
@@ -109,6 +120,99 @@ export default function DescubrePerfilPage() {
       });
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleSuggestWithAI = async () => {
+    setSuggesting(true);
+    try {
+      const res = await descubreApiClient.post('/v1/suggest_profile_updates', {}) as {
+        status: string;
+        reason?: string;
+        suggestions?: ProfileSuggestions;
+      };
+
+      if (res.status === 'no_data') {
+        if (res.reason === 'no_aplica_account') {
+          toast({
+            title: 'Sin datos para analizar',
+            description: 'Para usar esta función, necesita una cuenta Aplica con el RUP cargado.',
+            variant: 'destructive',
+          });
+        } else {
+          toast({
+            title: 'Sin datos RUP',
+            description: 'Cargue el RUP de su empresa en la sección de documentos de Aplica y vuelva a intentarlo.',
+            variant: 'destructive',
+          });
+        }
+        return;
+      }
+
+      if (!res.suggestions) return;
+
+      setForm((prev) => {
+        if (!prev) return prev;
+
+        const mergeArray = (current: string[] | undefined, suggested: string[] | undefined): string[] => {
+          if (!suggested?.length) return current ?? [];
+          const existing = new Set((current ?? []).map((s) => s.toLowerCase().trim()));
+          const newItems = suggested.filter((s) => !existing.has(s.toLowerCase().trim()));
+          return [...(current ?? []), ...newItems];
+        };
+
+        return {
+          ...prev,
+          tipos_servicio: mergeArray(
+            typeof prev.tipos_servicio === 'string'
+              ? prev.tipos_servicio.split('\n').filter(Boolean)
+              : prev.tipos_servicio,
+            res.suggestions!.tipos_servicio,
+          ),
+          palabras_clave_positivas: mergeArray(
+            typeof prev.palabras_clave_positivas === 'string'
+              ? prev.palabras_clave_positivas.split('\n').filter(Boolean)
+              : prev.palabras_clave_positivas,
+            res.suggestions!.palabras_clave_positivas,
+          ),
+          palabras_clave_negativas: mergeArray(
+            typeof prev.palabras_clave_negativas === 'string'
+              ? prev.palabras_clave_negativas.split('\n').filter(Boolean)
+              : prev.palabras_clave_negativas,
+            res.suggestions!.palabras_clave_negativas,
+          ),
+          ubicaciones_preferidas: mergeArray(
+            typeof prev.ubicaciones_preferidas === 'string'
+              ? prev.ubicaciones_preferidas.split('\n').filter(Boolean)
+              : prev.ubicaciones_preferidas,
+            res.suggestions!.ubicaciones_preferidas,
+          ),
+          entidades_interes: mergeArray(
+            typeof prev.entidades_interes === 'string'
+              ? prev.entidades_interes.split('\n').filter(Boolean)
+              : prev.entidades_interes,
+            res.suggestions!.entidades_interes,
+          ),
+          valor_minimo_interes:
+            (!prev.valor_minimo_interes || prev.valor_minimo_interes === 0) &&
+            res.suggestions!.valor_minimo_interes
+              ? res.suggestions!.valor_minimo_interes
+              : prev.valor_minimo_interes,
+        };
+      });
+
+      toast({
+        title: 'Sugerencias aplicadas al formulario',
+        description: res.suggestions.razon_general ?? 'Revise los campos actualizados y guarde cuando esté listo.',
+      });
+    } catch (e) {
+      toast({
+        title: 'Error al generar sugerencias',
+        description: e instanceof ApiError ? e.message : 'Error desconocido',
+        variant: 'destructive',
+      });
+    } finally {
+      setSuggesting(false);
     }
   };
 
@@ -249,7 +353,24 @@ export default function DescubrePerfilPage() {
         {/* Preferencias */}
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center gap-2"><Search className="h-5 w-5" />Preferencias de búsqueda</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="flex items-center gap-2">
+                <Search className="h-5 w-5" />Preferencias de búsqueda
+              </CardTitle>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleSuggestWithAI}
+                disabled={suggesting || saving}
+                className="gap-2 shrink-0"
+              >
+                {suggesting
+                  ? <><Loader2 className="h-4 w-4 animate-spin" />Analizando...</>
+                  : <><Sparkles className="h-4 w-4" />Sugerir con IA</>
+                }
+              </Button>
+            </div>
             <CardDescription>Un valor por línea.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
