@@ -83,6 +83,13 @@ function formatCopAmount(value: number): string {
   return `$${value.toLocaleString('es-CO')}`;
 }
 
+const PREFERENCE_INPUT_CLASS =
+  'text-foreground placeholder:italic placeholder:text-foreground/35';
+
+function ExampleHint({ children }: { children: React.ReactNode }) {
+  return <p className="text-xs italic text-foreground/45">Ejemplo: {children}</p>;
+}
+
 function arrayToLines(arr: string[] | undefined): string {
   if (!arr || arr.length === 0) return '';
   return arr.join('\n');
@@ -420,39 +427,91 @@ export default function DescubrePerfilPage() {
                 }
               </Button>
             </div>
-            <CardDescription>Un valor por línea.</CardDescription>
+            <CardDescription>
+              Un valor por línea. El texto en cursiva es un ejemplo y no forma parte de su perfil.
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label>Tipos de servicio (máx. {maxTipos})</Label>
-              <Textarea value={arrayToLines(form.tipos_servicio)} onChange={(e) => updateField('tipos_servicio', splitLinesRaw(e.target.value))} placeholder={'Consultoría TI\nDesarrollo Web'} rows={3} />
+              <ExampleHint>Consultoría TI, Desarrollo Web</ExampleHint>
+              <Textarea
+                value={arrayToLines(form.tipos_servicio)}
+                onChange={(e) => updateField('tipos_servicio', splitLinesRaw(e.target.value))}
+                placeholder="Un tipo de servicio por línea"
+                rows={3}
+                className={PREFERENCE_INPUT_CLASS}
+              />
             </div>
             <div className="space-y-2">
               <Label>Palabras clave positivas (máx. {maxPos})</Label>
-              <Textarea value={arrayToLines(form.palabras_clave_positivas)} onChange={(e) => updateField('palabras_clave_positivas', splitLinesRaw(e.target.value))} placeholder={'IA\nBig Data'} rows={3} />
+              <ExampleHint>IA, Big Data</ExampleHint>
+              <Textarea
+                value={arrayToLines(form.palabras_clave_positivas)}
+                onChange={(e) => updateField('palabras_clave_positivas', splitLinesRaw(e.target.value))}
+                placeholder="Una palabra o frase por línea"
+                rows={3}
+                className={PREFERENCE_INPUT_CLASS}
+              />
             </div>
             <div className="space-y-2">
               <Label>Palabras clave negativas (máx. {maxNeg})</Label>
-              <Textarea value={arrayToLines(form.palabras_clave_negativas)} onChange={(e) => updateField('palabras_clave_negativas', splitLinesRaw(e.target.value))} placeholder={'Manual\nObsoleto'} rows={2} />
+              <ExampleHint>Manual, Obsoleto</ExampleHint>
+              <Textarea
+                value={arrayToLines(form.palabras_clave_negativas)}
+                onChange={(e) => updateField('palabras_clave_negativas', splitLinesRaw(e.target.value))}
+                placeholder="Una palabra o frase por línea"
+                rows={2}
+                className={PREFERENCE_INPUT_CLASS}
+              />
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
                 <Label>Valor mínimo (COP)</Label>
-                <Input type="number" min={0} value={form.valor_minimo_interes ?? ''} onChange={(e) => updateField('valor_minimo_interes', e.target.value === '' ? undefined : Number(e.target.value))} placeholder="10000000" />
+                <ExampleHint>10.000.000</ExampleHint>
+                <Input
+                  type="number"
+                  min={0}
+                  value={form.valor_minimo_interes ?? ''}
+                  onChange={(e) => updateField('valor_minimo_interes', e.target.value === '' ? undefined : Number(e.target.value))}
+                  placeholder=""
+                  className={PREFERENCE_INPUT_CLASS}
+                />
               </div>
             </div>
             <div className="space-y-2">
               <Label>Ubicaciones preferidas</Label>
-              <Textarea value={arrayToLines(form.ubicaciones_preferidas)} onChange={(e) => updateField('ubicaciones_preferidas', splitLinesRaw(e.target.value))} placeholder={'Bogotá D.C.\nNacional'} rows={2} />
+              <ExampleHint>Bogotá D.C., Nacional</ExampleHint>
+              <Textarea
+                value={arrayToLines(form.ubicaciones_preferidas)}
+                onChange={(e) => updateField('ubicaciones_preferidas', splitLinesRaw(e.target.value))}
+                placeholder="Una ubicación por línea"
+                rows={2}
+                className={PREFERENCE_INPUT_CLASS}
+              />
             </div>
             <div className="space-y-2">
               <Label>Entidades de interés</Label>
-              <Textarea value={arrayToLines(form.entidades_interes)} onChange={(e) => updateField('entidades_interes', splitLinesRaw(e.target.value))} placeholder={'Ministerio TIC\nColpensiones'} rows={2} />
+              <ExampleHint>Ministerio TIC, Colpensiones</ExampleHint>
+              <Textarea
+                value={arrayToLines(form.entidades_interes)}
+                onChange={(e) => updateField('entidades_interes', splitLinesRaw(e.target.value))}
+                placeholder="Una entidad por línea"
+                rows={2}
+                className={PREFERENCE_INPUT_CLASS}
+              />
             </div>
             {descubreData?.plan_actual?.features_habilitadas?.palabra_clave_dorada_config && (
               <div className="space-y-2">
                 <Label>Palabras clave doradas</Label>
-                <Textarea value={arrayToLines(form.palabras_clave_doradas)} onChange={(e) => updateField('palabras_clave_doradas', splitLinesRaw(e.target.value))} placeholder="Urgencia Manifiesta" rows={2} />
+                <ExampleHint>Urgencia Manifiesta</ExampleHint>
+                <Textarea
+                  value={arrayToLines(form.palabras_clave_doradas)}
+                  onChange={(e) => updateField('palabras_clave_doradas', splitLinesRaw(e.target.value))}
+                  placeholder="Una palabra o frase por línea"
+                  rows={2}
+                  className={PREFERENCE_INPUT_CLASS}
+                />
               </div>
             )}
             <div className="space-y-2">
