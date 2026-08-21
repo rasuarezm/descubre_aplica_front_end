@@ -6,7 +6,7 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FeatureScroll } from "@/components/home/FeatureScroll";
-import { ArrowRight, Menu, X, Zap, ChevronRight } from "lucide-react";
+import { ArrowRight, Menu, X, Zap, ChevronRight, Check } from "lucide-react";
 
 export function HomeClient() {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
@@ -143,37 +143,36 @@ export function HomeClient() {
 
       <main className="flex-1">
         {/* Hero */}
-        <section className="w-full bg-background pt-24 pb-16 md:pt-36 md:pb-24">
-          <div className="container mx-auto px-4 md:px-6">
-            <div className="grid items-center gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)] lg:gap-x-6 lg:gap-y-10">
-              <div className="order-1 flex flex-col lg:order-none">
-                <span className="mb-6 inline-flex items-center gap-1.5 rounded-full border border-accent/30 bg-accent/8 px-3 py-1 text-xs font-medium text-accent">
+        <section className="relative w-full overflow-hidden bg-background pt-24 pb-16 md:pt-32 md:pb-24">
+          <div
+            className="pointer-events-none absolute -right-40 top-16 h-[560px] w-[560px] rounded-full bg-accent/10 blur-3xl"
+            aria-hidden
+          />
+          <div className="container relative mx-auto px-4 md:px-6">
+            <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.95fr)] lg:gap-x-10">
+              <div className="order-1 flex flex-col pt-1 lg:order-none">
+                <span className="mb-7 inline-flex items-center gap-1.5 self-start rounded-full border border-accent/30 bg-accent/8 px-3 py-1 text-xs font-medium text-accent">
                   <Zap className="h-3 w-3" />
                   Contratación pública · Fondos de fomento · Colombia
                 </span>
-                <h1 className="font-headline text-5xl font-semibold leading-[1.1] tracking-tight text-foreground md:text-6xl lg:text-[4.25rem]">
-                  Su radar inteligente para licitaciones estratégicas.
+                <h1 className="font-headline text-5xl font-bold leading-[1.05] tracking-tight text-foreground md:text-6xl lg:text-[4.5rem]">
+                  Su radar inteligente para{" "}
+                  <span className="text-accent">licitaciones estratégicas.</span>
                 </h1>
-                <p className="mt-5 max-w-lg text-lg leading-relaxed text-muted-foreground">
-                  Bidtory es la suite integral que combina un radar de
-                  oportunidades con IA que busca por usted (Descubre) y un
-                  espacio de trabajo colaborativo (Aplica).
+                <p className="mt-6 max-w-lg text-lg leading-relaxed text-muted-foreground">
+                  La suite que monitorea SECOP II con IA, prioriza lo que
+                  realmente aplica a su empresa, y lleva cada proceso del
+                  hallazgo a la propuesta — sin hojas de cálculo dispersas.
                 </p>
-                <p className="mt-3 max-w-lg text-lg leading-relaxed text-muted-foreground">
-                  Así su equipo puede gestionar cada proceso —desde la
-                  validación de requisitos, la construcción de la oferta y la
-                  formulación de preguntas hasta el cierre del mismo— con
-                  precisión y control.
-                </p>
-                <div className="mt-8 flex flex-wrap gap-3">
+
+                <div className="mt-8 flex flex-wrap items-center gap-4">
                   <Button
                     size="lg"
-                    className="gap-2 bg-accent text-accent-foreground hover:bg-accent/90"
+                    className="gap-2 bg-accent px-7 text-base text-accent-foreground shadow-lg shadow-accent/30 hover:bg-accent/90"
                     asChild
                   >
                     <Link href="/registro">
-                      Empezar ahora{" "}
-                      <ArrowRight className="h-4 w-4" aria-hidden />
+                      Empezar ahora <ArrowRight className="h-4 w-4" aria-hidden />
                     </Link>
                   </Button>
                   <Button
@@ -183,25 +182,83 @@ export function HomeClient() {
                     asChild
                   >
                     <Link href="#como-funciona">
-                      Ver cómo funciona{" "}
-                      <ChevronRight className="h-4 w-4" aria-hidden />
+                      Ver cómo funciona <ChevronRight className="h-4 w-4" aria-hidden />
                     </Link>
                   </Button>
                 </div>
+                <p className="mt-3 text-xs text-muted-foreground/70">
+                  Desde $149.000 COP/mes · Sin contratos · Cancele cuando
+                  quiera
+                </p>
+
+                <ul className="mt-10 flex flex-col gap-3 border-t border-border pt-7">
+                  {[
+                    "SECOP II monitoreado todos los días (más fuentes según su plan)",
+                    "Cada oportunidad puntuada por IA según el perfil de su empresa",
+                    "De la alerta a la propuesta, en un solo flujo de trabajo",
+                  ].map((text) => (
+                    <li
+                      key={text}
+                      className="flex items-start gap-2.5 text-sm text-foreground/80"
+                    >
+                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-accent" aria-hidden />
+                      {text}
+                    </li>
+                  ))}
+                </ul>
               </div>
 
-              <div className="relative order-2 w-full min-w-0 lg:order-none">
-                <div className="relative flex w-full justify-center lg:justify-start">
-                  <div className="relative w-full max-w-full">
-                    <Image
-                      src="/2-Bidtory%20Descubre-Oportunidades.webp"
-                      alt="Vista de oportunidades en Bidtory Descubre"
-                      width={1400}
-                      height={1050}
-                      className="h-auto w-full rounded-2xl border border-border/70 shadow-xl ring-1 ring-black/5 transition-shadow duration-300 hover:shadow-2xl"
-                      priority
-                      sizes="(max-width: 1024px) 100vw, 48vw"
-                    />
+              <div className="relative order-2 w-full min-w-0 pt-2 lg:order-none lg:pt-6">
+                {/* Tarjeta ilustrativa: representa un resultado de Bidtory Descubre,
+                    no es un control interactivo real, por eso todo el bloque es aria-hidden. */}
+                <div
+                  className="relative mx-auto max-w-md lg:mx-0 lg:ml-auto lg:max-w-lg"
+                  aria-hidden="true"
+                >
+                  <div className="absolute -top-4 right-4 z-10 inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground shadow-md">
+                    <span className="h-1.5 w-1.5 rounded-full bg-accent" />
+                    Nueva coincidencia detectada
+                  </div>
+                  <div className="rotate-1 rounded-2xl border border-border/70 bg-card p-6 shadow-2xl ring-1 ring-black/5 transition-transform duration-300 hover:rotate-0">
+                    <h3 className="font-headline text-lg font-semibold leading-snug text-foreground">
+                      Integración de sistemas, APIs y capa de
+                      interoperabilidad para...
+                    </h3>
+                    <p className="mt-2 text-xs text-muted-foreground">
+                      Procesado: 18 ago 2026
+                    </p>
+                    <p className="mt-3 text-sm italic leading-relaxed text-muted-foreground">
+                      &ldquo;Alta compatibilidad con su perfil TI: integración,
+                      gobierno de datos y proyectos co...&rdquo;
+                    </p>
+                    <dl className="mt-4 space-y-1.5 text-sm">
+                      <div className="flex gap-1.5">
+                        <dt className="font-medium text-foreground">Modalidad:</dt>
+                        <dd className="text-foreground/80">Licitación pública</dd>
+                      </div>
+                      <div className="flex gap-1.5">
+                        <dt className="font-medium text-foreground">Fecha límite:</dt>
+                        <dd className="text-foreground/80">15 oct 2026</dd>
+                      </div>
+                      <div className="flex gap-1.5">
+                        <dt className="font-medium text-foreground">Ubicación:</dt>
+                        <dd className="text-foreground/80">Bogotá D.C.</dd>
+                      </div>
+                    </dl>
+                    <div className="mt-4 flex flex-wrap items-center gap-2">
+                      <Badge variant="secondary" className="text-xs font-normal">
+                        Secretaría de las TIC de Bogotá
+                      </Badge>
+                      <Badge variant="secondary" className="text-xs font-normal">
+                        $ 450.000.000
+                      </Badge>
+                      <Badge variant="secondary" className="text-xs font-normal">
+                        Ranking: 8/10
+                      </Badge>
+                    </div>
+                    <div className="mt-5 flex w-full items-center justify-center rounded-md border border-input px-4 py-2 text-sm font-medium text-foreground">
+                      Ver detalle
+                    </div>
                   </div>
                 </div>
               </div>
@@ -240,100 +297,91 @@ export function HomeClient() {
         </section>
 
         {/* El sistema */}
-        <section
-          id="descubre"
-          className="w-full bg-muted/40 py-20 md:py-28"
-        >
+        <section id="descubre" className="w-full bg-muted/40 py-20 md:py-28">
           <div className="container mx-auto px-4 md:px-6">
             <div className="mb-16 text-center">
               <p className="mb-3 text-sm font-medium text-accent">El sistema</p>
               <h2 className="font-headline text-3xl font-semibold tracking-tight text-foreground md:text-4xl">
-                El ecosistema de licitación inteligente
+                Dos herramientas, un solo flujo
               </h2>
               <p className="mx-auto mt-3 max-w-xl text-center text-muted-foreground">
-                Dos herramientas conectadas para acompañar a su equipo desde la
-                detección de oportunidades hasta la preparación y el cierre de
-                cada proceso, con trazabilidad.
+                Descubre encuentra y prioriza; Aplica organiza el trabajo
+                hasta el cierre. Conectadas, con trazabilidad de principio a
+                fin.
               </p>
             </div>
 
-            <div className="mx-auto mt-12 grid max-w-5xl items-center gap-4 md:grid-cols-[1fr_auto_1fr]">
-              <div className="rounded-xl border border-border border-l-4 border-l-accent bg-card p-8 shadow-sm transition-shadow duration-200 hover:shadow-md">
+            <div className="mx-auto mt-12 grid max-w-5xl items-stretch gap-4 md:grid-cols-[1.35fr_auto_1fr] md:gap-0">
+              <div className="flex flex-col rounded-2xl bg-accent p-8 text-accent-foreground shadow-lg md:p-10">
+                <span className="mb-5 inline-flex h-8 w-8 items-center justify-center rounded-md bg-accent-foreground/15 font-headline text-sm font-semibold">
+                  01
+                </span>
                 <Image
                   src="/logo-bidtory-descubre-neg.svg"
                   alt="Bidtory Descubre"
                   width={140}
                   height={32}
-                  className="mb-5 h-7 w-auto opacity-80"
+                  className="mb-4 h-7 w-auto"
                 />
-                <h3 className="mb-1 text-lg font-semibold text-foreground">
-                  Bidtory Descubre
-                </h3>
-                <p className="mb-5 text-sm text-muted-foreground">
+                <p className="mb-6 text-sm text-accent-foreground/80">
                   Inteligencia y monitoreo
                 </p>
-                <ul className="space-y-2.5">
+                <ul className="mb-6 space-y-2.5">
                   {[
-                    "Monitoreo de convocatorias (incluido SECOP II y fondos de fomento)",
+                    "Monitoreo diario de SECOP II (más fuentes según su plan)",
                     "Priorización con IA según el perfil de su empresa",
                     "Alertas para no perder plazos ni cambios relevantes",
-                    "Vista clara de oportunidades y su contexto",
                   ].map((text) => (
-                    <li
-                      key={text}
-                      className="flex items-center gap-2.5 text-sm text-foreground/80"
-                    >
-                      <div className="h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
+                    <li key={text} className="flex items-start gap-2.5 text-sm">
+                      <Check className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
                       {text}
                     </li>
                   ))}
                 </ul>
-                <Badge variant="secondary" className="mt-6 text-xs">
+                <Badge
+                  variant="secondary"
+                  className="mt-auto self-start bg-accent-foreground/15 text-accent-foreground"
+                >
                   Disponible en todos los planes
                 </Badge>
               </div>
 
-              <div className="flex flex-none flex-col items-center gap-1 py-4">
-                <ChevronRight
-                  className="hidden h-6 w-6 text-muted-foreground/50 md:block"
-                  aria-hidden
-                />
-                <span className="hidden text-[10px] font-medium tracking-wider text-muted-foreground/40 md:block">
-                  1 clic
-                </span>
+              <div className="hidden items-center justify-center px-3 md:flex" aria-hidden>
+                <div className="flex h-11 w-11 items-center justify-center rounded-full border border-border bg-card shadow-md">
+                  <ArrowRight className="h-4 w-4 text-accent" />
+                </div>
               </div>
 
-              <div className="rounded-xl border border-border border-l-4 border-l-foreground bg-card p-8 shadow-sm transition-shadow duration-200 hover:shadow-md">
+              <div className="flex flex-col rounded-2xl border border-border bg-card p-8 shadow-lg md:p-10">
+                <span className="mb-5 inline-flex h-8 w-8 items-center justify-center rounded-md bg-muted font-headline text-sm font-semibold text-foreground">
+                  02
+                </span>
                 <Image
-                  src="/logo-bidtory-aplica-neg.svg"
+                  src="/logo-bidtory-aplica-pos.svg"
                   alt="Bidtory Aplica"
                   width={140}
                   height={32}
-                  className="mb-5 h-7 w-auto opacity-80"
+                  className="mb-4 h-7 w-auto opacity-90"
                 />
-                <h3 className="mb-1 text-lg font-semibold text-foreground">
-                  Bidtory Aplica
-                </h3>
-                <p className="mb-5 text-sm text-muted-foreground">
+                <p className="mb-6 text-sm text-muted-foreground">
                   Gestión y pipeline
                 </p>
-                <ul className="space-y-2.5">
+                <ul className="mb-6 space-y-2.5">
                   {[
                     "Pipeline de oportunidades con estados claros",
                     "Análisis asistido de pliegos y requisitos",
-                    "Checklist y documentos de la propuesta",
-                    "Bitácora para coordinar jurídica, técnica y gestión",
+                    "Checklist, documentos y bitácora del equipo",
                   ].map((text) => (
                     <li
                       key={text}
-                      className="flex items-center gap-2.5 text-sm text-foreground/80"
+                      className="flex items-start gap-2.5 text-sm text-foreground/80"
                     >
-                      <div className="h-1.5 w-1.5 shrink-0 rounded-full bg-accent" />
+                      <Check className="mt-0.5 h-4 w-4 shrink-0 text-accent" aria-hidden />
                       {text}
                     </li>
                   ))}
                 </ul>
-                <Badge variant="secondary" className="mt-6 text-xs">
+                <Badge variant="secondary" className="mt-auto self-start text-xs">
                   Desde plan Profesional
                 </Badge>
               </div>
