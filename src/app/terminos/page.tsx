@@ -117,7 +117,7 @@ export default function TermsOfServicePage() {
             <h3>6.1. Propiedad de Puro Contenido SAS</h3>
             <p>Todo el contenido y materiales del Sitio Web, incluyendo textos, gráficos, logotipos, iconos, imágenes, clips de audio, descargas digitales, compilaciones de datos y software (excluyendo el Contenido del Cliente), son propiedad de Puro Contenido SAS o de sus licenciantes y están protegidos por las leyes colombianas e internacionales de derechos de autor y marcas registradas.</p>
             <h3>6.2. Marcas</h3>
-            <p>La marca "Puro Contenido SAS", el logotipo, la marca "Bidtory™" y sus componentes (Bidtory Descubre, Bidtory Aplica), así como otros nombres de productos y servicios relacionados, diseños y eslóganes, son marcas comerciales o marcas de servicio de Puro Contenido SAS, registradas o en proceso de registro. No se le otorga ninguna licencia o derecho para usar estas marcas sin el consentimiento previo por escrito de Puro Contenido SAS.</p>
+            <p>La marca Bidtory® está registrada a nombre de Puro Contenido SAS ante la Superintendencia de Industria y Comercio de Colombia. El logotipo y los nombres de producto Bidtory Descubre y Bidtory Aplica, así como otros signos distintivos, diseños y eslóganes relacionados, son propiedad de Puro Contenido SAS. No se le otorga ninguna licencia o derecho para usar estas marcas o signos sin el consentimiento previo por escrito de Puro Contenido SAS.</p>
             <h3>6.3. Licencia de Uso Limitado</h3>
             <p>Se le concede una licencia limitada, no exclusiva, intransferible y revocable para acceder y utilizar el Sitio Web únicamente para los fines informativos y de colaboración para los que fue diseñado, de acuerdo con estos Términos de Uso.</p>
 

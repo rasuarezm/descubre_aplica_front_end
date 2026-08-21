@@ -211,7 +211,7 @@ export function HomeClient() {
                   className="relative z-0 mx-auto max-w-md lg:mx-0 lg:ml-auto lg:max-w-lg"
                   aria-hidden="true"
                 >
-                  <div className="pointer-events-none absolute left-1/2 top-1/2 -z-10 h-[480px] w-[480px] -translate-x-1/2 -translate-y-1/2 bg-[radial-gradient(circle_at_50%_45%,hsl(var(--accent)/0.22),transparent_70%)]" />
+                  <div className="pointer-events-none absolute left-1/2 top-1/2 -z-10 h-[560px] w-[560px] -translate-x-1/2 -translate-y-1/2 bg-[radial-gradient(circle_at_50%_45%,hsl(var(--accent)/0.48)_0%,hsl(var(--accent)/0.22)_42%,transparent_68%)]" />
                   <div className="absolute -top-4 right-4 z-10 inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground shadow-md">
                     <span className="h-1.5 w-1.5 rounded-full bg-accent" />
                     Nueva coincidencia detectada
@@ -488,7 +488,7 @@ export function HomeClient() {
               />
               <p className="text-center text-sm text-muted-foreground md:text-left">
                 © {new Date().getFullYear()} Puro Contenido SAS. Todos los
-                derechos reservados. Bidtory™ es una marca comercial de Puro
+                derechos reservados. Bidtory® es una marca registrada de Puro
                 Contenido SAS.
               </p>
             </div>

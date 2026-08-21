@@ -66,7 +66,7 @@ export default function LoginClient() {
       <footer className="w-full py-4 bg-card/95 backdrop-blur-sm border-t border-border">
         <div className="container mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 px-4 md:px-6">
           <p className="text-xs text-muted-foreground">
-            © {new Date().getFullYear()} Puro Contenido SAS. Bidtory™
+            © {new Date().getFullYear()} Puro Contenido SAS. Bidtory®
           </p>
           <div className="flex gap-6 text-xs">
             <Link

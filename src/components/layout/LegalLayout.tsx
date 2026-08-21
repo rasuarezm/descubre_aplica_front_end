@@ -56,7 +56,7 @@ export function LegalLayout({ children }: { children: React.ReactNode }) {
               />
               <p className="text-sm text-muted-foreground">
                 © {new Date().getFullYear()} Puro Contenido SAS. Todos los
-                derechos reservados. Bidtory™ es una marca comercial de Puro
+                derechos reservados. Bidtory® es una marca registrada de Puro
                 Contenido SAS.
               </p>
             </div>
