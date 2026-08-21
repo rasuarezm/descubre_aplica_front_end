@@ -144,10 +144,6 @@ export function HomeClient() {
       <main className="flex-1">
         {/* Hero */}
         <section className="relative w-full overflow-hidden bg-background pt-24 pb-16 md:pt-32 md:pb-24">
-          <div
-            className="pointer-events-none absolute -right-40 top-16 h-[560px] w-[560px] rounded-full bg-accent/10 blur-3xl"
-            aria-hidden
-          />
           <div className="container relative mx-auto px-4 md:px-6">
             <div className="grid items-start gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.95fr)] lg:gap-x-10">
               <div className="order-1 flex flex-col pt-1 lg:order-none">
@@ -212,9 +208,10 @@ export function HomeClient() {
                 {/* Tarjeta ilustrativa: representa un resultado de Bidtory Descubre,
                     no es un control interactivo real, por eso todo el bloque es aria-hidden. */}
                 <div
-                  className="relative mx-auto max-w-md lg:mx-0 lg:ml-auto lg:max-w-lg"
+                  className="relative z-0 mx-auto max-w-md lg:mx-0 lg:ml-auto lg:max-w-lg"
                   aria-hidden="true"
                 >
+                  <div className="pointer-events-none absolute left-1/2 top-1/2 -z-10 h-[480px] w-[480px] -translate-x-1/2 -translate-y-1/2 bg-[radial-gradient(circle_at_50%_45%,hsl(var(--accent)/0.22),transparent_70%)]" />
                   <div className="absolute -top-4 right-4 z-10 inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground shadow-md">
                     <span className="h-1.5 w-1.5 rounded-full bg-accent" />
                     Nueva coincidencia detectada
