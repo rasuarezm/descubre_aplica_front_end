@@ -18,6 +18,14 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, AlertCircle, ArrowLeft, Building2, Search, Bell, Rss, CheckCircle2, Plus, Minus, Sparkles } from 'lucide-react';
 
@@ -29,6 +37,50 @@ interface ProfileSuggestions {
   ubicaciones_preferidas?: string[];
   entidades_interes?: string[];
   razon_general?: string;
+}
+
+type SuggestionListKey =
+  | 'tipos_servicio'
+  | 'palabras_clave_positivas'
+  | 'palabras_clave_negativas'
+  | 'ubicaciones_preferidas'
+  | 'entidades_interes';
+
+const SUGGESTION_LIST_FIELDS: { key: SuggestionListKey; label: string }[] = [
+  { key: 'tipos_servicio', label: 'Tipos de servicio' },
+  { key: 'palabras_clave_positivas', label: 'Palabras clave — incluir' },
+  { key: 'palabras_clave_negativas', label: 'Palabras clave — excluir' },
+  { key: 'ubicaciones_preferidas', label: 'Ubicaciones' },
+  { key: 'entidades_interes', label: 'Entidades de interés' },
+];
+
+function toStringArray(value: string[] | string | undefined | null): string[] {
+  if (value == null || value === '') return [];
+  if (typeof value === 'string') {
+    return value.split('\n').map((s) => s.trim()).filter(Boolean);
+  }
+  return value.map((s) => String(s).trim()).filter(Boolean);
+}
+
+function mergeSuggestedArray(
+  current: string[] | string | undefined,
+  suggested: string[] | undefined,
+): string[] {
+  const currentList =
+    typeof current === 'string' ? current.split('\n').filter(Boolean) : (current ?? []);
+  if (!suggested?.length) return currentList;
+  const existing = new Set(currentList.map((s) => s.toLowerCase().trim()));
+  const newItems = suggested.filter((s) => !existing.has(s.toLowerCase().trim()));
+  return [...currentList, ...newItems];
+}
+
+function isNewSuggestion(item: string, current: string[]): boolean {
+  const needle = item.toLowerCase().trim();
+  return !current.some((v) => v.toLowerCase().trim() === needle);
+}
+
+function formatCopAmount(value: number): string {
+  return `$${value.toLocaleString('es-CO')}`;
 }
 
 function arrayToLines(arr: string[] | undefined): string {
@@ -72,6 +124,8 @@ export default function DescubrePerfilPage() {
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
   const [suggesting, setSuggesting] = useState(false);
+  const [suggestions, setSuggestions] = useState<ProfileSuggestions | null>(null);
+  const [showSuggestModal, setShowSuggestModal] = useState(false);
   const [form, setForm] = useState<Partial<DescubreClienteProfile> | null>(null);
   const [actionInProgress, setActionInProgress] = useState<string | null>(null);
 
@@ -151,60 +205,8 @@ export default function DescubrePerfilPage() {
 
       if (!res.suggestions) return;
 
-      setForm((prev) => {
-        if (!prev) return prev;
-
-        const mergeArray = (current: string[] | undefined, suggested: string[] | undefined): string[] => {
-          if (!suggested?.length) return current ?? [];
-          const existing = new Set((current ?? []).map((s) => s.toLowerCase().trim()));
-          const newItems = suggested.filter((s) => !existing.has(s.toLowerCase().trim()));
-          return [...(current ?? []), ...newItems];
-        };
-
-        return {
-          ...prev,
-          tipos_servicio: mergeArray(
-            typeof prev.tipos_servicio === 'string'
-              ? prev.tipos_servicio.split('\n').filter(Boolean)
-              : prev.tipos_servicio,
-            res.suggestions!.tipos_servicio,
-          ),
-          palabras_clave_positivas: mergeArray(
-            typeof prev.palabras_clave_positivas === 'string'
-              ? prev.palabras_clave_positivas.split('\n').filter(Boolean)
-              : prev.palabras_clave_positivas,
-            res.suggestions!.palabras_clave_positivas,
-          ),
-          palabras_clave_negativas: mergeArray(
-            typeof prev.palabras_clave_negativas === 'string'
-              ? prev.palabras_clave_negativas.split('\n').filter(Boolean)
-              : prev.palabras_clave_negativas,
-            res.suggestions!.palabras_clave_negativas,
-          ),
-          ubicaciones_preferidas: mergeArray(
-            typeof prev.ubicaciones_preferidas === 'string'
-              ? prev.ubicaciones_preferidas.split('\n').filter(Boolean)
-              : prev.ubicaciones_preferidas,
-            res.suggestions!.ubicaciones_preferidas,
-          ),
-          entidades_interes: mergeArray(
-            typeof prev.entidades_interes === 'string'
-              ? prev.entidades_interes.split('\n').filter(Boolean)
-              : prev.entidades_interes,
-            res.suggestions!.entidades_interes,
-          ),
-          valor_minimo_interes:
-            (!prev.valor_minimo_interes || prev.valor_minimo_interes === 0) &&
-            res.suggestions!.valor_minimo_interes
-              ? res.suggestions!.valor_minimo_interes
-              : prev.valor_minimo_interes,
-        };
-      });
-
-      toast({
-        title: 'Sugerencias aplicadas al formulario',
-        description: res.suggestions.razon_general ?? 'Revise los campos actualizados y guarde cuando esté listo.',
-      });
+      setSuggestions(res.suggestions);
+      setShowSuggestModal(true);
     } catch (e) {
       toast({
         title: 'Error al generar sugerencias',
@@ -214,6 +216,53 @@ export default function DescubrePerfilPage() {
     } finally {
       setSuggesting(false);
     }
+  };
+
+  const closeSuggestModal = () => {
+    setShowSuggestModal(false);
+    setSuggestions(null);
+  };
+
+  const handleSuggestModalOpenChange = (open: boolean) => {
+    setShowSuggestModal(open);
+    if (!open) setSuggestions(null);
+  };
+
+  const handleApplySuggestions = () => {
+    if (!suggestions) return;
+    const razon = suggestions.razon_general;
+
+    setForm((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        tipos_servicio: mergeSuggestedArray(prev.tipos_servicio, suggestions.tipos_servicio),
+        palabras_clave_positivas: mergeSuggestedArray(
+          prev.palabras_clave_positivas,
+          suggestions.palabras_clave_positivas,
+        ),
+        palabras_clave_negativas: mergeSuggestedArray(
+          prev.palabras_clave_negativas,
+          suggestions.palabras_clave_negativas,
+        ),
+        ubicaciones_preferidas: mergeSuggestedArray(
+          prev.ubicaciones_preferidas,
+          suggestions.ubicaciones_preferidas,
+        ),
+        entidades_interes: mergeSuggestedArray(prev.entidades_interes, suggestions.entidades_interes),
+        valor_minimo_interes:
+          (!prev.valor_minimo_interes || prev.valor_minimo_interes === 0) &&
+          suggestions.valor_minimo_interes
+            ? suggestions.valor_minimo_interes
+            : prev.valor_minimo_interes,
+      };
+    });
+
+    closeSuggestModal();
+    toast({
+      title: 'Sugerencias aplicadas al formulario',
+      description: razon ?? 'Revise los campos actualizados y guarde cuando esté listo.',
+    });
   };
 
   const handleSubscribe = async (fuente: FuenteSecop) => {
@@ -534,6 +583,103 @@ export default function DescubrePerfilPage() {
           </CardContent>
         </Card>
       </form>
+
+      <Dialog open={showSuggestModal} onOpenChange={handleSuggestModalOpenChange}>
+        <DialogContent className="max-w-3xl max-h-[85vh] overflow-hidden p-0 gap-0">
+          <div className="px-6 pt-6 pb-3 pr-12">
+            <DialogHeader>
+              <DialogTitle>Sugerencias de IA para su perfil</DialogTitle>
+              <DialogDescription>
+                {suggestions?.razon_general || 'Revise las diferencias antes de aplicar.'}
+              </DialogDescription>
+            </DialogHeader>
+          </div>
+
+          <div className="px-6 overflow-y-auto max-h-[55vh] space-y-5">
+            <div className="hidden sm:grid grid-cols-2 gap-6">
+              <h4 className="text-sm font-semibold text-muted-foreground">Perfil actual</h4>
+              <h4 className="text-sm font-semibold text-muted-foreground">Sugerido por IA</h4>
+            </div>
+
+            {SUGGESTION_LIST_FIELDS.map(({ key, label }) => {
+              const currentItems = toStringArray(form[key]);
+              const suggestedItems = suggestions?.[key] ?? [];
+              return (
+                <div key={key} className="space-y-2">
+                  <p className="text-xs font-medium text-muted-foreground">{label}</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
+                    <div>
+                      <p className="sm:hidden text-xs text-muted-foreground mb-1.5">Perfil actual</p>
+                      {currentItems.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">Sin valores</p>
+                      ) : (
+                        <div className="flex flex-wrap gap-1.5">
+                          {currentItems.map((item, index) => (
+                            <Badge key={`${key}-current-${index}`} variant="secondary">
+                              {item}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <div>
+                      <p className="sm:hidden text-xs text-muted-foreground mb-1.5">Sugerido por IA</p>
+                      {suggestedItems.length === 0 ? (
+                        <p className="text-sm text-muted-foreground">Sin sugerencias</p>
+                      ) : (
+                        <div className="flex flex-wrap gap-1.5">
+                          {suggestedItems.map((item, index) => {
+                            const isNew = isNewSuggestion(item, currentItems);
+                            return (
+                              <Badge
+                                key={`${key}-suggested-${index}`}
+                                variant="secondary"
+                                className={
+                                  isNew
+                                    ? 'border-green-200 bg-green-50 text-green-600 hover:bg-green-50'
+                                    : undefined
+                                }
+                              >
+                                {isNew ? `+ ${item}` : item}
+                              </Badge>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+
+            {suggestions?.valor_minimo_interes != null &&
+              suggestions.valor_minimo_interes > 0 &&
+              (!form.valor_minimo_interes || form.valor_minimo_interes === 0) && (
+                <div className="space-y-1">
+                  <p className="text-xs font-medium text-muted-foreground">Valor mínimo de interés</p>
+                  <p className="text-sm">
+                    Actual: $0 → Sugerido: {formatCopAmount(suggestions.valor_minimo_interes)}
+                  </p>
+                </div>
+              )}
+          </div>
+
+          <div className="px-6 py-4 space-y-4 border-t border-border bg-background">
+            <p className="text-xs text-muted-foreground">
+              Al aplicar, los ítems sugeridos se añadirán a su perfil sin eliminar los existentes.
+              Recuerde guardar el perfil para que los cambios queden registrados.
+            </p>
+            <DialogFooter className="mt-0">
+              <Button type="button" variant="outline" onClick={closeSuggestModal}>
+                Descartar
+              </Button>
+              <Button type="button" onClick={handleApplySuggestions}>
+                Aplicar sugerencias
+              </Button>
+            </DialogFooter>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
