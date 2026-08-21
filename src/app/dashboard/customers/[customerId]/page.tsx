@@ -23,6 +23,7 @@ import { useAuth } from '@/contexts/auth-context';
 import { getUrgencyInfo } from '@/lib/date-utils';
 import { BidtoryRadarIcon } from '@/components/icons/BidtoryRadarIcon';
 import { Separator } from '@/components/ui/separator';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import apiClient from '@/lib/api-client';
 import { customerLogoImgSrc } from '@/lib/gcs-display';
 import { FinancialProfileWidget } from '@/components/customers/FinancialProfileWidget';
@@ -201,19 +202,30 @@ function ExperienceDocRow({
             canCreateAndEdit &&
             doc.financial_extraction_status === 'completed' &&
             onFillContracts && (
-            <Button
-              variant="ghost" size="sm"
-              className="h-7 text-xs text-muted-foreground hover:text-foreground gap-1"
-              onClick={handleFill}
-              disabled={isFilling}
-              title="Buscar contratos del RUP que no se extrajeron, sin rehacer los indicadores financieros"
-            >
-              {isFilling
-                ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                : <RefreshCw className="h-3.5 w-3.5" />
-              }
-              {isFilling ? 'Encolando…' : 'Actualizar contratos'}
-            </Button>
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="inline-flex">
+                    <Button
+                      variant="ghost" size="sm"
+                      className="h-7 text-xs text-muted-foreground hover:text-foreground gap-1"
+                      onClick={handleFill}
+                      disabled={isFilling}
+                    >
+                      {isFilling
+                        ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                        : <RefreshCw className="h-3.5 w-3.5" />
+                      }
+                      {isFilling ? 'Encolando…' : 'Actualizar contratos'}
+                    </Button>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent side="top" className="max-w-xs text-xs">
+                  Úselo si el número de contratos extraídos no coincide con el total declarado en su RUP.
+                  El proceso re-analiza el documento sin modificar sus indicadores financieros.
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
           )}
           {isExperience && doc.status !== 'pending' && canCreateAndEdit && (
             <Button
