@@ -59,7 +59,7 @@ function opportunityCardLeftBorderClass(
 function ExperienceDocRow({
   doc, isExperience, isLinked, extractedData, suggestedContract,
   canCreateAndEdit, canDelete,
-  getStatusIcon, onDelete, onFileChange, onReextract, fmtCOP, fmtDate,
+  getStatusIcon, onDelete, onFileChange, onReextract, onFillContracts, fmtCOP, fmtDate,
 }: {
   doc: CustomerDocument;
   isExperience: boolean;
@@ -72,12 +72,17 @@ function ExperienceDocRow({
   onDelete: () => void;
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onReextract: (docId: string) => Promise<void>;
+  onFillContracts?: (docId: string) => Promise<void>;
   fmtCOP: (v: number | null | undefined) => string;
   fmtDate: (iso: string | null | undefined) => string;
 }) {
   const [expanded, setExpanded] = useState(false);
   const [isReextracting, setIsReextracting] = useState(false);
+  const [isFilling, setIsFilling] = useState(false);
   const hasExtracted = isExperience && !!extractedData;
+  const isRup = doc.category === 'rup';
+  const extractedCount = doc.rup_contracts_count ?? null;
+  const declaredCount = doc.rup_total_contracts_declared ?? null;
 
   const handleReextract = async () => {
     setIsReextracting(true);
@@ -85,6 +90,16 @@ function ExperienceDocRow({
       await onReextract(doc.id);
     } finally {
       setIsReextracting(false);
+    }
+  };
+
+  const handleFill = async () => {
+    if (!onFillContracts) return;
+    setIsFilling(true);
+    try {
+      await onFillContracts(doc.id);
+    } finally {
+      setIsFilling(false);
     }
   };
 
@@ -123,9 +138,21 @@ function ExperienceDocRow({
                   </div>
                 )}
                 {doc.financial_extraction_status === 'completed' && (
-                  <Badge variant="outline" className="text-green-400 border-green-400/40 text-xs">
-                    ✓ Indicadores extraídos
-                  </Badge>
+                  <>
+                    <Badge variant="outline" className="text-green-400 border-green-400/40 text-xs">
+                      ✓ Indicadores extraídos
+                    </Badge>
+                    {isRup && extractedCount != null && declaredCount != null && (
+                      <span className="text-xs text-muted-foreground">
+                        {extractedCount} de {declaredCount} contratos
+                      </span>
+                    )}
+                    {isRup && extractedCount != null && declaredCount == null && (
+                      <span className="text-xs text-muted-foreground">
+                        {extractedCount} contratos extraídos
+                      </span>
+                    )}
+                  </>
                 )}
                 {doc.financial_extraction_status === 'failed' && (
                   <Badge
@@ -168,6 +195,24 @@ function ExperienceDocRow({
             >
               {expanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
               {expanded ? 'Ocultar datos' : 'Ver datos IA'}
+            </Button>
+          )}
+          {isRup &&
+            canCreateAndEdit &&
+            doc.financial_extraction_status === 'completed' &&
+            onFillContracts && (
+            <Button
+              variant="ghost" size="sm"
+              className="h-7 text-xs text-muted-foreground hover:text-foreground gap-1"
+              onClick={handleFill}
+              disabled={isFilling}
+              title="Buscar contratos del RUP que no se extrajeron, sin rehacer los indicadores financieros"
+            >
+              {isFilling
+                ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                : <RefreshCw className="h-3.5 w-3.5" />
+              }
+              {isFilling ? 'Encolando…' : 'Actualizar contratos'}
             </Button>
           )}
           {isExperience && doc.status !== 'pending' && canCreateAndEdit && (
@@ -560,6 +605,46 @@ export default function CustomerDetailPage() {
   
   const handleOpenDeleteConfirm = (doc: CustomerDocument) => {
     setDocToDelete(doc);
+  };
+
+  const handleFillRupContracts = async (docId: string) => {
+    try {
+      await apiClient.post('/request_rup_contract_fill', {
+        document_id: docId,
+        customer_id: customerId,
+      });
+      setCustomerDocuments(prev =>
+        prev.map(d =>
+          d.id === docId
+            ? {
+                ...d,
+                financial_extraction_status: 'queued',
+                extraction_progress: 55,
+                extraction_step: 'Actualización de contratos encolada…',
+              }
+            : d
+        )
+      );
+      toast({
+        title: 'Actualización encolada',
+        description:
+          'La IA buscará los contratos que faltaron. El progreso se actualizará en esta pantalla.',
+      });
+    } catch (err) {
+      const status = (err as { status?: number })?.status;
+      if (status === 409) {
+        toast({
+          title: 'Actualización en curso',
+          description: 'Ya hay una actualización de contratos en curso.',
+        });
+        return;
+      }
+      toast({
+        title: 'Error al actualizar contratos',
+        description: (err as Error).message,
+        variant: 'destructive',
+      });
+    }
   };
 
   const handleReextractCertification = async (docId: string) => {
@@ -1475,6 +1560,7 @@ const handleUploadGeneralDocument = async () => {
                                         onDelete={() => handleOpenDeleteConfirm(doc)}
                                         onFileChange={(e) => handleFileChange(doc.id, e)}
                                         onReextract={handleReextractCertification}
+                                        onFillContracts={key === 'rup' ? handleFillRupContracts : undefined}
                                         fmtCOP={fmtCOP}
                                         fmtDate={fmtDate}
                                       />

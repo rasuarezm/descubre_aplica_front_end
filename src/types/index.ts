@@ -249,6 +249,8 @@ export interface CustomerDocument {
   extraction_updated_at?: Date | null;
   extraction_error?: string | null;
   financial_profile_id?: number | null;
+  rup_contracts_count?: number | null;
+  rup_total_contracts_declared?: number | null;
 }
 
 export interface FinancialIndicators {
