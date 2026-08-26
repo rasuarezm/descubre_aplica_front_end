@@ -27,16 +27,23 @@ export default function LoginClient() {
   }
 
   return (
-    <div 
-      className="flex flex-col min-h-screen bg-background text-foreground"
-      style={{
-        backgroundImage: `url('/bg-login-applica.webp')`,
-        backgroundSize: 'cover',
-        backgroundPosition: 'center center',
-        backgroundRepeat: 'no-repeat',
-        backgroundAttachment: 'fixed'
-      }}
-    >
+    <div className="relative flex min-h-screen flex-col overflow-hidden bg-gradient-to-br from-background via-background to-secondary/5 text-foreground">
+      <Image
+        src="/logo-bidtory-radar-pos.svg"
+        alt=""
+        aria-hidden="true"
+        width={640}
+        height={640}
+        className="pointer-events-none absolute -left-32 -top-32 h-[420px] w-[420px] opacity-[0.04]"
+      />
+      <Image
+        src="/logo-bidtory-radar-pos.svg"
+        alt=""
+        aria-hidden="true"
+        width={480}
+        height={480}
+        className="pointer-events-none absolute -bottom-24 -right-24 h-[320px] w-[320px] opacity-[0.05]"
+      />
       <header className="sticky top-0 z-50 w-full bg-card/95 backdrop-blur-sm border-b border-border">
         <div className="container mx-auto flex h-14 items-center justify-between px-4 md:px-6">
           <Link href="/" className="flex items-center">

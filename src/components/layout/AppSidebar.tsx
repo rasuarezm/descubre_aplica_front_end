@@ -228,8 +228,11 @@ export function AppSidebar() {
             <SidebarMenuButton 
               isActive={pathname === customerZoneHref}
               tooltip={{content: "Mi Empresa", side: "right"}}
+              className="group-data-[collapsible=icon]:!p-0"
             >
-              <UserSquare className="h-5 w-5" />
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-secondary/10 text-secondary group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:w-8">
+                <UserSquare className="h-4 w-4" />
+              </span>
               <span className="group-data-[collapsible=icon]:hidden">Mi Empresa</span>
             </SidebarMenuButton>
           </Link>
@@ -240,10 +243,12 @@ export function AppSidebar() {
               onClick={() => toggleSubmenu("Oportunidades")}
               isActive={pathname.includes("/opportunities/")}
               tooltip={{content: "Oportunidades", side: "right"}}
-              className="justify-between"
+              className="justify-between group-data-[collapsible=icon]:!p-0"
             >
               <div className="flex items-center gap-2">
-                <Briefcase className="h-5 w-5" />
+                <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-secondary/10 text-secondary group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:w-8">
+                  <Briefcase className="h-4 w-4" />
+                </span>
                 <span className="group-data-[collapsible=icon]:hidden">Oportunidades</span>
               </div>
               {openSubmenus["Oportunidades"] ? <ChevronUp className="h-4 w-4 group-data-[collapsible=icon]:hidden" /> : <ChevronDown className="h-4 w-4 group-data-[collapsible=icon]:hidden" />}
@@ -298,8 +303,11 @@ export function AppSidebar() {
             <SidebarMenuButton 
               isActive={pathname.startsWith('/dashboard/settings')}
               tooltip={{content: "Configuración", side: "right"}}
+              className="group-data-[collapsible=icon]:!p-0"
             >
-              <Settings className="h-5 w-5" />
+              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-secondary/10 text-secondary group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:w-8">
+                <Settings className="h-4 w-4" />
+              </span>
               <span className="group-data-[collapsible=icon]:hidden">Configuración</span>
             </SidebarMenuButton>
           </Link>
@@ -340,10 +348,13 @@ export function AppSidebar() {
                     <Link href="/dashboard/descubre" passHref>
                       <SidebarMenuButton
                         isActive={isDescubreOportunidadesActive}
-                    tooltip={{ content: "Mis Oportunidades", side: "right" }}
+                        tooltip={{ content: "Mis Oportunidades", side: "right" }}
+                        className="group-data-[collapsible=icon]:!p-0"
                       >
-                        <Search className="h-5 w-5" />
-                    <span className="group-data-[collapsible=icon]:hidden">Mis Oportunidades</span>
+                        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-accent/10 text-accent group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:w-8">
+                          <Search className="h-4 w-4" />
+                        </span>
+                        <span className="group-data-[collapsible=icon]:hidden">Mis Oportunidades</span>
                       </SidebarMenuButton>
                     </Link>
                   </SidebarMenuItem>
@@ -352,8 +363,11 @@ export function AppSidebar() {
                       <SidebarMenuButton
                         isActive={pathname.startsWith("/dashboard/descubre/perfil")}
                         tooltip={{ content: "Mis Preferencias", side: "right" }}
+                        className="group-data-[collapsible=icon]:!p-0"
                       >
-                        <SlidersHorizontal className="h-5 w-5" />
+                        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-accent/10 text-accent group-data-[collapsible=icon]:h-8 group-data-[collapsible=icon]:w-8">
+                          <SlidersHorizontal className="h-4 w-4" />
+                        </span>
                         <span className="group-data-[collapsible=icon]:hidden">Mis Preferencias</span>
                       </SidebarMenuButton>
                     </Link>
