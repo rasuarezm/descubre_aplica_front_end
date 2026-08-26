@@ -309,16 +309,16 @@ function DescubreKpiRow({ kpis, fuentes }: { kpis: DescubreKpiSnapshot; fuentes:
       aria-label="Indicadores de Descubre"
       className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4"
     >
-      <div className="relative overflow-hidden rounded-xl bg-secondary px-4 py-4 text-secondary-foreground shadow-md">
+      <div className="relative overflow-hidden rounded-xl bg-accent px-4 py-4 text-accent-foreground shadow-md">
         <KpiHeroSparkline />
-        <p className="relative pr-20 text-[0.65rem] font-semibold uppercase tracking-wider text-secondary-foreground/90">
+        <p className="relative pr-20 text-[0.65rem] font-semibold uppercase tracking-wider text-accent-foreground/90">
           Oportunidades en vista
         </p>
         <p className="relative mt-1 font-headline text-3xl font-semibold tabular-nums">{nTotal}</p>
-        <p className="relative mt-2 text-xs leading-snug text-secondary-foreground/80">
+        <p className="relative mt-2 text-xs leading-snug text-accent-foreground/80">
           + {nToday} hoy · {nHigh} de alta afinidad
         </p>
-        <p className="relative mt-1 text-[10px] leading-snug text-secondary-foreground/65">
+        <p className="relative mt-1 text-[10px] leading-snug text-accent-foreground/65">
           Oportunidades activas de los últimos 60 días en esta pantalla.
         </p>
       </div>
@@ -439,10 +439,10 @@ function DescubreDashboardSkeleton() {
       </div>
 
       <section aria-hidden className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <div className="rounded-xl bg-secondary/80 px-4 py-4 shadow-md">
-          <Skeleton className="h-3 w-40 bg-secondary-foreground/25" />
-          <Skeleton className="mt-3 h-9 w-14 bg-secondary-foreground/30" />
-          <Skeleton className="mt-3 h-3 w-full max-w-[14rem] bg-secondary-foreground/20" />
+        <div className="rounded-xl bg-accent/80 px-4 py-4 shadow-md">
+          <Skeleton className="h-3 w-40 bg-accent-foreground/25" />
+          <Skeleton className="mt-3 h-9 w-14 bg-accent-foreground/30" />
+          <Skeleton className="mt-3 h-3 w-full max-w-[14rem] bg-accent-foreground/20" />
         </div>
         {[0, 1, 2].map((i) => (
           <div key={i} className="rounded-xl border border-border bg-card px-4 py-4 shadow-sm">
