@@ -1,6 +1,6 @@
 "use client";
 
-import Image from "next/image";
+import { BidtoryRadarMark } from "@/components/icons/BidtoryRadarMark";
 import { cn } from "@/lib/utils";
 
 const MODULE_CONFIG = {
@@ -13,14 +13,7 @@ export function ModuleBadge({ module }: { module: keyof typeof MODULE_CONFIG }) 
   return (
     <div className="mb-5">
       <div className={cn("flex items-center gap-2", cfg.textClass)}>
-        <Image
-          src="/logo-bidtory-radar-pos.svg"
-          alt=""
-          aria-hidden="true"
-          width={18}
-          height={18}
-          className="h-[18px] w-[18px]"
-        />
+        <BidtoryRadarMark className="h-[18px] w-[18px]" aria-hidden="true" />
         <span className="text-xs font-bold uppercase tracking-wider">{cfg.label}</span>
       </div>
       <div className={cn("mt-3 h-[3px] w-full rounded-full bg-gradient-to-r to-transparent", cfg.fromClass)} />
