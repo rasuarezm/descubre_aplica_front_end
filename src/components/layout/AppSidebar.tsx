@@ -28,6 +28,7 @@ import { Badge } from "@/components/ui/badge";
 import type { Customer, Opportunity } from "@/types";
 import { getUrgencyInfo, type UrgencyInfo } from "@/lib/date-utils";
 import { cn } from "@/lib/utils";
+import { BidtoryRadarMark } from "@/components/icons/BidtoryRadarMark";
 import apiClient from "@/lib/api-client";
 
 const allNavItemsForAdmin = [
@@ -416,13 +417,21 @@ export function AppSidebar() {
   return (
     <Sidebar collapsible="icon" variant="sidebar" side="left">
       <SidebarHeader className="p-4 items-center justify-center h-[6rem]">
-        <Link href="/dashboard" className="flex items-center justify-center text-sidebar-foreground h-full">
+        <Link
+          href="/dashboard"
+          aria-label="Bidtory"
+          className="flex h-full items-center justify-center text-sidebar-foreground"
+        >
           <Image
             src="/logo-bidtory-color.svg"
-            alt="Bidtory Logo"
+            alt=""
             width={128}
             height={40}
-            className="w-auto h-full max-h-10 group-data-[collapsible=icon]:w-full group-data-[collapsible=icon]:h-auto"
+            className="h-full w-auto max-h-10 group-data-[collapsible=icon]:hidden"
+          />
+          <BidtoryRadarMark
+            aria-hidden="true"
+            className="hidden h-8 w-8 text-accent group-data-[collapsible=icon]:block"
           />
         </Link>
       </SidebarHeader>

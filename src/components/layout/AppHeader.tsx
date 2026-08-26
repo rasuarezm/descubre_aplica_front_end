@@ -72,7 +72,7 @@ export function AppHeader() {
 
   return (
     <header className="sticky top-0 z-50 flex h-14 shrink-0 items-center gap-4 border-b border-border bg-card px-4 sm:static sm:h-14 sm:px-6">
-      <SidebarTrigger className="sm:hidden" />
+      <SidebarTrigger />
       <div className="ml-auto flex items-center gap-4">
          <DropdownMenu onOpenChange={(open) => open && handleBellClick()}>
           <DropdownMenuTrigger asChild>
