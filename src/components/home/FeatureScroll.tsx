@@ -35,7 +35,7 @@ const features: FeatureItem[] = [
     logo: '/logo-bidtory-descubre-pos.svg',
     title: 'Paso 1: Su radar de convocatorias',
     description:
-      'Bidtory Descubre monitorea SECOP II, fondos de fomento y cooperación internacional cada día. Gemini analiza cada convocatoria y la puntúa según el perfil de su empresa. Usted solo ve lo que realmente le aplica.',
+      'Bidtory Descubre monitorea SECOP II y Colombia Compra Eficiente cada día. Gemini analiza cada convocatoria y la puntúa según el perfil de su organización. Usted solo ve lo que realmente le aplica.',
     cta: {
       text: 'Conocer Descubre',
       href: '/suscripciones',
@@ -46,9 +46,9 @@ const features: FeatureItem[] = [
   {
     step: 2,
     logo: '/logo-bidtory-aplica-pos.svg',
-    title: 'Paso 2: Lleva al pipeline con un clic',
+    title: 'Paso 2: Pipeline de trabajo',
     description:
-      'Cuando Descubre identifica una oportunidad relevante, usted la lleva a Bidtory Aplica en un clic. Su pipeline Kanban muestra el estado de sus licitaciones activas —por ejemplo prospecto, en desarrollo, enviada y cierre del proceso— con una vista clara para todo el equipo.',
+      'Cuando una oportunidad es relevante, su equipo la gestiona en Bidtory Aplica. El pipeline Kanban muestra el estado de las licitaciones activas —por ejemplo prospecto, en desarrollo, enviada y cierre del proceso— con una vista clara para todo el equipo.',
     cta: null,
     image: '/2-Bidtory%20Aplica-PipelinePasos.webp',
   },
@@ -57,7 +57,7 @@ const features: FeatureItem[] = [
     logo: '/logo-bidtory-aplica-pos.svg',
     title: 'Paso 3: Análisis IA del pliego',
     description:
-      'En la pestaña Análisis IA, Bidtory resume el pliego y los requisitos habilitantes, y en una segunda vista muestra el diagnóstico de elegibilidad frente al perfil de su empresa y el checklist de documentos sugerido. Use las vistas 1 y 2 debajo de la imagen para recorrer ambas pantallas con texto legible.',
+      'En la pestaña Análisis IA, Bidtory resume el pliego y los requisitos habilitantes, y en una segunda vista muestra el diagnóstico de elegibilidad frente al perfil de su organización y el checklist de documentos sugerido. Use las vistas 1 y 2 debajo de la imagen para recorrer ambas pantallas con texto legible.',
     cta: null,
     images: [
       '/2-Bidtory%20Aplica-AnalisisAi-1.webp',

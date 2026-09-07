@@ -5,6 +5,7 @@ import { usePathname, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import Script from 'next/script';
 import { getCookieConsentValue } from '@/components/CookieConsent';
+import { captureUtmFromSearchParams, trackPurocontenidoInboundIfNeeded } from '@/lib/analytics';
 
 const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GOOGLE_ANALYTICS_ID;
 
@@ -19,11 +20,17 @@ export function Analytics() {
   }, []);
 
   useEffect(() => {
+    captureUtmFromSearchParams(searchParams);
+  }, [searchParams]);
+
+  useEffect(() => {
     if (!consentGiven || !GA_MEASUREMENT_ID || typeof window.gtag !== 'function') {
       return;
     }
 
-    const url = pathname + searchParams.toString();
+    trackPurocontenidoInboundIfNeeded();
+    const query = searchParams.toString();
+    const url = query ? `${pathname}?${query}` : pathname;
     window.gtag('config', GA_MEASUREMENT_ID, {
       page_path: url,
     });
@@ -38,6 +45,9 @@ export function Analytics() {
       <Script
         strategy="afterInteractive"
         src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
+        onLoad={() => {
+          trackPurocontenidoInboundIfNeeded();
+        }}
       />
       <Script
         id="google-analytics"

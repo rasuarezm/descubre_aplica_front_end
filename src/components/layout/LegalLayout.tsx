@@ -1,21 +1,28 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
+import {
+  PuroContenidoFooterClaim,
+  PuroContenidoHeaderMark,
+} from "@/components/layout/PuroContenidoEndorsement";
 
 export function LegalLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <header className="sticky top-0 z-50 w-full bg-white border-b border-border shadow-sm">
         <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
-          <Link href="/" className="flex items-center gap-2">
-            <Image
-              src="/logo-bidtory-838w.svg"
-              alt="Bidtory - Licitaciones con IA"
-              width={140}
-              height={40}
-              className="h-8 w-auto"
-            />
-          </Link>
+          <div className="flex min-w-0 items-center gap-2">
+            <Link href="/" className="flex items-center">
+              <Image
+                src="/logo-bidtory-838w.svg"
+                alt="Bidtory - Licitaciones con IA"
+                width={140}
+                height={40}
+                className="h-8 w-auto"
+              />
+            </Link>
+            <PuroContenidoHeaderMark />
+          </div>
           <nav className="hidden md:flex items-center gap-6">
             <Link
               href="/suscripciones"
@@ -46,19 +53,22 @@ export function LegalLayout({ children }: { children: React.ReactNode }) {
       <footer className="w-full border-t border-border py-8 bg-[#E5E7EB] mt-auto">
         <div className="container mx-auto px-4 md:px-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-4">
-              <Image
-                src="/logo-bidtory-838w.svg"
-                alt="Bidtory"
-                width={120}
-                height={34}
-                className="h-8 w-auto opacity-80"
-              />
-              <p className="text-sm text-muted-foreground">
-                © {new Date().getFullYear()} Puro Contenido SAS. Todos los
-                derechos reservados. Bidtory® es una marca registrada de Puro
-                Contenido SAS.
-              </p>
+            <div className="flex max-w-xl flex-col items-center gap-2 md:max-w-2xl md:items-start">
+              <div className="flex items-center gap-4">
+                <Image
+                  src="/logo-bidtory-838w.svg"
+                  alt="Bidtory"
+                  width={120}
+                  height={34}
+                  className="h-8 w-auto opacity-80"
+                />
+                <p className="text-sm text-muted-foreground">
+                  © {new Date().getFullYear()} Puro Contenido SAS. Todos los
+                  derechos reservados. Bidtory® es una marca registrada de Puro
+                  Contenido SAS.
+                </p>
+              </div>
+              <PuroContenidoFooterClaim />
             </div>
             <div className="flex gap-6 text-sm">
               <Link

@@ -35,11 +35,12 @@ const PLANS: Plan[] = [
     popular: false,
     features: [
       "Bidtory Descubre incluido",
-      "Contratación pública (SECOP II)",
+      "Todas las fuentes disponibles",
+      "Hasta 5 fuentes monitoreadas",
       "Scoring IA básico",
-      "Alertas diarias por email",
+      "Alertas diarias (email)",
       "CTA de apoyo Puro Contenido",
-      "1 usuario · 5 palabras clave",
+      "1 destinatario de alertas · 5 palabras clave",
       "Soporte por email",
     ],
     href: "/registro?plan=esencial",
@@ -49,16 +50,15 @@ const PLANS: Plan[] = [
     name: "Profesional",
     price: "$349.000",
     period: "COP / mes",
-    tagline: "El más popular",
+    tagline: "Para postular en serio",
     popular: true,
     badge: "Más popular",
     features: [
       "Todo lo de Esencial, más:",
       "Bidtory Aplica incluido",
-      "Fondos de fomento nacionales",
-      "Scoring IA completo con Gemini",
-      "Botón Llevar al pipeline (próximamente)",
-      "Hasta 5 usuarios · 20 palabras clave",
+      "Hasta 20 fuentes monitoreadas",
+      "Scoring IA completo",
+      "Hasta 5 destinatarios de alertas · 20 palabras clave",
       "Soporte prioritario",
     ],
     href: "/registro?plan=profesional",
@@ -68,13 +68,13 @@ const PLANS: Plan[] = [
     name: "Experto",
     price: "$649.000",
     period: "COP / mes",
-    tagline: "Para equipos de licitaciones",
+    tagline: "Para equipos",
     popular: false,
     features: [
       "Todo lo de Profesional, más:",
-      "Cooperación internacional y fondos privados",
-      "Alertas inmediatas (sin esperar el batch diario)",
-      "Usuarios ilimitados · Palabras clave sin límite",
+      "Fuentes monitoreadas sin límite",
+      "Alertas inmediatas (email)",
+      "Destinatarios de alertas sin límite · Palabras clave sin límite",
       "Soporte por WhatsApp",
     ],
     href: "/registro?plan=experto",
@@ -110,30 +110,18 @@ const COMPARISON_ROWS: ComparisonRow[] = [
     profesional: true,
     experto: true,
   },
-  { category: "Fuentes de convocatorias" },
+  { category: "Fuentes" },
   {
-    feature: "Contratación pública (SECOP II)",
+    feature: "Todas las fuentes disponibles",
     esencial: true,
     profesional: true,
     experto: true,
   },
   {
-    feature: "Fondos de fomento nacionales",
-    esencial: false,
-    profesional: true,
-    experto: true,
-  },
-  {
-    feature: "Cooperación internacional",
-    esencial: false,
-    profesional: false,
-    experto: true,
-  },
-  {
-    feature: "Fondos privados y fundaciones",
-    esencial: false,
-    profesional: false,
-    experto: true,
+    feature: "Fuentes monitoreadas",
+    esencial: "Hasta 5",
+    profesional: "Hasta 20",
+    experto: "Sin límite",
   },
   { category: "Funcionalidades" },
   {
@@ -143,10 +131,10 @@ const COMPARISON_ROWS: ComparisonRow[] = [
     experto: "Completo",
   },
   {
-    feature: "Alertas por email",
-    esencial: "Diarias",
-    profesional: "Diarias",
-    experto: "Inmediatas",
+    feature: "Alertas",
+    esencial: "Diarias (email)",
+    profesional: "Diarias (email)",
+    experto: "Inmediatas (email)",
   },
   {
     feature: "CTA apoyo Puro Contenido",
@@ -154,18 +142,12 @@ const COMPARISON_ROWS: ComparisonRow[] = [
     profesional: true,
     experto: true,
   },
-  {
-    feature: "Llevar al pipeline",
-    esencial: false,
-    profesional: "Próximamente",
-    experto: "Próximamente",
-  },
   { category: "Límites de uso" },
   {
-    feature: "Usuarios",
+    feature: "Destinatarios de alertas",
     esencial: "1",
     profesional: "Hasta 5",
-    experto: "Ilimitados",
+    experto: "Sin límite",
   },
   {
     feature: "Palabras clave",
@@ -195,10 +177,6 @@ const FAQ_ITEMS = [
     a: "Sí. Si cancela antes del próximo ciclo, no se genera ningún cargo adicional. Su acceso continúa hasta el final del período pagado.",
   },
   {
-    q: "¿Qué es el botón 'Llevar al pipeline'?",
-    a: "Es una función de integración entre Bidtory Descubre y Bidtory Aplica: con un clic, una licitación pasa directamente al pipeline de trabajo en Aplica. Disponible próximamente para planes Profesional y Experto.",
-  },
-  {
     q: "¿Qué incluye el CTA de apoyo Puro Contenido?",
     a: "En cada convocatoria con score relevante aparece un botón para hablar directamente con el equipo consultor de Puro Contenido SAS. No tiene costo adicional: es un canal para derivar a consultoría cuando lo requiera.",
   },
@@ -220,10 +198,6 @@ function PlanFeatureCross() {
   );
 }
 
-function featureLineShowsProntoBadge(text: string) {
-  return /próximamente/i.test(text);
-}
-
 function ComparisonCell({ value }: { value: boolean | string }) {
   if (value === true) {
     return (
@@ -236,16 +210,6 @@ function ComparisonCell({ value }: { value: boolean | string }) {
     return (
       <div className="flex justify-center">
         <PlanFeatureCross />
-      </div>
-    );
-  }
-  if (value === "Próximamente") {
-    return (
-      <div className="flex flex-wrap items-center justify-center gap-1">
-        <span className="text-sm">Próximamente</span>
-        <span className="rounded-full bg-muted px-1.5 py-0.5 text-xs text-muted-foreground">
-          Pronto
-        </span>
       </div>
     );
   }
@@ -262,8 +226,8 @@ export default function SuscripcionesPage() {
             Planes Bidtory
           </h1>
           <p className="text-lg text-muted-foreground">
-            Encuentre las convocatorias que su empresa puede ganar. Elija el plan
-            que mejor se adapta a su etapa.
+            Todas las fuentes, en todos los planes. Elija el tamaño que se
+            ajusta a su operación.
           </p>
         </div>
 
@@ -305,14 +269,7 @@ export default function SuscripcionesPage() {
                     {plan.features.map((line, i) => (
                       <li key={i} className="flex items-start gap-2 text-sm text-foreground">
                         <PlanFeatureCheck />
-                        <span>
-                          {line}
-                          {featureLineShowsProntoBadge(line) ? (
-                            <span className="ml-1.5 rounded-full bg-muted px-1.5 py-0.5 align-middle text-[10px] font-medium text-muted-foreground">
-                              Pronto
-                            </span>
-                          ) : null}
-                        </span>
+                        <span>{line}</span>
                       </li>
                     ))}
                   </ul>
@@ -429,7 +386,7 @@ export default function SuscripcionesPage() {
             ¿Tiene dudas sobre qué plan elegir?
           </h2>
           <p className="mt-3 text-muted-foreground">
-            Escríbanos y le ayudaremos a encontrar el plan correcto para su empresa.
+            Escríbanos y le ayudaremos a encontrar el plan correcto para su organización.
           </p>
           <Button asChild variant="outline" className="mt-6">
             <a href="https://wa.me/573208691817?text=Hola%2C%20quiero%20conocer%20más%20sobre%20los%20planes%20de%20Bidtory">

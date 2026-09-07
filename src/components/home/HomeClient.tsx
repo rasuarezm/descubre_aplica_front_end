@@ -6,6 +6,10 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FeatureScroll } from "@/components/home/FeatureScroll";
+import {
+  PuroContenidoFooterClaim,
+  PuroContenidoHeaderMark,
+} from "@/components/layout/PuroContenidoEndorsement";
 import { ArrowRight, Menu, X, Zap, ChevronRight, Check } from "lucide-react";
 
 export function HomeClient() {
@@ -34,15 +38,18 @@ export function HomeClient() {
     <div className="flex min-h-screen flex-col bg-background text-foreground">
       <header className="sticky top-0 z-50 w-full border-b border-border bg-background">
         <div className="container mx-auto flex h-16 items-center justify-between gap-2 px-4 md:px-6">
-          <Link href="/" className="flex min-w-0 shrink items-center gap-2">
-            <Image
-              src="/logo-bidtory-838w.svg"
-              alt="Bidtory - Licitaciones con IA"
-              width={140}
-              height={40}
-              className="h-8 w-auto"
-            />
-          </Link>
+          <div className="flex min-w-0 shrink items-center gap-2">
+            <Link href="/" className="flex min-w-0 shrink items-center">
+              <Image
+                src="/logo-bidtory-838w.svg"
+                alt="Bidtory - Licitaciones con IA"
+                width={140}
+                height={40}
+                className="h-8 w-auto"
+              />
+            </Link>
+            <PuroContenidoHeaderMark />
+          </div>
           <nav
             className="hidden items-center gap-6 md:flex"
             aria-label="Secciones de la página"
@@ -149,16 +156,16 @@ export function HomeClient() {
               <div className="order-1 flex flex-col pt-1 lg:order-none">
                 <span className="mb-7 inline-flex items-center gap-1.5 self-start rounded-full border border-accent/30 bg-accent/8 px-3 py-1 text-xs font-medium text-accent">
                   <Zap className="h-3 w-3" />
-                  Contratación pública · Fondos de fomento · Colombia
+                  Contratación pública · Colombia
                 </span>
                 <h1 className="font-headline text-5xl font-bold leading-[1.05] tracking-tight text-foreground md:text-6xl lg:text-[4.5rem]">
                   Su radar inteligente para{" "}
                   <span className="text-accent">licitaciones estratégicas.</span>
                 </h1>
                 <p className="mt-6 max-w-lg text-lg leading-relaxed text-muted-foreground">
-                  La suite que monitorea SECOP II con IA, prioriza lo que
-                  realmente aplica a su empresa, y lleva cada proceso del
-                  hallazgo a la propuesta — sin hojas de cálculo dispersas.
+                  La suite que monitorea la contratación pública con IA, prioriza
+                  lo que realmente aplica a su organización y lleva cada proceso
+                  del hallazgo a la propuesta, sin hojas de cálculo dispersas.
                 </p>
 
                 <div className="mt-8 flex flex-wrap items-center gap-4">
@@ -189,8 +196,8 @@ export function HomeClient() {
 
                 <ul className="mt-10 flex flex-col gap-3 border-t border-border pt-7">
                   {[
-                    "SECOP II monitoreado todos los días (más fuentes según su plan)",
-                    "Cada oportunidad puntuada por IA según el perfil de su empresa",
+                    "Todas las fuentes disponibles, en todos los planes",
+                    "Cada oportunidad puntuada por IA según el perfil de su organización",
                     "De la alerta a la propuesta, en un solo flujo de trabajo",
                   ].map((text) => (
                     <li
@@ -276,12 +283,7 @@ export function HomeClient() {
               Fuentes de datos oficiales e integraciones
             </p>
             <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-6 opacity-60 grayscale transition-[opacity,filter] duration-500 hover:opacity-100 hover:grayscale-0 md:gap-x-14 md:gap-y-8">
-              {[
-                "SECOP II",
-                "Colombia Compra Eficiente",
-                "Fondos de fomento",
-                "Cooperación internacional",
-              ].map((name) => (
+              {["SECOP II", "Colombia Compra Eficiente"].map((name) => (
                 <span
                   key={name}
                   className="font-headline text-center text-base font-semibold tracking-tight text-foreground/85 md:text-lg"
@@ -290,6 +292,9 @@ export function HomeClient() {
                 </span>
               ))}
             </div>
+            <p className="mt-6 text-center text-sm text-muted-foreground">
+              Todas las fuentes disponibles se incluyen en todos los planes.
+            </p>
           </div>
         </section>
 
@@ -325,8 +330,8 @@ export function HomeClient() {
                 </p>
                 <ul className="mb-6 space-y-2.5">
                   {[
-                    "Monitoreo diario de SECOP II (más fuentes según su plan)",
-                    "Priorización con IA según el perfil de su empresa",
+                    "Monitoreo diario de todas las fuentes disponibles",
+                    "Priorización con IA según el perfil de su organización",
                     "Alertas para no perder plazos ni cambios relevantes",
                   ].map((text) => (
                     <li key={text} className="flex items-start gap-2.5 text-sm">
@@ -423,16 +428,16 @@ export function HomeClient() {
               </span>
               <span className="mt-1.5 max-w-[220px] text-sm leading-snug text-muted-foreground">
                 Para orientar su perfil y revisar oportunidades alineadas con
-                su empresa.
+                su organización.
               </span>
             </div>
             <div className="flex flex-col items-center py-6 text-center md:py-0 md:px-10">
               <span className="text-3xl font-semibold tracking-tight text-foreground md:text-4xl">
-                Varias fuentes
+                Contratación pública
               </span>
               <span className="mt-1.5 max-w-[240px] text-sm leading-snug text-muted-foreground">
-                Contratación pública, fondos de fomento y cooperación
-                internacional en un solo flujo.
+                SECOP II y Colombia Compra Eficiente, las mismas fuentes en
+                todos los planes.
               </span>
             </div>
           </div>
@@ -486,11 +491,14 @@ export function HomeClient() {
                 height={34}
                 className="h-8 w-auto shrink-0 opacity-80"
               />
-              <p className="text-center text-sm text-muted-foreground md:text-left">
-                © {new Date().getFullYear()} Puro Contenido SAS. Todos los
-                derechos reservados. Bidtory® es una marca registrada de Puro
-                Contenido SAS.
-              </p>
+              <div className="flex flex-col items-center gap-2 md:items-start">
+                <p className="text-center text-sm text-muted-foreground md:text-left">
+                  © {new Date().getFullYear()} Puro Contenido SAS. Todos los
+                  derechos reservados. Bidtory® es una marca registrada de Puro
+                  Contenido SAS.
+                </p>
+                <PuroContenidoFooterClaim />
+              </div>
             </div>
             <nav
               className="flex flex-col items-center gap-3 text-sm sm:flex-row sm:flex-wrap sm:justify-center md:justify-end md:gap-x-6 md:gap-y-2"

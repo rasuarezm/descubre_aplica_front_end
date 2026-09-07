@@ -18,6 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Lock } from "lucide-react";
 import descubreApiClient from "@/lib/descubre-api-client";
+import { trackEvent } from "@/lib/analytics";
 
 const RECAPTCHA_SITE_KEY =
   process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY ||
@@ -258,6 +259,7 @@ export function RegistroClient() {
         title: "¡Bienvenido a Bidtory!",
         description: data.message || "Su cuenta ha sido creada exitosamente.",
       });
+      trackEvent("trial_start", { plan_elegido: planElegido });
       router.push("/dashboard/descubre");
     } catch (err) {
       let message = "Error en el proceso de registro.";

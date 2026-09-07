@@ -1,7 +1,7 @@
 import type { MetadataRoute } from 'next'
 
 // NOTE: Update this URL to match your domain
-const baseUrl = 'https://www.purocontenido.com';
+const baseUrl = 'https://bidtory.com';
 
 export default function sitemap(): MetadataRoute.Sitemap {
   return [

@@ -4,7 +4,9 @@ Documento de **una página** para alinear copy, diseño y producto antes de iter
 
 **Audiencia:** diseño, marketing y quien defina el home público (`bidtory_portal_front_end`).
 
-**Última revisión sugerida:** 21 ago 2026 — hero alineado a planes reales (Esencial = SECOP II; Aplica/fondos desde Profesional); Bidtory® SIC (Colombia) en pies/Términos, no en H1.
+**Última revisión sugerida:** 7 sep 2026 — **subordinado a `cambios-bidtory.md` v1.3** (raíz de `/dev`). Si este brief y la spec GTM discrepan, **gana `cambios-bidtory.md`**.
+
+Cambio de estrategia vs 21 ago: las fuentes *disponibles* van en **todos** los planes (no “más fuentes según su plan”). En Fase 1 el radar vivo es contratación pública (SECOP II · CCE); **no listar** fomento ni cooperación hasta que una fuente no-SECOP esté en el dashboard de un usuario Esencial. Aplica sigue desde Profesional. “Llevar al pipeline” no se vende como hecho ni como “próximamente”.
 
 ---
 
@@ -12,7 +14,7 @@ Documento de **una página** para alinear copy, diseño y producto antes de iter
 
 Use solo bullets que el producto o el roadmap cercano respalden. Lista base alineada con el estado actual del portal:
 
-- **Bidtory Descubre:** monitoreo de convocatorias (p. ej. SECOP II y otras fuentes que el producto cubra), con **priorización / puntuación** según el perfil de la empresa, para reducir ruido frente a buscar a mano.
+- **Bidtory Descubre:** monitoreo de convocatorias **disponibles** (hoy SECOP II / Colombia Compra Eficiente), con **priorización / puntuación** según el perfil de la organización, las mismas fuentes en todos los planes.
 - **Bidtory Aplica:** espacio de trabajo por cliente — **pipeline** de oportunidades, **análisis asistido del pliego**, **checklist y documentos** de la propuesta, **bitácora** con trazabilidad entre áreas (jurídica, gestión, formulación).
 - **Flujo integrado en narrativa:** de la detección de una oportunidad relevante a la preparación y seguimiento interno, sin prometer resultados de adjudicación.
 - **Acceso:** registro, planes/suscripciones e inicio de sesión según lo que el sitio publique hoy.
@@ -68,8 +70,9 @@ Antes de publicar una nueva propuesta de home:
 - [ ] Los pasos del flujo (1–5 o bento) reflejan **Descubre → Aplica** sin añadir módulos fantasma.
 - [ ] Tono **usted** y español consistente en CTAs.
 - [ ] Un CTA primario acordado con negocio.
-- [ ] Precio de entrada (Esencial) no promete fondos de fomento ni Aplica; “Llevar al pipeline” no se vende como hecho.
+- [ ] Precio de entrada (Esencial) no promete Aplica ni fuentes que **aún no están vivas** (fomento/cooperación); “Llevar al pipeline” no se vende como hecho ni como “próximamente”.
 - [ ] Bidtory® (SIC, Colombia) solo en pies/Términos; no en H1 ni logos.
+- [ ] Copy GTM Fase 1 alineado a **`cambios-bidtory.md`** (franja/pill sin fomento; “todas las fuentes disponibles”, no “según su plan”).
 
 ---
 
