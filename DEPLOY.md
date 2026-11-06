@@ -53,6 +53,104 @@ Si un despliegue llegara al servicio protegido por error, la revisión a la que 
 - **`firebase deploy` (solo Hosting)** sube `public/` y las reglas; **no construye ni actualiza** la imagen de Cloud Run del Next.js.
 - El **SSR** vive en **Cloud Run**: hay que desplegarlo con **`gcloud run deploy --source`**, que ejecuta el build en Google Cloud Build (incluye `npm run build` → genera `.next`).
 
+## Variables del build (`NEXT_PUBLIC_*`)
+
+Next.js incrusta las variables `NEXT_PUBLIC_*` en el JavaScript durante `next build`. Definirlas solo en el runtime de Cloud Run no cambia un JavaScript ya construido. `.env` y `.env.local` no viajan en el source (`.gcloudignore`), así que hay que pasarlas al build de forma explícita.
+
+La lista completa, con valores ficticios, está en `build-env.example.yaml`. Esos valores sirven para comprobar la receta, nunca para publicar. Todas son públicas: acaban en el navegador. Ningún secreto debe llevar el prefijo `NEXT_PUBLIC_`.
+
+### Lista completa
+
+La columna «Si falta en el build» se midió quitando cada variable por separado, con las demás presentes (6-nov-2026). **Un build que pasa no prueba que la configuración esté completa:** seis de las nueve obligatorias no lo rompen. Por eso existe el paso 1 de «Comprobar la receta». El efecto en el navegador no se midió.
+
+| Variable | Obligatoria | Si falta en el build | Uso |
+|---|---|---|---|
+| `NEXT_PUBLIC_FIREBASE_API_KEY` | Sí | **Falla** (`auth/invalid-api-key`) | Firebase Auth y Firestore |
+| `NEXT_PUBLIC_API_BASE_URL` | Sí | **Falla** (prerender de `/`) | Base de Aplica. Valor esperado: `/api-proxy` |
+| `NEXT_PUBLIC_DESCUBRE_API_URL` | Sí | **Falla** (prerender de `/registro`) | Base de Descubre. Valor esperado: `/api-descubre-proxy` |
+| `NEXT_PUBLIC_FIREBASE_PROJECT_ID` | Sí | Pasa sin avisar | Proyecto de Firebase de Auth y Firestore |
+| `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN` | Sí | Pasa sin avisar | Configuración web de Firebase |
+| `NEXT_PUBLIC_FIREBASE_APP_ID` | Sí | Pasa sin avisar | Configuración web de Firebase |
+| `NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET` | Sí | Pasa sin avisar | Configuración web de Firebase; hoy sin consumidor directo |
+| `NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID` | Sí | Pasa sin avisar | Configuración web de Firebase; hoy sin consumidor directo |
+| `NEXT_PUBLIC_RECAPTCHA_SITE_KEY` | Sí | Pasa sin avisar | Clave pública de reCAPTCHA. Sin ella, `/registro` usa la clave escrita en el código y `/contact` el texto `do-not-use-this-key` |
+| `NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID` | No | Pasa | Configuración web de Firebase; el SDK de Analytics no se usa |
+| `NEXT_PUBLIC_GOOGLE_ANALYTICS_ID` | No | Pasa | Sin ella no se carga Google Analytics |
+| `NEXT_PUBLIC_DOCUMENTS_BUCKET_NAME` | No | Pasa | Por defecto `aplica-documents-pc-sitioweb`. Debe coincidir con `DOCUMENTS_BUCKET_NAME` del backend |
+
+Las bases de API deben ser las rutas relativas de los proxies: una URL absoluta saltaría el proxy y dependería de `connect-src` en `next.config.ts`.
+
+### Lo que no va en el build
+
+| Variable | Dónde va |
+|---|---|
+| `APLICA_GATEWAY_URL`, `DESCUBRE_GATEWAY_URL` | Runtime del servidor: las leen los proxies, no el navegador. Son opcionales: sin ellas se usan los gateways escritos en cada `route.ts` |
+| Clave **secreta** de reCAPTCHA | Solo en el backend, en Secret Manager |
+| `GEMINI_API_KEY` | No se usa en el build ni en el portal: solo la lee Genkit en `src/ai`, que la aplicación no importa |
+| `NEXT_PUBLIC_CF_BASE_URL` | No definirla: aparece en `.env.local` pero ningún código la usa |
+
+### Dónde se definen
+
+**Cloud Run (`gcloud run deploy --source`, la arquitectura actual).** Sin `Dockerfile`, el build usa buildpacks. Copia `build-env.example.yaml` fuera del repositorio con los valores del destino propio y pásalo con `--build-env-vars-file`. `--set-env-vars` define solo el runtime. Estos flags no existen para despliegues desde imagen. Un `Dockerfile` en el repositorio tendría prioridad sobre buildpacks y habría que revisar esta receta.
+
+```bash
+gcloud run deploy SERVICIO_DE_DESTINO \
+  --source . \
+  --region REGION_DE_DESTINO \
+  --project PROYECTO_DE_DESTINO \
+  --build-env-vars-file RUTA/build-env.yaml \
+  --set-env-vars APLICA_GATEWAY_URL=URL_APLICA,DESCUBRE_GATEWAY_URL=URL_DESCUBRE
+```
+
+Este comando queda sujeto al bloqueo de B08: no lo ejecutes hasta cumplir «Condiciones para levantar el bloqueo». `--build-env-vars-file` sustituye todas las variables de build anteriores, así que el archivo debe estar completo.
+
+**App Hosting (solo si el destino propio se crea así; hoy no hay backend declarado).** Las variables van en la lista `env` de `apphosting.yaml`, o de `apphosting.<entorno>.yaml`, que van versionados: admiten estos valores públicos, no secretos. La consola de Firebase tiene prioridad sobre esos archivos. Sin `availability`, una variable existe en build y en runtime.
+
+```yaml
+env:
+  - variable: NEXT_PUBLIC_FIREBASE_API_KEY
+    value: VALOR_DEL_DESTINO
+    availability:
+      - BUILD
+  # ...una entrada igual por cada variable obligatoria
+  - variable: APLICA_GATEWAY_URL
+    value: URL_APLICA
+    availability:
+      - RUNTIME
+```
+
+No añadas a `apphosting.yaml` los valores ficticios: ese archivo se usaría en un despliegue real.
+
+### Comprobar la receta
+
+**1. Comprobar el archivo real.** Los dos comandos no deben imprimir ninguna línea: la primera detecta variables que faltan y la segunda, valores ficticios olvidados.
+
+```bash
+for name in $(sed -nE 's/^([A-Z_]+): .*/\1/p' build-env.example.yaml); do grep -qE "^$name: \".+\"$" RUTA/build-env.yaml || echo "FALTA $name"; done
+```
+
+```bash
+grep -nE 'fictici|FICTICIO|000000000000' RUTA/build-env.yaml
+```
+
+**2. Comprobar que el código construye sin `.env` y sin red (macOS).** Parte de una copia limpia del último commit y de un entorno vacío, y bloquea la red, incluida la resolución de nombres. Debe terminar con salida 0 y el último `grep` debe listar archivos: es la prueba de que los valores quedaron incrustados.
+
+```bash
+DIR="$(mktemp -d)"
+git archive HEAD | tar -x -C "$DIR"
+ln -s "$PWD/node_modules" "$DIR/node_modules"
+cd "$DIR"
+env -i PATH="$PATH" HOME="$HOME" NEXT_TELEMETRY_DISABLED=1 \
+  $(sed -nE 's/^([A-Z_]+): "(.*)"$/\1=\2/p' build-env.example.yaml) \
+  sandbox-exec -p '(version 1)(allow default)(deny network-outbound (remote ip))(deny network-outbound (remote unix-socket (path-literal "/private/var/run/mDNSResponder")))' \
+  npm run build
+grep -rl 'ficticio-project-id' .next/static
+```
+
+Ese build es solo una comprobación: sus valores ficticios no sirven para publicar.
+
+Estado a 6-nov-2026: el paso 2 pasa. **Sin comprobar:** un build real en Cloud Build o en App Hosting. Nunca se ejecutó ninguno de los dos, porque el despliegue sigue bloqueado. Tras el primer build real, confirma que el `projectId` del destino aparece en el JavaScript servido.
+
 ## Deploy del frontend SSR (código Next.js, `src/`, etc.)
 
 Desde la raíz del proyecto frontend (`procurement_portal_front_end`):
@@ -112,7 +210,7 @@ gcloud run services update-traffic ssrprocurementportalapp \
 
 - **`.firebaseignore`**: si existe, Firebase CLI lo usa **en lugar de** `.gitignore` al subir archivos. Así evitas que reglas como `/.next/` en `.gitignore` impidan incluir el build cuando haga falta. No listes `.next` aquí si tu flujo depende de subirla.
 - **`.gcloudignore`**: usado por herramientas `gcloud` al empaquetar código; mismo criterio: no ignores `.next` si debe formar parte del contexto de build.
-- **`.env` y `.env.local` nunca se suben**, tampoco sus copias en subcarpetas: `.gcloudignore` los excluye. Un build con `gcloud run deploy --source` no los recibe, así que las variables `NEXT_PUBLIC_*` deben llegarle por otra vía.
+- **`.env` y `.env.local` nunca se suben**, tampoco sus copias en subcarpetas: `.gcloudignore` los excluye. Un build con `gcloud run deploy --source` no los recibe: ver «Variables del build».
 
 ## Referencias útiles
 

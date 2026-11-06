@@ -1,0 +1,18 @@
+# Variables NEXT_PUBLIC_* del build. Valores FICTICIOS: sirven para comprobar la receta, no para publicar.
+# Para un build real, copia este archivo fuera del repositorio y pon los valores del destino propio.
+# Ver «Variables del build» en DEPLOY.md. Todos los valores van entre comillas: gcloud los exige como texto.
+
+NEXT_PUBLIC_FIREBASE_API_KEY: "ficticia-api-key"
+NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN: "ficticio.firebaseapp.test"
+NEXT_PUBLIC_FIREBASE_PROJECT_ID: "ficticio-project-id"
+NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET: "ficticio.appspot.test"
+NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID: "000000000000"
+NEXT_PUBLIC_FIREBASE_APP_ID: "1:000000000000:web:ficticia"
+NEXT_PUBLIC_API_BASE_URL: "/api-proxy"
+NEXT_PUBLIC_DESCUBRE_API_URL: "/api-descubre-proxy"
+NEXT_PUBLIC_RECAPTCHA_SITE_KEY: "ficticia-recaptcha-site-key"
+
+# Opcionales: descomenta solo las que el destino use.
+# NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID: "G-FICTICIO"
+# NEXT_PUBLIC_GOOGLE_ANALYTICS_ID: "G-FICTICIO"
+# NEXT_PUBLIC_DOCUMENTS_BUCKET_NAME: "ficticio-documents"
