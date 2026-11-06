@@ -230,10 +230,11 @@ export function ProposalDocumentsSection({ userProfile, opportunity, proposalDoc
     }
   };
   
-  const canChangeToFinalStatus = (status: string) => {
+  // De un estado final solo sale quien puede ponerlo: el backend responde 403 a los demás.
+  const canEnterOrLeaveStatus = (status: string | undefined) => {
       if (canManage) return true;
       const finalStatuses = ['aprobado', 'aprobado por cliente', 'presentado', 'enviada'];
-      return !finalStatuses.includes(status.toLowerCase());
+      return !finalStatuses.includes((status ?? '').toLowerCase());
   };
 
   return (
@@ -279,14 +280,14 @@ export function ProposalDocumentsSection({ userProfile, opportunity, proposalDoc
                                   <Select 
                                       value={latestVersion.status} 
                                       onValueChange={(newStatus) => handleStatusChange(latestVersion.id, newStatus)}
-                                      disabled={!canCollaborate}
+                                      disabled={!canCollaborate || !canEnterOrLeaveStatus(latestVersion.status)}
                                   >
                                       <SelectTrigger className={cn("w-auto h-9 text-xs px-2 capitalize [&_svg]:h-3 [&_svg]:w-3 rounded-full border-transparent", getStatusClass(latestVersion.status))}>
                                           <SelectValue />
                                       </SelectTrigger>
                                       <SelectContent>
                                           {proposalDocumentStatuses.all_statuses.map(s => 
-                                            <SelectItem key={s} value={s} className="capitalize" disabled={!canChangeToFinalStatus(s)}>
+                                            <SelectItem key={s} value={s} className="capitalize" disabled={!canEnterOrLeaveStatus(s)}>
                                               {s}
                                             </SelectItem>
                                           )}
@@ -298,15 +299,19 @@ export function ProposalDocumentsSection({ userProfile, opportunity, proposalDoc
 
                               {canCollaborate && (
                                   <>
-                                      <Button variant="outline" size="sm" onClick={() => openModal('version', latestVersion)}>
-                                      <Replace className="mr-2 h-4 w-4"/> Nueva Versión
-                                      </Button>
+                                      {canEnterOrLeaveStatus(latestVersion.status) && (
+                                          <Button variant="outline" size="sm" onClick={() => openModal('version', latestVersion)}>
+                                          <Replace className="mr-2 h-4 w-4"/> Nueva Versión
+                                          </Button>
+                                      )}
                                       <Button variant="outline" size="sm" onClick={() => openModal('edit', latestVersion)}>
                                       <Edit className="mr-2 h-4 w-4"/> Editar
                                       </Button>
-                                      <Button variant="ghost" size="icon" onClick={() => setDocToDelete(latestVersion)}>
-                                      <Trash2 className="h-4 w-4 text-destructive"/>
-                                      </Button>
+                                      {canEnterOrLeaveStatus(latestVersion.status) && (
+                                          <Button variant="ghost" size="icon" onClick={() => setDocToDelete(latestVersion)}>
+                                          <Trash2 className="h-4 w-4 text-destructive"/>
+                                          </Button>
+                                      )}
                                   </>
                               )}
                               <Button variant="outline" size="sm" asChild>
