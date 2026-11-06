@@ -104,6 +104,7 @@ gcloud run services update-traffic ssrprocurementportalapp \
 
 - **`.firebaseignore`**: si existe, Firebase CLI lo usa **en lugar de** `.gitignore` al subir archivos. Así evitas que reglas como `/.next/` en `.gitignore` impidan incluir el build cuando haga falta. No listes `.next` aquí si tu flujo depende de subirla.
 - **`.gcloudignore`**: usado por herramientas `gcloud` al empaquetar código; mismo criterio: no ignores `.next` si debe formar parte del contexto de build.
+- **`.env` y `.env.local` nunca se suben**, tampoco sus copias en subcarpetas: `.gcloudignore` los excluye. Un build con `gcloud run deploy --source` no los recibe, así que las variables `NEXT_PUBLIC_*` deben llegarle por otra vía.
 
 ## Referencias útiles
 
