@@ -3,18 +3,23 @@ import { Suspense } from 'react';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
 import { AuthProvider } from '@/contexts/auth-context';
-import { DM_Sans, Playfair_Display } from 'next/font/google';
+import localFont from 'next/font/local';
 import { Analytics } from '@/components/Analytics';
 import { CookieConsent } from '@/components/CookieConsent';
 
-const dmSans = DM_Sans({
-  subsets: ['latin'],
+// Fuentes en el repositorio: next/font/google las descarga durante el build y falla sin red.
+const dmSans = localFont({
+  src: './fonts/dm-sans-latin-wght-normal.woff2',
+  weight: '100 1000',
+  style: 'normal',
   variable: '--font-dm-sans',
   display: 'swap',
 });
 
-const playfairDisplay = Playfair_Display({
-  subsets: ['latin'],
+const playfairDisplay = localFont({
+  src: './fonts/playfair-display-latin-wght-normal.woff2',
+  weight: '400 900',
+  style: 'normal',
   variable: '--font-playfair-display',
   display: 'swap',
 });
