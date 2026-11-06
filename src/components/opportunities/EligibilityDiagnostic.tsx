@@ -36,10 +36,12 @@ import {
 } from 'lucide-react';
 import apiClient from '@/lib/api-client';
 import { cn } from '@/lib/utils';
+import type { ActionAccess } from '@/lib/account-status';
 
 interface EligibilityDiagnosticProps {
   opportunityId: string;
   customerId: string;
+  access: ActionAccess;
 }
 
 // ─── Status helpers ────────────────────────────────────────────────────────────
@@ -306,7 +308,7 @@ function RupWithoutCertWarning({ items }: { items: RupContractWithoutCert[] }) {
 
 // ─── Main component ─────────────────────────────────────────────────────────────
 
-export function EligibilityDiagnostic({ opportunityId, customerId }: EligibilityDiagnosticProps) {
+export function EligibilityDiagnostic({ opportunityId, customerId, access }: EligibilityDiagnosticProps) {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [result, setResult] = useState<EligibilityAnalysis | null>(null);
@@ -345,6 +347,7 @@ export function EligibilityDiagnostic({ opportunityId, customerId }: Eligibility
 
   // --- Empty state ---
   if (!result && !isLoading) {
+    if (access === 'denied') return null;
     return (
       <Card className="bg-muted/50 border-dashed">
         <CardContent className="pt-6 flex flex-col items-center text-center">
@@ -354,7 +357,7 @@ export function EligibilityDiagnostic({ opportunityId, customerId }: Eligibility
             Compruebe si el cliente cumple los requisitos habilitantes de esta oportunidad:
             indicadores financieros y experiencia certificada, cruzados contra los requisitos del pliego.
           </p>
-          <Button onClick={handleGenerate} disabled={isLoading}>
+          <Button onClick={handleGenerate} disabled={isLoading || access === 'suspended'}>
             <ShieldCheck className="mr-2 h-4 w-4" />
             Analizar Elegibilidad del Cliente
           </Button>
@@ -399,10 +402,12 @@ export function EligibilityDiagnostic({ opportunityId, customerId }: Eligibility
           </div>
           <div className="flex items-center gap-2 shrink-0">
             <StatusBadge status={result.overall_status} size="lg" />
-            <Button variant="outline" size="sm" onClick={() => setResult(null)}>
-              <RotateCcw className="mr-1.5 h-3 w-3" />
-              Regenerar
-            </Button>
+            {access !== 'denied' && (
+              <Button variant="outline" size="sm" onClick={() => setResult(null)} disabled={access === 'suspended'}>
+                <RotateCcw className="mr-1.5 h-3 w-3" />
+                Regenerar
+              </Button>
+            )}
           </div>
         </CardHeader>
       </Card>

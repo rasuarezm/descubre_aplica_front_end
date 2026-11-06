@@ -108,12 +108,14 @@ function CertificationDetail({ data }: { data: CertificationExtractedData }) {
 
 // ─── Sub-componente: fila de un contrato ─────────────────────────────────────
 
-function ContractRow({
+export function ContractRow({
   contract,
+  canLink,
   onLinkClick,
   onUnlinkClick,
 }: {
   contract: RupContract;
+  canLink: boolean;
   onLinkClick: (contract: RupContract) => void;
   onUnlinkClick: (contract: RupContract) => void;
 }) {
@@ -175,7 +177,7 @@ function ContractRow({
               {expanded ? 'Ocultar' : 'Ver detalle'}
             </Button>
           )}
-          {hasCert ? (
+          {canLink && (hasCert ? (
             <Button
               variant="ghost"
               size="icon"
@@ -194,7 +196,7 @@ function ContractRow({
             >
               <Link2 className="h-3 w-3" /> Vincular
             </Button>
-          )}
+          ))}
         </div>
       </div>
 
@@ -321,6 +323,8 @@ interface RupContractsWidgetProps {
   onLinkedDocIdsChange?: (ids: Set<string>) => void;
   /** Mejor contrato RUP sugerido por certificación (score ≥ 50), según computeMatchScore */
   onSuggestionsChange?: (suggestions: Map<string, RupContract>) => void;
+  /** Vincular certificaciones lo niega el servidor a un lector. */
+  canLink: boolean;
 }
 
 export function RupContractsWidget({
@@ -330,6 +334,7 @@ export function RupContractsWidget({
   rupDocs = [],
   onLinkedDocIdsChange,
   onSuggestionsChange,
+  canLink,
 }: RupContractsWidgetProps) {
   const { toast } = useToast();
   const [contracts, setContracts] = useState<RupContract[]>([]);
@@ -562,6 +567,7 @@ export function RupContractsWidget({
             <ContractRow
               key={contract.id}
               contract={contract}
+              canLink={canLink}
               onLinkClick={(c) => { setLinkTarget(c); setSelectedDocId(''); }}
               onUnlinkClick={handleUnlink}
             />

@@ -15,6 +15,7 @@ import { Bot, Copy, Check, Loader2, Scale, AlertTriangle, RotateCcw, Info, FileC
 import apiClient from '@/lib/api-client';
 import { useAiGeneration } from '@/hooks/use-ai-generation';
 import { GenerationRecoveryCard } from './GenerationRecoveryCard';
+import type { ActionAccess } from '@/lib/account-status';
 
 const CATEGORY_FINAL = 'Terminos de Referencia';
 const CATEGORY_DRAFT = 'Borrador de Terminos de Referencia';
@@ -28,6 +29,7 @@ interface ObservationsGeneratorProps {
   opportunityId: string;
   tenderDocuments: DocumentItem[];
   observationsGenerationStatus?: string;
+  access: ActionAccess;
 }
 
 const TYPE_CONFIG: Record<string, { className: string }> = {
@@ -69,6 +71,7 @@ export function ObservationsGenerator({
   opportunityId,
   tenderDocuments,
   observationsGenerationStatus,
+  access,
 }: ObservationsGeneratorProps) {
   const { toast } = useToast();
 
@@ -192,15 +195,18 @@ export function ObservationsGenerator({
               })}
             </CardDescription>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setResult(null)}
-            className="shrink-0"
-          >
-            <RotateCcw className="mr-2 h-3 w-3" />
-            Regenerar
-          </Button>
+          {access !== 'denied' && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setResult(null)}
+              disabled={access === 'suspended'}
+              className="shrink-0"
+            >
+              <RotateCcw className="mr-2 h-3 w-3" />
+              Regenerar
+            </Button>
+          )}
         </CardHeader>
         <CardContent className="space-y-4">
           {result.observations.map((obs: Observation, index: number) => (
@@ -276,6 +282,8 @@ export function ObservationsGenerator({
     );
   }
 
+  if (access === 'denied') return null;
+
   // --- Vista: Botón de generación ---
   return (
     <>
@@ -302,7 +310,7 @@ export function ObservationsGenerator({
             </div>
           )}
 
-          <Button onClick={handleOpenModal}>
+          <Button onClick={handleOpenModal} disabled={access === 'suspended'}>
             <Bot className="mr-2 h-4 w-4" />
             Generar Observaciones con IA
           </Button>

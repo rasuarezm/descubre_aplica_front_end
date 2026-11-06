@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useDescubre } from '@/contexts/descubre-context';
+import { useAccount } from '@/contexts/account-context';
 import descubreApiClient, { ApiError } from '@/lib/descubre-api-client';
 import {
   codigoFuenteParaDisplay,
@@ -129,6 +130,7 @@ function normalizeModalidadIds(values: string[] | undefined): string[] {
 
 export default function DescubrePerfilPage() {
   const { descubreData, loading, tieneDescubre, refreshDescubreProfile } = useDescubre();
+  const { suspended: accountSuspended } = useAccount();
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
   const [suggesting, setSuggesting] = useState(false);
@@ -419,7 +421,7 @@ export default function DescubrePerfilPage() {
                 variant="outline"
                 size="sm"
                 onClick={handleSuggestWithAI}
-                disabled={suggesting || saving}
+                disabled={suggesting || saving || accountSuspended}
                 className="gap-2 shrink-0"
               >
                 {suggesting
@@ -628,7 +630,7 @@ export default function DescubrePerfilPage() {
                           size="sm"
                           className="shrink-0 gap-1"
                           onClick={() => handleSubscribe(f)}
-                          disabled={limiteAlcanzado || !!actionInProgress}
+                          disabled={limiteAlcanzado || !!actionInProgress || accountSuspended}
                           title={limiteAlcanzado ? 'Límite de fuentes alcanzado en su plan' : undefined}
                         >
                           {isProcessing ? <Loader2 className="h-3 w-3 animate-spin" /> : <Plus className="h-3 w-3" />}

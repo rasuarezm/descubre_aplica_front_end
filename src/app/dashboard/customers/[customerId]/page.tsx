@@ -20,12 +20,14 @@ import { format, isPast } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/auth-context';
+import { useAccount } from '@/contexts/account-context';
 import { getUrgencyInfo } from '@/lib/date-utils';
 import { BidtoryRadarIcon } from '@/components/icons/BidtoryRadarIcon';
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import apiClient from '@/lib/api-client';
 import { finalizeUpload } from '@/lib/upload-finalize';
+import { uploadBlockedBySuspension } from '@/lib/account-status';
 import { customerLogoImgSrc } from '@/lib/gcs-display';
 import { FinancialProfileWidget } from '@/components/customers/FinancialProfileWidget';
 import { RupContractsWidget } from '@/components/customers/RupContractsWidget';
@@ -60,7 +62,7 @@ function opportunityCardLeftBorderClass(
 
 function ExperienceDocRow({
   doc, isExperience, isLinked, extractedData, suggestedContract,
-  canCreateAndEdit, canDelete,
+  canCreateAndEdit, canDelete, accountSuspended,
   getStatusIcon, onDelete, onFileChange, onReextract, onFillContracts, fmtCOP, fmtDate,
 }: {
   doc: CustomerDocument;
@@ -70,6 +72,7 @@ function ExperienceDocRow({
   suggestedContract?: RupContract | null;
   canCreateAndEdit: boolean;
   canDelete: boolean;
+  accountSuspended: boolean;
   getStatusIcon: (s: CustomerDocument['status']) => React.ReactNode;
   onDelete: () => void;
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
@@ -85,6 +88,7 @@ function ExperienceDocRow({
   const isRup = doc.category === 'rup';
   const extractedCount = doc.rup_contracts_count ?? null;
   const declaredCount = doc.rup_total_contracts_declared ?? null;
+  const uploadBlocked = uploadBlockedBySuspension(doc.category, accountSuspended);
 
   const handleReextract = async () => {
     setIsReextracting(true);
@@ -211,7 +215,7 @@ function ExperienceDocRow({
                       variant="ghost" size="sm"
                       className="h-7 text-xs text-muted-foreground hover:text-foreground gap-1"
                       onClick={handleFill}
-                      disabled={isFilling}
+                      disabled={isFilling || accountSuspended}
                     >
                       {isFilling
                         ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -234,6 +238,7 @@ function ExperienceDocRow({
               className="h-7 text-xs text-muted-foreground hover:text-foreground gap-1"
               onClick={handleReextract}
               disabled={
+                accountSuspended ||
                 isReextracting ||
                 doc.financial_extraction_status === 'processing' ||
                 doc.financial_extraction_status === 'queued'
@@ -251,14 +256,18 @@ function ExperienceDocRow({
           )}
           {doc.status === 'pending' ? (
             <>
-              {canCreateAndEdit && (
+              {canCreateAndEdit && (uploadBlocked ? (
+                <Button variant="outline" size="sm" disabled>
+                  <UploadCloud className="mr-2 h-4 w-4" /> Subir
+                </Button>
+              ) : (
                 <Label htmlFor={`customer-file-upload-${doc.id}`} className="cursor-pointer">
                   <Button asChild variant="outline" size="sm">
                     <div><UploadCloud className="mr-2 h-4 w-4" /> Subir</div>
                   </Button>
                 </Label>
-              )}
-              <Input id={`customer-file-upload-${doc.id}`} type="file" className="hidden" onChange={onFileChange} />
+              ))}
+              <Input id={`customer-file-upload-${doc.id}`} type="file" className="hidden" onChange={onFileChange} disabled={uploadBlocked} />
             </>
           ) : (
             <>
@@ -350,6 +359,7 @@ export default function CustomerDetailPage() {
   const customerId = params.customerId as string;
   const { toast } = useToast();
   const { getIdToken, userProfile } = useAuth();
+  const { suspended: accountSuspended } = useAccount();
   const router = useRouter();
 
   const [customer, setCustomer] = useState<Customer | undefined>(undefined);
@@ -1140,6 +1150,7 @@ const handleUploadGeneralDocument = async () => {
                 <DialogTrigger asChild>
                     <Button
                       onClick={handleOpenAnalysisModal}
+                      disabled={accountSuspended}
                       className="bg-accent text-accent-foreground shadow-sm hover:bg-accent/90 focus-visible:ring-accent"
                     >
                         <BidtoryRadarIcon className="mr-2 h-4 w-4" /> Analizar Nuevo Pliego
@@ -1330,6 +1341,7 @@ const handleUploadGeneralDocument = async () => {
                 <Button
                   className="mt-6 bg-accent text-accent-foreground shadow-sm hover:bg-accent/90 focus-visible:ring-accent"
                   onClick={handleOpenAnalysisModal}
+                  disabled={accountSuspended}
                 >
                   <BidtoryRadarIcon className="mr-2 h-4 w-4" /> Analizar Nuevo Pliego
                 </Button>
@@ -1516,7 +1528,7 @@ const handleUploadGeneralDocument = async () => {
                             <AccordionContent>
                               {canCreateAndEdit && (
                                 <div className="flex justify-end mb-4">
-                                    <Button size="sm" onClick={() => handleOpenAddDialog(key as CustomerDocument['category'])}>
+                                    <Button size="sm" onClick={() => handleOpenAddDialog(key as CustomerDocument['category'])} disabled={uploadBlockedBySuspension(key, accountSuspended)}>
                                         <PlusCircle className="mr-2 h-4 w-4" />
                                         Añadir Documento
                                     </Button>
@@ -1542,6 +1554,7 @@ const handleUploadGeneralDocument = async () => {
                                   experienceDocs={experienceDocuments}
                                   onLinkedDocIdsChange={setLinkedCertDocIds}
                                   onSuggestionsChange={setRupSuggestions}
+                                  canLink={canCreateAndEdit}
                                 />
                               )}
 
@@ -1569,6 +1582,7 @@ const handleUploadGeneralDocument = async () => {
                                         suggestedContract={rupSuggestions.get(String(doc.id)) ?? null}
                                         canCreateAndEdit={canCreateAndEdit}
                                         canDelete={canDelete}
+                                        accountSuspended={accountSuspended}
                                         getStatusIcon={getStatusIcon}
                                         onDelete={() => handleOpenDeleteConfirm(doc)}
                                         onFileChange={(e) => handleFileChange(doc.id, e)}

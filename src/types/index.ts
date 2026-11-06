@@ -455,6 +455,24 @@ export type NivelSuscripcion = 'esencial' | 'profesional' | 'experto';
 /** Tope de un plan. `sin_limite` lo declara `configuracion_planes`. */
 export type PlanLimit = number | 'sin_limite';
 
+export interface CuentaUsoContador {
+  usado: number;
+  limite: PlanLimit;
+}
+
+/** Puede faltar o ser null: un backend anterior no la envía y un fallo de lectura la anula. */
+export interface CuentaInfo {
+  estado: 'prueba' | 'activa' | 'suspendida';
+  motivo?: string | null;
+  vence_en?: string | null;
+  uso?: {
+    plan: string;
+    mes: string;
+    oportunidades: CuentaUsoContador;
+    generaciones: CuentaUsoContador;
+  } | null;
+}
+
 export interface PlanConfig {
   nombre_visible: string;
   descripcion_corta?: string;
@@ -526,6 +544,7 @@ export interface EstadoBidtoryInfo {
 export interface DescubreDashboardData {
   cliente: DescubreClienteProfile;
   plan_actual: PlanConfig;
+  cuenta?: CuentaInfo | null;
   fuentes_suscritas: FuenteSecop[];
   fuentes_secop_disponibles_para_suscripcion: FuenteSecop[];
   categorias_colaboracion_disponibles: { id: string; nombre: string }[];

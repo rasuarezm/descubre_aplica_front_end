@@ -17,6 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 import { ArrowLeft, CalendarDays, Loader2, AlertCircle, Edit, PlusCircle, Trash2, CalendarIcon, DollarSign, Clock, CheckCircle, Info, Pencil, AlertTriangle, MoreVertical, Archive, Trophy, XCircle, Trash, CalendarClock, Target, ShieldCheck, ShieldOff } from "lucide-react";
 import type { Opportunity, Customer, DocumentItem, OpportunityStatusInfo, RequiredDocument, UserProfile, ProposalDocument, ProposalDocumentStatusInfo, ImportantDate, OpportunityComment, IaRequiredDocument, AdendaAnalysis } from '@/types';
 import { useAuth } from '@/contexts/auth-context';
+import { useAccount } from '@/contexts/account-context';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Input } from '@/components/ui/input';
@@ -39,6 +40,7 @@ import { AdendaReviewModal } from '@/components/opportunities/AdendaReviewModal'
 import { OpportunityDetailSkeleton } from '@/components/opportunities/OpportunityDetailSkeleton';
 import apiClient from '@/lib/api-client';
 import { finalizeUpload } from '@/lib/upload-finalize';
+import { actionAccess } from '@/lib/account-status';
 import {
   IA_ANALYSIS_ERROR_STATUSES,
   IA_ANALYSIS_IN_PROGRESS_STATUSES,
@@ -105,6 +107,7 @@ export default function OpportunityDetailPage() {
     () => searchParams.get('analyzing') === 'true'
   );
   const { user, userProfile, getIdToken } = useAuth();
+  const { suspended: accountSuspended } = useAccount();
 
   const [opportunity, setOpportunity] = useState<Opportunity | null>(null);
   const [customer, setCustomer] = useState<Customer | null>(null);
@@ -1218,6 +1221,7 @@ const sortedRequiredDocs = useMemo(() => {
                   onRefreshData={() => fetchData(false)}
                   onNavigateToChecklist={() => handleTabChange('checklist')}
                   wbsGenerationStatus={opportunity?.wbs_generation_status}
+                  accountSuspended={accountSuspended}
                 />
               </TabsContent>
               <TabsContent
@@ -1236,6 +1240,7 @@ const sortedRequiredDocs = useMemo(() => {
                   tenderDocuments={tenderDocuments}
                   onRefreshData={() => fetchData(false)}
                   observationsGenerationStatus={opportunity?.observations_generation_status}
+                  access={actionAccess(canCollaborate, accountSuspended)}
                 />
               </TabsContent>
               <TabsContent
@@ -1664,6 +1669,7 @@ const sortedRequiredDocs = useMemo(() => {
             adendaAnalysis={newAdendaAnalyses[0]}
             onRefreshData={() => fetchData(false)}
             onNavigateToTab={handleTabChange}
+            canApply={canCollaborate}
         />
       )}
 

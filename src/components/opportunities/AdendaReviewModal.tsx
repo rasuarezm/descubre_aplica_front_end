@@ -21,6 +21,8 @@ interface AdendaReviewModalProps {
   adendaAnalysis: AdendaAnalysis;
   onRefreshData: () => void;
   onNavigateToTab: (tab: string) => void;
+  /** Sin este permiso solo se leen los cambios: aplicar y marcar como revisada lo rechaza el servidor. */
+  canApply: boolean;
 }
 
 export function AdendaReviewModal({
@@ -29,6 +31,7 @@ export function AdendaReviewModal({
   adendaAnalysis,
   onRefreshData,
   onNavigateToTab,
+  canApply,
 }: AdendaReviewModalProps) {
   const { getIdToken } = useAuth();
   const { toast } = useToast();
@@ -68,6 +71,10 @@ export function AdendaReviewModal({
   };
 
   const handleClose = async () => {
+    if (!canApply) {
+      onOpenChange(false);
+      return;
+    }
     setIsLoading(true);
   
     try {
@@ -99,6 +106,7 @@ export function AdendaReviewModal({
   };
 
   const actionButton = (actionType: string, payload: any, text: string) => {
+    if (!canApply) return null;
     const actionId = `${actionType}-${JSON.stringify(payload)}`;
     const isApplied = appliedActions.has(actionId);
     
@@ -192,14 +200,14 @@ export function AdendaReviewModal({
                                 <div key={index} className="p-3 border rounded-md bg-card">
                                     <p className="text-sm font-medium">Modificación en documento: <span className="font-bold">{doc.document_name}</span></p>
                                     <p className="text-sm text-muted-foreground mt-1">{doc.summary_of_change}</p>
-                                    <Button variant="link" size="sm" className="p-0 h-auto mt-2" onClick={() => handleDiscuss(doc)}>💬 Discutir este cambio en la bitácora</Button>
+                                    {canApply && <Button variant="link" size="sm" className="p-0 h-auto mt-2" onClick={() => handleDiscuss(doc)}>💬 Discutir este cambio en la bitácora</Button>}
                                 </div>
                             ))}
                             {modified_technical_requirements.map((req, index) => (
                                 <div key={index} className="p-3 border rounded-md bg-card">
                                     <p className="text-sm font-medium">Cambio técnico en: <span className="font-bold">{req.section_reference}</span></p>
                                     <p className="text-sm text-muted-foreground mt-1">{req.summary_of_change}</p>
-                                    <Button variant="link" size="sm" className="p-0 h-auto mt-2" onClick={() => handleDiscuss(req)}>💬 Discutir este cambio en la bitácora</Button>
+                                    {canApply && <Button variant="link" size="sm" className="p-0 h-auto mt-2" onClick={() => handleDiscuss(req)}>💬 Discutir este cambio en la bitácora</Button>}
                                 </div>
                             ))}
                         </div>
@@ -210,7 +218,7 @@ export function AdendaReviewModal({
         <DialogFooter>
           <Button onClick={handleClose} disabled={isLoading}>
             {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-            Marcar como Revisado y Cerrar
+            {canApply ? 'Marcar como Revisado y Cerrar' : 'Cerrar'}
           </Button>
         </DialogFooter>
       </DialogContent>

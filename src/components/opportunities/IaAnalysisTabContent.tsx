@@ -14,6 +14,7 @@ import { normalizeDocName } from '@/lib/utils';
 import { IA_ANALYSIS_IN_PROGRESS_STATUSES } from '@/lib/ia-analysis-constants';
 import { ObservationsGenerator } from './ObservationsGenerator';
 import { EligibilityDiagnostic } from './EligibilityDiagnostic';
+import type { ActionAccess } from '@/lib/account-status';
 
 interface IaAnalysisTabContentProps {
   ia_analysis: Opportunity['ia_analysis'];
@@ -24,6 +25,7 @@ interface IaAnalysisTabContentProps {
   customerId: string;
   tenderDocuments: DocumentItem[];
   observationsGenerationStatus?: string;
+  access: ActionAccess;
   /** Vuelve a cargar la oportunidad (p. ej. si el análisis aún no aparece). */
   onRefreshData?: () => void;
 }
@@ -37,6 +39,7 @@ export function IaAnalysisTabContent({
   customerId,
   tenderDocuments,
   observationsGenerationStatus,
+  access,
   onRefreshData,
 }: IaAnalysisTabContentProps) {
 
@@ -207,6 +210,7 @@ export function IaAnalysisTabContent({
         <EligibilityDiagnostic
           opportunityId={opportunityId}
           customerId={customerId}
+          access={access}
         />
       )}
 
@@ -231,7 +235,7 @@ export function IaAnalysisTabContent({
         </Card>
       )}
       
-      {ia_analysis.required_documents_checklist && ia_analysis.required_documents_checklist.length > 0 && (
+      {access !== 'denied' && ia_analysis.required_documents_checklist && ia_analysis.required_documents_checklist.length > 0 && (
          <Card>
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -296,6 +300,7 @@ export function IaAnalysisTabContent({
         opportunityId={opportunityId}
         tenderDocuments={tenderDocuments}
         observationsGenerationStatus={observationsGenerationStatus}
+        access={access}
       />
     </div>
   );

@@ -22,6 +22,7 @@ import {
   isWbsGenerating,
   markWbsGenerating,
 } from '@/lib/wbs-generating-state';
+import type { ActionAccess } from '@/lib/account-status';
 
 type WbsUiState = 'conflict' | 'ready' | 'draft_only' | 'no_pliegos';
 
@@ -37,6 +38,7 @@ interface WBSGeneratorProps {
   onWbsGenerated: () => void;
   onNavigateToChecklist?: () => void;
   wbsGenerationStatus?: string;
+  access: ActionAccess;
 }
 
 export function WBSGenerator({
@@ -45,6 +47,7 @@ export function WBSGenerator({
   onWbsGenerated,
   onNavigateToChecklist,
   wbsGenerationStatus,
+  access,
 }: WBSGeneratorProps) {
   const { getIdToken } = useAuth();
   const { toast } = useToast();
@@ -167,6 +170,8 @@ export function WBSGenerator({
     );
   };
 
+  if (access === 'denied' && view.status === 'idle') return null;
+
   if (wbsUiState === 'conflict') {
     return (
       <Alert variant="destructive">
@@ -283,7 +288,7 @@ export function WBSGenerator({
             La calidad del borrador depende de la completitud de los documentos que seleccione
             (pliego, anexos técnicos, adendas, etc.).
           </p>
-          <Button onClick={handleGenerateClick} disabled={isBusy}>
+          <Button onClick={handleGenerateClick} disabled={isBusy || access === 'suspended'}>
             {isBusy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Bot className="mr-2 h-4 w-4" />}
             {isBusy ? 'Cargando...' : 'Generar borrador de WBS con IA'}
           </Button>

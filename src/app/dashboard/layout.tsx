@@ -9,6 +9,8 @@ import { useRouter } from "next/navigation";
 import { useEffect } from "react";
 import { AcceptTermsModal } from "@/components/auth/AcceptTermsModal";
 import { DescubreProvider, useDescubre } from "@/contexts/descubre-context";
+import { AccountProvider } from "@/contexts/account-context";
+import { AccountSuspendedNotice } from "@/components/account/AccountSuspendedNotice";
 import { VerifyEmailBanner } from "@/components/auth/VerifyEmailBanner";
 import { needsRegistrationCompletion } from "@/lib/registration";
 
@@ -65,18 +67,21 @@ export default function DashboardLayout({
   return (
     <SidebarProvider defaultOpen>
       <DescubreProvider>
-        <RegistrationGate />
-        <AppSidebar />
-        <SidebarInset>
-          <AppHeader />
-          {user && !user.emailVerified && <VerifyEmailBanner user={user} />}
-          <main className="flex-1 overflow-auto p-6">
-            {children}
-          </main>
-          {user && needsToAcceptTerms && (
-            <AcceptTermsModal />
-          )}
-        </SidebarInset>
+        <AccountProvider>
+          <RegistrationGate />
+          <AppSidebar />
+          <SidebarInset>
+            <AppHeader />
+            {user && !user.emailVerified && <VerifyEmailBanner user={user} />}
+            <AccountSuspendedNotice />
+            <main className="flex-1 overflow-auto p-6">
+              {children}
+            </main>
+            {user && needsToAcceptTerms && (
+              <AcceptTermsModal />
+            )}
+          </SidebarInset>
+        </AccountProvider>
       </DescubreProvider>
     </SidebarProvider>
   );

@@ -27,6 +27,7 @@ import {
 } from '@/lib/proposal-documents-api';
 import { WBSGenerator } from './WBSGenerator';
 import { WBSViewer } from './WBSViewer';
+import { actionAccess } from '@/lib/account-status';
 
 interface ProposalDocumentsSectionProps {
   userProfile: UserProfile | null;
@@ -37,6 +38,7 @@ interface ProposalDocumentsSectionProps {
   onRefreshData: () => void;
   onNavigateToChecklist?: () => void;
   wbsGenerationStatus?: string;
+  accountSuspended?: boolean;
 }
 
 type ModalMode = 'new' | 'version' | 'edit';
@@ -65,7 +67,7 @@ const getStatusClass = (status: string | undefined): string => {
 };
 
 
-export function ProposalDocumentsSection({ userProfile, opportunity, proposalDocuments, proposalDocumentStatuses, tenderDocuments, onRefreshData, onNavigateToChecklist, wbsGenerationStatus }: ProposalDocumentsSectionProps) {
+export function ProposalDocumentsSection({ userProfile, opportunity, proposalDocuments, proposalDocumentStatuses, tenderDocuments, onRefreshData, onNavigateToChecklist, wbsGenerationStatus, accountSuspended = false }: ProposalDocumentsSectionProps) {
   const { toast } = useToast();
   
   const [modalState, setModalState] = useState<ModalState>({ isOpen: false, mode: 'new', doc: null, file: null });
@@ -365,6 +367,7 @@ export function ProposalDocumentsSection({ userProfile, opportunity, proposalDoc
               onWbsGenerated={onRefreshData}
               onNavigateToChecklist={onNavigateToChecklist}
               wbsGenerationStatus={wbsGenerationStatus}
+              access={actionAccess(canCollaborate, accountSuspended)}
             />
           )}
         </div>
