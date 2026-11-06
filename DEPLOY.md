@@ -34,7 +34,7 @@ Fuente: salida de los comandos de lectura en `docs/estado-nube-2026-11-06.txt`, 
 | Riesgo de sobrescritura | Real: el tráfico sigue a la última revisión (`latestRevision: true`), así que un despliegue a ese servicio pasa a producción de inmediato |
 | Forma del servicio | Existe como Cloud Run y también como Function, con última actualización el 2026-03-23 |
 | Portal nuevo en esa revisión | Sin indicios: esa fecha es anterior al primer commit de este repositorio (2026-03-26). No es prueba definitiva: falta la fecha de creación de la revisión `00008-8rj` |
-| Servicio propio del portal nuevo | **No existe**: `pc-sitioweb-1724428189856` no tiene ningún servicio SSR del portal |
+| Servicio propio del portal nuevo | **No aparece en el inventario consultado** de `pc-sitioweb-1724428189856`. No se inspeccionaron otras regiones, dominios ni sitios |
 | Gateways | `aplica-gateway` y `bidtory-gateway` en `pc-sitioweb-1724428189856`; `procurement-portal-gateway` en `procurement-portal-app` (número `763056400659`) |
 | Hosting | **Sin comprobar**: los dos listados de sitios fallaron con 401. Se desconocen los sitios y dominios de ambos proyectos |
 
