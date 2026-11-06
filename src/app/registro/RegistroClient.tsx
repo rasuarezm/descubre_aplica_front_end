@@ -1,12 +1,15 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import Script from "next/script";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
   createUserWithEmailAndPassword,
   sendEmailVerification,
+  signInWithEmailAndPassword,
+  signOut,
+  type User,
 } from "firebase/auth";
 import { auth } from "@/lib/firebase";
 import { FirebaseError } from "firebase/app";
@@ -17,8 +20,14 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Lock } from "lucide-react";
-import descubreApiClient from "@/lib/descubre-api-client";
+import { useAuth } from "@/contexts/auth-context";
 import { trackEvent } from "@/lib/analytics";
+import {
+  ExistingAccountError,
+  getRegistrationState,
+  registerOrResume,
+  type RegistrationAuth,
+} from "@/lib/registration";
 
 declare global {
   interface Window {
@@ -45,6 +54,15 @@ const TIPOS_DOCUMENTO = [
   { value: "NIT", label: "NIT" },
   { value: "CE", label: "Cédula de Extranjería (CE)" },
 ];
+
+const registrationAuth: RegistrationAuth<User> = {
+  currentUser: () => auth.currentUser,
+  createUser: async (email, password) =>
+    (await createUserWithEmailAndPassword(auth, email, password)).user,
+  signIn: async (email, password) =>
+    (await signInWithEmailAndPassword(auth, email, password)).user,
+  sendVerification: (user) => sendEmailVerification(user),
+};
 
 function isValidEmail(email: string): boolean {
   const normalized = email.trim().toLowerCase();
@@ -82,14 +100,19 @@ export function RegistroClient() {
   const searchParams = useSearchParams();
   const { toast } = useToast();
 
+  const { user: authUser, loading: authLoading } = useAuth();
+
   const planParam = searchParams.get("plan") || "";
-  const planElegido = ["esencial", "profesional", "experto"].includes(planParam)
-    ? planParam
-    : "esencial";
+  const [planElegido, setPlanElegido] = useState(
+    ["esencial", "profesional", "experto"].includes(planParam) ? planParam : "esencial"
+  );
   const planNombre = PLAN_NAMES[planElegido] || "Esencial";
 
   const [recaptchaReady, setRecaptchaReady] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  // Hay sesión de una cuenta sin perfil: solo faltan los datos de la empresa.
+  const [isCompleting, setIsCompleting] = useState(false);
+  const submittingRef = useRef(false);
 
   const [form, setForm] = useState({
     email: "",
@@ -110,10 +133,36 @@ export function RegistroClient() {
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
+  useEffect(() => {
+    if (authLoading || submittingRef.current) return;
+    if (!authUser) {
+      setIsCompleting(false);
+      return;
+    }
+    let cancelled = false;
+    getRegistrationState()
+      .then((state) => {
+        if (cancelled) return;
+        if (state === "complete") {
+          router.replace("/dashboard");
+        } else {
+          setIsCompleting(true);
+        }
+      })
+      .catch(() => {
+        // registerOrResume vuelve a comprobar el estado antes de crear nada.
+        if (!cancelled) setIsCompleting(true);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [authLoading, authUser, router]);
+
   const isAccountEmailReady =
-    isValidEmail(form.email) &&
-    isValidEmail(form.emailConfirm) &&
-    form.email.trim().toLowerCase() === form.emailConfirm.trim().toLowerCase();
+    isCompleting ||
+    (isValidEmail(form.email) &&
+      isValidEmail(form.emailConfirm) &&
+      form.email.trim().toLowerCase() === form.emailConfirm.trim().toLowerCase());
   const isBillingEmailReady = isValidEmail(form.emailFacturacion);
   const isBillingPhoneReady = isValidPhone(form.telefonoFacturacion);
   const isContactDataReady =
@@ -127,24 +176,26 @@ export function RegistroClient() {
   const validate = useCallback((): boolean => {
     const newErrors: Record<string, string> = {};
 
-    if (!form.email.trim()) {
-      newErrors.email = "El correo electrónico es requerido.";
-    } else if (!isValidEmail(form.email)) {
-      newErrors.email = "Ingrese un correo electrónico válido.";
-    }
+    if (!isCompleting) {
+      if (!form.email.trim()) {
+        newErrors.email = "El correo electrónico es requerido.";
+      } else if (!isValidEmail(form.email)) {
+        newErrors.email = "Ingrese un correo electrónico válido.";
+      }
 
-    if (form.email !== form.emailConfirm) {
-      newErrors.emailConfirm = "Los correos electrónicos no coinciden.";
-    } else if (form.emailConfirm && !isValidEmail(form.emailConfirm)) {
-      newErrors.emailConfirm = "Ingrese un correo electrónico válido.";
-    }
+      if (form.email !== form.emailConfirm) {
+        newErrors.emailConfirm = "Los correos electrónicos no coinciden.";
+      } else if (form.emailConfirm && !isValidEmail(form.emailConfirm)) {
+        newErrors.emailConfirm = "Ingrese un correo electrónico válido.";
+      }
 
-    if (form.password.length < 6) {
-      newErrors.password = "La contraseña debe tener al menos 6 caracteres.";
-    }
+      if (form.password.length < 6) {
+        newErrors.password = "La contraseña debe tener al menos 6 caracteres.";
+      }
 
-    if (form.password !== form.passwordConfirm) {
-      newErrors.passwordConfirm = "Las contraseñas no coinciden.";
+      if (form.password !== form.passwordConfirm) {
+        newErrors.passwordConfirm = "Las contraseñas no coinciden.";
+      }
     }
 
     if (!form.nombreEmpresa.trim()) {
@@ -200,7 +251,7 @@ export function RegistroClient() {
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
-  }, [form]);
+  }, [form, isCompleting]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -216,9 +267,11 @@ export function RegistroClient() {
     }
 
     setIsSubmitting(true);
+    // Sigue activo tras un alta correcta: la página ya va de salida.
+    submittingRef.current = true;
 
-    try {
-      const recaptchaToken = await new Promise<string>((resolve, reject) => {
+    const getRecaptchaToken = () =>
+      new Promise<string>((resolve, reject) => {
         if (typeof window === "undefined" || !window.grecaptcha) {
           reject(new Error("reCAPTCHA no disponible"));
           return;
@@ -231,51 +284,58 @@ export function RegistroClient() {
         });
       });
 
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        form.email.trim(),
-        form.password
-      );
-      const user = userCredential.user;
+    const buildProfile = async () => ({
+      nombre_empresa: form.nombreEmpresa.trim(),
+      nombre_persona_contacto: form.nombrePersonaContacto.trim(),
+      cargo_persona_contacto: form.cargoPersonaContacto.trim() || undefined,
+      nivel_suscripcion_elegido: planElegido,
+      tipo_documento_facturacion: form.tipoDocumento || undefined,
+      numero_documento_facturacion: form.numeroDocumento.trim() || undefined,
+      digito_verificacion_facturacion:
+        form.tipoDocumento === "NIT"
+          ? form.digitoVerificacion.trim() || undefined
+          : undefined,
+      email_facturacion: form.emailFacturacion.trim() || undefined,
+      telefono_contacto_facturacion:
+        form.telefonoFacturacion.replace(/\s/g, "") || undefined,
+      direccion_facturacion: form.direccionFacturacion.trim() || undefined,
+      recaptcha_token: await getRecaptchaToken(),
+    });
 
-      await sendEmailVerification(user);
+    try {
+      const result = await registerOrResume(registrationAuth, {
+        email: form.email.trim(),
+        password: form.password,
+        buildProfile,
+      });
 
-      const payload = {
-        nombre_empresa: form.nombreEmpresa.trim(),
-        nombre_persona_contacto: form.nombrePersonaContacto.trim(),
-        cargo_persona_contacto: form.cargoPersonaContacto.trim() || undefined,
-        nivel_suscripcion_elegido: planElegido,
-        tipo_documento_facturacion: form.tipoDocumento || undefined,
-        numero_documento_facturacion: form.numeroDocumento.trim() || undefined,
-        digito_verificacion_facturacion:
-          form.tipoDocumento === "NIT"
-            ? form.digitoVerificacion.trim() || undefined
-            : undefined,
-        email_facturacion: form.emailFacturacion.trim() || undefined,
-        telefono_contacto_facturacion:
-          form.telefonoFacturacion.replace(/\s/g, "") || undefined,
-        direccion_facturacion: form.direccionFacturacion.trim() || undefined,
-        recaptcha_token: recaptchaToken,
-      };
-
-      const data = await descubreApiClient.post<{
-        success?: boolean;
-        message?: string;
-        email_verificacion_requerida?: boolean;
-      }>("/v1/client_profile", payload);
+      if (result.outcome === "already_complete") {
+        toast({
+          title: "Su cuenta ya está lista",
+          description: "Lo llevamos a su panel.",
+        });
+        router.push("/dashboard");
+        return;
+      }
 
       toast({
         title: "¡Bienvenido a Bidtory!",
-        description: data.message || "Su cuenta ha sido creada exitosamente.",
+        description:
+          result.verificationSent || auth.currentUser?.emailVerified
+            ? "Su cuenta ha sido creada exitosamente."
+            : "Su cuenta ha sido creada. No pudimos enviar el correo de verificación: puede pedirlo desde su panel.",
       });
       trackEvent("trial_start", { plan_elegido: planElegido });
       router.push("/dashboard/descubre");
     } catch (err) {
+      submittingRef.current = false;
+      // Si la cuenta de Auth ya existe, el siguiente intento solo debe completar el perfil.
+      if (auth.currentUser) setIsCompleting(true);
       let message = "Error en el proceso de registro.";
-      if (err instanceof FirebaseError) {
-        if (err.code === "auth/email-already-in-use") {
-          message = "Este correo electrónico ya está registrado.";
-        } else if (err.code === "auth/weak-password") {
+      if (err instanceof ExistingAccountError) {
+        message = err.message;
+      } else if (err instanceof FirebaseError) {
+        if (err.code === "auth/weak-password") {
           message = "La contraseña es demasiado débil.";
         } else if (err.code === "auth/invalid-email") {
           message = "El correo electrónico no es válido.";
@@ -306,104 +366,129 @@ export function RegistroClient() {
         <Card className="border-border/80 shadow-sm">
           <CardHeader className="pb-4">
             <CardTitle className="text-center font-headline text-xl">
-              Crear su Cuenta Bidtory
+              {isCompleting ? "Complete su Registro" : "Crear su Cuenta Bidtory"}
             </CardTitle>
             <p className="text-center text-muted-foreground text-sm mt-1">
-              Está a un paso de optimizar su búsqueda de licitaciones y
-              oportunidades de negocio.
+              {isCompleting
+                ? "Su cuenta ya existe. Solo faltan los datos de su empresa. Si su empresa ya usa Bidtory, pida acceso a su administrador en lugar de completar este formulario."
+                : "Está a un paso de optimizar su búsqueda de licitaciones y oportunidades de negocio."}
             </p>
-            <p className="text-center text-sm mt-2">
-              Plan seleccionado: <strong>{planNombre}</strong>
-            </p>
+            {isCompleting ? (
+              <div className="mt-3">
+                <Label htmlFor="planElegido">Plan</Label>
+                <select
+                  id="planElegido"
+                  value={planElegido}
+                  onChange={(e) => setPlanElegido(e.target.value)}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                >
+                  {Object.entries(PLAN_NAMES).map(([value, label]) => (
+                    <option key={value} value={value}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            ) : (
+              <p className="text-center text-sm mt-2">
+                Plan seleccionado: <strong>{planNombre}</strong>
+              </p>
+            )}
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <h3 className="text-sm font-medium border-b border-border pb-2 mb-4">
-                  Información de la Cuenta
-                </h3>
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="email">Correo Electrónico</Label>
-                    <Input
-                      id="email"
-                      type="email"
-                      value={form.email}
-                      onChange={(e) =>
-                        updateField("email", e.target.value.toLowerCase().replace(/\s/g, ""))
-                      }
-                      placeholder="su@correo.com"
-                      inputMode="email"
-                      autoComplete="email"
-                      maxLength={100}
-                      className={errors.email ? "border-destructive" : ""}
-                    />
-                    {errors.email && (
-                      <p className="text-sm text-destructive mt-1">
-                        {errors.email}
-                      </p>
-                    )}
-                  </div>
-                  <div>
-                    <Label htmlFor="emailConfirm">Confirmar Correo</Label>
-                    <Input
-                      id="emailConfirm"
-                      type="email"
-                      value={form.emailConfirm}
-                      onChange={(e) =>
-                        updateField(
-                          "emailConfirm",
-                          e.target.value.toLowerCase().replace(/\s/g, "")
-                        )
-                      }
-                      placeholder="Confirme su correo"
-                      inputMode="email"
-                      autoComplete="email"
-                      maxLength={100}
-                      className={errors.emailConfirm ? "border-destructive" : ""}
-                    />
-                    {errors.emailConfirm && (
-                      <p className="text-sm text-destructive mt-1">
-                        {errors.emailConfirm}
-                      </p>
-                    )}
-                  </div>
-                  <div>
-                    <Label htmlFor="password">Contraseña (min. 6 caracteres)</Label>
-                    <Input
-                      id="password"
-                      type="password"
-                      value={form.password}
-                      onChange={(e) => updateField("password", e.target.value)}
-                      placeholder="Contraseña"
-                      className={errors.password ? "border-destructive" : ""}
-                    />
-                    {errors.password && (
-                      <p className="text-sm text-destructive mt-1">
-                        {errors.password}
-                      </p>
-                    )}
-                  </div>
-                  <div>
-                    <Label htmlFor="passwordConfirm">Confirmar Contraseña</Label>
-                    <Input
-                      id="passwordConfirm"
-                      type="password"
-                      value={form.passwordConfirm}
-                      onChange={(e) =>
-                        updateField("passwordConfirm", e.target.value)
-                      }
-                      placeholder="Confirmar contraseña"
-                      className={errors.passwordConfirm ? "border-destructive" : ""}
-                    />
-                    {errors.passwordConfirm && (
-                      <p className="text-sm text-destructive mt-1">
-                        {errors.passwordConfirm}
-                      </p>
-                    )}
+              {isCompleting ? (
+                <p className="text-sm text-muted-foreground">
+                  Cuenta: <strong className="text-foreground">{auth.currentUser?.email}</strong>
+                </p>
+              ) : (
+                <div>
+                  <h3 className="text-sm font-medium border-b border-border pb-2 mb-4">
+                    Información de la Cuenta
+                  </h3>
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="email">Correo Electrónico</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={form.email}
+                        onChange={(e) =>
+                          updateField("email", e.target.value.toLowerCase().replace(/\s/g, ""))
+                        }
+                        placeholder="su@correo.com"
+                        inputMode="email"
+                        autoComplete="email"
+                        maxLength={100}
+                        className={errors.email ? "border-destructive" : ""}
+                      />
+                      {errors.email && (
+                        <p className="text-sm text-destructive mt-1">
+                          {errors.email}
+                        </p>
+                      )}
+                    </div>
+                    <div>
+                      <Label htmlFor="emailConfirm">Confirmar Correo</Label>
+                      <Input
+                        id="emailConfirm"
+                        type="email"
+                        value={form.emailConfirm}
+                        onChange={(e) =>
+                          updateField(
+                            "emailConfirm",
+                            e.target.value.toLowerCase().replace(/\s/g, "")
+                          )
+                        }
+                        placeholder="Confirme su correo"
+                        inputMode="email"
+                        autoComplete="email"
+                        maxLength={100}
+                        className={errors.emailConfirm ? "border-destructive" : ""}
+                      />
+                      {errors.emailConfirm && (
+                        <p className="text-sm text-destructive mt-1">
+                          {errors.emailConfirm}
+                        </p>
+                      )}
+                    </div>
+                    <div>
+                      <Label htmlFor="password">Contraseña (min. 6 caracteres)</Label>
+                      <Input
+                        id="password"
+                        type="password"
+                        value={form.password}
+                        onChange={(e) => updateField("password", e.target.value)}
+                        placeholder="Contraseña"
+                        className={errors.password ? "border-destructive" : ""}
+                      />
+                      {errors.password && (
+                        <p className="text-sm text-destructive mt-1">
+                          {errors.password}
+                        </p>
+                      )}
+                    </div>
+                    <div>
+                      <Label htmlFor="passwordConfirm">Confirmar Contraseña</Label>
+                      <Input
+                        id="passwordConfirm"
+                        type="password"
+                        value={form.passwordConfirm}
+                        onChange={(e) =>
+                          updateField("passwordConfirm", e.target.value)
+                        }
+                        placeholder="Confirmar contraseña"
+                        className={errors.passwordConfirm ? "border-destructive" : ""}
+                      />
+                      {errors.passwordConfirm && (
+                        <p className="text-sm text-destructive mt-1">
+                          {errors.passwordConfirm}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
 
               <div>
                 <h3 className="text-sm font-medium border-b border-border pb-2 mb-4">
@@ -670,7 +755,7 @@ export function RegistroClient() {
                     Procesando...
                   </>
                 ) : (
-                  "Crear Cuenta y Suscribirse"
+                  isCompleting ? "Completar Registro" : "Crear Cuenta y Suscribirse"
                 )}
               </Button>
               {!isContactDataReady && (
@@ -680,12 +765,25 @@ export function RegistroClient() {
               )}
             </form>
 
-            <p className="mt-6 text-center text-sm text-muted-foreground">
-              ¿Ya tiene una cuenta?{" "}
-              <Link href="/login" className="text-accent hover:underline">
-                Iniciar Sesión
-              </Link>
-            </p>
+            {isCompleting ? (
+              <p className="mt-6 text-center text-sm text-muted-foreground">
+                ¿No es su cuenta?{" "}
+                <button
+                  type="button"
+                  onClick={() => signOut(auth)}
+                  className="text-accent hover:underline"
+                >
+                  Cerrar Sesión
+                </button>
+              </p>
+            ) : (
+              <p className="mt-6 text-center text-sm text-muted-foreground">
+                ¿Ya tiene una cuenta?{" "}
+                <Link href="/login" className="text-accent hover:underline">
+                  Iniciar Sesión
+                </Link>
+              </p>
+            )}
           </CardContent>
         </Card>
       </div>

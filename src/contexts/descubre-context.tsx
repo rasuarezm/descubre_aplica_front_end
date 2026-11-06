@@ -22,6 +22,8 @@ interface DescubreContextType {
   descubreData: DescubreDashboardData | null;
   nivelSuscripcion: NivelSuscripcion | null;
   tieneDescubre: boolean;
+  /** Solo con un 404: el usuario no tiene perfil de cliente. Un error de lectura no lo activa. */
+  perfilClienteFaltante: boolean;
   tieneAplica: boolean;
   /** Carga inicial del perfil Descubre (dashboard_data). */
   loading: boolean;
@@ -41,6 +43,7 @@ export function DescubreProvider({ children }: { children: ReactNode }) {
   const [descubreData, setDescubreData] = useState<DescubreDashboardData | null>(null);
   const [nivelSuscripcion, setNivelSuscripcion] = useState<NivelSuscripcion | null>(null);
   const [tieneDescubre, setTieneDescubre] = useState(false);
+  const [perfilClienteFaltante, setPerfilClienteFaltante] = useState(false);
   const [fetchLoading, setFetchLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -56,6 +59,7 @@ export function DescubreProvider({ children }: { children: ReactNode }) {
   const loadDashboard = useCallback(
     async (options?: { background?: boolean }) => {
       if (!user || !userProfile || userProfile.role !== 'customer') {
+        setPerfilClienteFaltante(false);
         setDescubreData(null);
         setNivelSuscripcion(null);
         setTieneDescubre(false);
@@ -76,9 +80,11 @@ export function DescubreProvider({ children }: { children: ReactNode }) {
         setDescubreData(data);
         setNivelSuscripcion(data.cliente.nivel_suscripcion);
         setTieneDescubre(true);
+        setPerfilClienteFaltante(false);
         descubreLoadedRef.current = true;
       } catch (e) {
         if (e instanceof ApiError && e.status === 404) {
+          setPerfilClienteFaltante(true);
           setDescubreData(null);
           setNivelSuscripcion(null);
           setTieneDescubre(false);
@@ -219,6 +225,7 @@ export function DescubreProvider({ children }: { children: ReactNode }) {
       descubreData,
       nivelSuscripcion,
       tieneDescubre,
+      perfilClienteFaltante,
       tieneAplica,
       loading,
       error,
@@ -232,6 +239,7 @@ export function DescubreProvider({ children }: { children: ReactNode }) {
       descubreData,
       nivelSuscripcion,
       tieneDescubre,
+      perfilClienteFaltante,
       tieneAplica,
       loading,
       error,
