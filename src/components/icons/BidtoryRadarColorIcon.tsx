@@ -1,5 +1,5 @@
 
-import Image from 'next/image';
+import { BidtoryRadarMark } from '@/components/icons/BidtoryRadarMark';
 import { cn } from '@/lib/utils';
 
 interface BidtoryRadarColorIconProps {
@@ -8,15 +8,10 @@ interface BidtoryRadarColorIconProps {
 
 export function BidtoryRadarColorIcon({ className }: BidtoryRadarColorIconProps) {
   return (
-    <Image
-      src="/logo-bidtory-radar-pos.svg"
-      alt="Bidtory Radar"
-      width={96}
-      height={96}
-      className={cn("h-24 w-24", className)}
-      priority
+    <BidtoryRadarMark
+      role="img"
+      aria-label="Bidtory Radar"
+      className={cn("h-24 w-24 text-[#00A89A]", className)}
     />
   );
 }
-
-    

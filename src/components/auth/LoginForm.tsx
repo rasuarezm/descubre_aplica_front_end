@@ -3,7 +3,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import Image from 'next/image';
+import { BidtoryLogo } from '@/components/icons/BidtoryLogo';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -107,7 +107,7 @@ export function LoginForm() {
     <AlertDialog open={isResetDialogOpen} onOpenChange={setIsResetDialogOpen}>
       <Card className="w-full max-w-md bg-card/80 backdrop-blur-sm border-white/20 shadow-2xl shadow-black/50">
         <CardHeader className="text-center space-y-4">
-          <Image src="/logo-bidtory-color.svg" alt="Bidtory Logo" width={192} height={60} className="mx-auto h-20 w-auto" />
+          <BidtoryLogo alt="Bidtory Logo" className="mx-auto h-24" />
           <CardDescription className="text-foreground/80 pt-2">Inicie sesión para gestionar sus oportunidades y proyectos.</CardDescription>
         </CardHeader>
         <CardContent>

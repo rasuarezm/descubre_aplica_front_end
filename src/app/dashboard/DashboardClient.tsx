@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback } from 'react';
-import Image from "next/image";
+import { BidtoryModuleLogo } from "@/components/icons/BidtoryLogo";
 import Link from "next/link";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -351,13 +351,7 @@ export default function DashboardClient() {
               <Card className="group hover:shadow-lg hover:border-accent/50 transition-all duration-300 cursor-pointer h-full">
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
-                    <Image
-                      src="/logo-bidtory-descubre-pos.svg"
-                      alt="Bidtory Descubre"
-                      width={120}
-                      height={32}
-                      className="h-7 w-auto"
-                    />
+                    <BidtoryModuleLogo module="descubre" />
                     <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-accent transition-colors" />
                   </div>
                   <CardDescription className="pt-2">
@@ -401,13 +395,7 @@ export default function DashboardClient() {
               <Card className="group hover:shadow-lg hover:border-accent/50 transition-all duration-300 cursor-pointer h-full">
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
-                    <Image
-                      src="/logo-bidtory-aplica-pos.svg"
-                      alt="Bidtory Aplica"
-                      width={120}
-                      height={32}
-                      className="h-7 w-auto"
-                    />
+                    <BidtoryModuleLogo module="aplica" />
                     <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-accent transition-colors" />
                   </div>
                   <CardDescription className="pt-2">
@@ -451,13 +439,7 @@ export default function DashboardClient() {
             <Card className="border-dashed border-2 border-muted h-full">
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
-                  <Image
-                    src="/logo-bidtory-aplica-pos.svg"
-                    alt="Bidtory Aplica"
-                    width={120}
-                    height={32}
-                    className="h-7 w-auto opacity-50"
-                  />
+                  <BidtoryModuleLogo module="aplica" className="opacity-50" />
                   <Badge className="border-0 bg-popular text-popular-foreground text-[10px] font-semibold px-2">
                     Plan Profesional
                   </Badge>

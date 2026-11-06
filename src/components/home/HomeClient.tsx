@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
+import { BidtoryLogo, BidtoryModuleLogo } from "@/components/icons/BidtoryLogo";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FeatureScroll } from "@/components/home/FeatureScroll";
@@ -40,13 +40,7 @@ export function HomeClient() {
         <div className="container mx-auto flex h-16 items-center justify-between gap-2 px-4 md:px-6">
           <div className="flex min-w-0 shrink items-center gap-2">
             <Link href="/" className="flex min-w-0 shrink items-center">
-              <Image
-                src="/logo-bidtory-838w.svg"
-                alt="Bidtory - Licitaciones con IA"
-                width={140}
-                height={40}
-                className="h-8 w-auto"
-              />
+              <BidtoryLogo alt="Bidtory - Licitaciones con IA" className="h-12" />
             </Link>
             <PuroContenidoHeaderMark />
           </div>
@@ -318,13 +312,7 @@ export function HomeClient() {
                 <span className="mb-5 inline-flex h-8 w-8 items-center justify-center rounded-md bg-accent-foreground/15 font-headline text-sm font-semibold">
                   01
                 </span>
-                <Image
-                  src="/logo-bidtory-descubre-neg.svg"
-                  alt="Bidtory Descubre"
-                  width={140}
-                  height={32}
-                  className="mb-4 h-7 w-auto"
-                />
+                <BidtoryModuleLogo module="descubre" surface="dark" className="mb-4" />
                 <p className="mb-6 text-sm text-accent-foreground/80">
                   Inteligencia y monitoreo
                 </p>
@@ -358,13 +346,7 @@ export function HomeClient() {
                 <span className="mb-5 inline-flex h-8 w-8 items-center justify-center rounded-md bg-muted font-headline text-sm font-semibold text-foreground">
                   02
                 </span>
-                <Image
-                  src="/logo-bidtory-aplica-pos.svg"
-                  alt="Bidtory Aplica"
-                  width={140}
-                  height={32}
-                  className="mb-4 h-7 w-auto opacity-90"
-                />
+                <BidtoryModuleLogo module="aplica" className="mb-4 opacity-90" />
                 <p className="mb-6 text-sm text-muted-foreground">
                   Gestión y pipeline
                 </p>
@@ -484,13 +466,7 @@ export function HomeClient() {
         <div className="container mx-auto px-4 md:px-6">
           <div className="flex flex-col items-center gap-6 md:flex-row md:items-center md:justify-between md:gap-8">
             <div className="flex w-full max-w-xl flex-col items-center gap-4 md:max-w-none md:flex-row md:items-center md:gap-4 md:text-left">
-              <Image
-                src="/logo-bidtory-838w.svg"
-                alt="Bidtory"
-                width={120}
-                height={34}
-                className="h-8 w-auto shrink-0 opacity-80"
-              />
+              <BidtoryLogo alt="Bidtory" className="h-12 shrink-0 opacity-80" />
               <div className="flex flex-col items-center gap-2 md:items-start">
                 <p className="text-center text-sm text-muted-foreground md:text-left">
                   © {new Date().getFullYear()} Puro Contenido SAS. Todos los

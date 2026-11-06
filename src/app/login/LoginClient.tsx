@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/auth-context';
 import { LoginForm } from '@/components/auth/LoginForm';
 import Link from 'next/link';
-import Image from 'next/image';
+import { BidtoryLogo } from '@/components/icons/BidtoryLogo';
+import { BidtoryRadarMark } from '@/components/icons/BidtoryRadarMark';
 import { Button } from '@/components/ui/button';
 
 export default function LoginClient() {
@@ -28,32 +29,18 @@ export default function LoginClient() {
 
   return (
     <div className="relative flex min-h-screen flex-col overflow-hidden bg-gradient-to-br from-background via-background to-secondary/5 text-foreground">
-      <Image
-        src="/logo-bidtory-radar-pos.svg"
-        alt=""
+      <BidtoryRadarMark
         aria-hidden="true"
-        width={640}
-        height={640}
-        className="pointer-events-none absolute -left-32 -top-32 h-[420px] w-[420px] opacity-[0.04]"
+        className="pointer-events-none absolute -left-32 -top-32 h-[420px] w-[420px] text-[#00A89A] opacity-[0.04]"
       />
-      <Image
-        src="/logo-bidtory-radar-pos.svg"
-        alt=""
+      <BidtoryRadarMark
         aria-hidden="true"
-        width={480}
-        height={480}
-        className="pointer-events-none absolute -bottom-24 -right-24 h-[320px] w-[320px] opacity-[0.05]"
+        className="pointer-events-none absolute -bottom-24 -right-24 h-[320px] w-[320px] text-[#00A89A] opacity-[0.05]"
       />
       <header className="sticky top-0 z-50 w-full bg-card/95 backdrop-blur-sm border-b border-border">
         <div className="container mx-auto flex h-14 items-center justify-between px-4 md:px-6">
           <Link href="/" className="flex items-center">
-            <Image
-              src="/logo-bidtory-color.svg"
-              alt="Bidtory"
-              width={130}
-              height={36}
-              className="h-8 w-auto"
-            />
+            <BidtoryLogo alt="Bidtory" className="h-12" />
           </Link>
           <Button
             variant="ghost"

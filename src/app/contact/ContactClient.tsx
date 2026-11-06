@@ -1,7 +1,7 @@
 "use client";
 
 import Link from 'next/link';
-import Image from 'next/image';
+import { BidtoryLogo } from '@/components/icons/BidtoryLogo';
 import { Button } from '@/components/ui/button';
 import { ContactForm } from '@/components/contact/ContactForm';
 import { Mail, Lock } from 'lucide-react';
@@ -16,7 +16,7 @@ export default function ContactClient() {
           <header className="sticky top-0 z-50 w-full bg-card/95 backdrop-blur-sm border-b border-border">
               <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
               <Link href="/" className="flex items-center justify-center">
-                  <Image src="/logo-bidtory-color.svg" alt="Bidtory Logo" width={130} height={36} className="h-8 w-auto" />
+                  <BidtoryLogo alt="Bidtory Logo" className="h-12" />
               </Link>
               <nav className="hidden md:flex items-center gap-6">
                   <Link href="/suscripciones" className="text-sm font-medium hover:text-accent transition-colors">Planes</Link>
@@ -81,7 +81,7 @@ export default function ContactClient() {
             <div className="container mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 px-4 md:px-6">
               <div className="flex flex-col items-center md:items-start">
                 <div className="flex items-center gap-3">
-                  <Image src="/logo-bidtory-color.svg" alt="Bidtory Logo" width={120} height={34} className="h-8 w-auto" />
+                  <BidtoryLogo alt="Bidtory Logo" className="h-12" />
                   <p className="text-sm text-muted-foreground tracking-wide">&copy; {new Date().getFullYear()} Puro Contenido.</p>
                 </div>
                 <p className="text-xs text-muted-foreground mt-2 text-center md:text-left">Todos los derechos reservados.</p>

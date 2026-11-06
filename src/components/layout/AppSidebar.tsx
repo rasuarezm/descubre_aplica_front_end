@@ -19,7 +19,6 @@ import {
 } from "@/components/ui/sidebar";
 import { Home, Users, Briefcase, FileText, Settings, ChevronDown, ChevronUp, UserSquare, Search, SlidersHorizontal } from "lucide-react";
 import Link from "next/link";
-import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/contexts/auth-context";
@@ -28,6 +27,7 @@ import { Badge } from "@/components/ui/badge";
 import type { Customer, Opportunity } from "@/types";
 import { getUrgencyInfo, type UrgencyInfo } from "@/lib/date-utils";
 import { cn } from "@/lib/utils";
+import { BidtoryLogo } from "@/components/icons/BidtoryLogo";
 import { BidtoryRadarMark } from "@/components/icons/BidtoryRadarMark";
 import apiClient from "@/lib/api-client";
 
@@ -422,13 +422,7 @@ export function AppSidebar() {
           aria-label="Bidtory"
           className="flex h-full items-center justify-center text-sidebar-foreground"
         >
-          <Image
-            src="/logo-bidtory-color.svg"
-            alt=""
-            width={128}
-            height={40}
-            className="h-full w-auto max-h-10 group-data-[collapsible=icon]:hidden"
-          />
+          <BidtoryLogo alt="" className="h-full max-h-16 group-data-[collapsible=icon]:hidden" />
           <BidtoryRadarMark
             aria-hidden="true"
             className="hidden h-8 w-8 text-accent group-data-[collapsible=icon]:block"

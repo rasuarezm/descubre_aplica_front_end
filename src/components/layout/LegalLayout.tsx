@@ -1,5 +1,5 @@
 import Link from "next/link";
-import Image from "next/image";
+import { BidtoryLogo } from "@/components/icons/BidtoryLogo";
 import { Button } from "@/components/ui/button";
 import {
   PuroContenidoFooterClaim,
@@ -13,13 +13,7 @@ export function LegalLayout({ children }: { children: React.ReactNode }) {
         <div className="container mx-auto flex h-16 items-center justify-between px-4 md:px-6">
           <div className="flex min-w-0 items-center gap-2">
             <Link href="/" className="flex items-center">
-              <Image
-                src="/logo-bidtory-838w.svg"
-                alt="Bidtory - Licitaciones con IA"
-                width={140}
-                height={40}
-                className="h-8 w-auto"
-              />
+              <BidtoryLogo alt="Bidtory - Licitaciones con IA" className="h-12" />
             </Link>
             <PuroContenidoHeaderMark />
           </div>
@@ -55,13 +49,7 @@ export function LegalLayout({ children }: { children: React.ReactNode }) {
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex max-w-xl flex-col items-center gap-2 md:max-w-2xl md:items-start">
               <div className="flex items-center gap-4">
-                <Image
-                  src="/logo-bidtory-838w.svg"
-                  alt="Bidtory"
-                  width={120}
-                  height={34}
-                  className="h-8 w-auto opacity-80"
-                />
+                <BidtoryLogo alt="Bidtory" className="h-12 opacity-80" />
                 <p className="text-sm text-muted-foreground">
                   © {new Date().getFullYear()} Puro Contenido SAS. Todos los
                   derechos reservados. Bidtory® es una marca registrada de Puro

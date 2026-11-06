@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
+import { BidtoryModuleLogo } from '@/components/icons/BidtoryLogo';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
@@ -17,7 +18,7 @@ type FeatureCta = {
 
 type FeatureItem = {
   step: number;
-  logo: string;
+  module: 'descubre' | 'aplica';
   title: string;
   description: string;
   cta: FeatureCta;
@@ -32,7 +33,7 @@ type FeatureItem = {
 const features: FeatureItem[] = [
   {
     step: 1,
-    logo: '/logo-bidtory-descubre-pos.svg',
+    module: 'descubre',
     title: 'Paso 1: Su radar de convocatorias',
     description:
       'Bidtory Descubre monitorea SECOP II y Colombia Compra Eficiente cada día. Gemini analiza cada convocatoria y la puntúa según el perfil de su organización. Usted solo ve lo que realmente le aplica.',
@@ -45,7 +46,7 @@ const features: FeatureItem[] = [
   },
   {
     step: 2,
-    logo: '/logo-bidtory-aplica-pos.svg',
+    module: 'aplica',
     title: 'Paso 2: Pipeline de trabajo',
     description:
       'Cuando una oportunidad es relevante, su equipo la gestiona en Bidtory Aplica. El pipeline Kanban muestra el estado de las licitaciones activas —por ejemplo prospecto, en desarrollo, enviada y cierre del proceso— con una vista clara para todo el equipo.',
@@ -54,7 +55,7 @@ const features: FeatureItem[] = [
   },
   {
     step: 3,
-    logo: '/logo-bidtory-aplica-pos.svg',
+    module: 'aplica',
     title: 'Paso 3: Análisis IA del pliego',
     description:
       'En la pestaña Análisis IA, Bidtory resume el pliego y los requisitos habilitantes, y en una segunda vista muestra el diagnóstico de elegibilidad frente al perfil de su organización y el checklist de documentos sugerido. Use las vistas 1 y 2 debajo de la imagen para recorrer ambas pantallas con texto legible.',
@@ -70,7 +71,7 @@ const features: FeatureItem[] = [
   },
   {
     step: 4,
-    logo: '/logo-bidtory-aplica-pos.svg',
+    module: 'aplica',
     title: 'Paso 4: Checklist y documentos de la propuesta',
     description:
       'En la pestaña Checklist concentra lo que exige el proceso: biblioteca de documentos del pliego (pliego, anexos, adendas) y el checklist oficial con ítems como garantía de seriedad y carta de presentación. Los documentos que la IA sugirió al analizar el pliego (por ejemplo certificación ISO 27001 o carta de alianza técnica) quedan identificados para que no se pierdan entre el resto de requisitos.',
@@ -83,7 +84,7 @@ const features: FeatureItem[] = [
   },
   {
     step: 5,
-    logo: '/logo-bidtory-aplica-pos.svg',
+    module: 'aplica',
     title: 'Paso 5: Bitácora y trazabilidad',
     description:
       'En la pestaña Bitácora, los perfiles de jurídica revisan y validan requisitos y riesgos; los de gestión y formulación documentan acuerdos y el estado de los documentos asociados a la propuesta. Todo queda registrado en un solo hilo por licitación, con trazabilidad clara para auditorías o revisiones internas, sin perder el contexto entre correos dispersos.',
@@ -219,13 +220,7 @@ export function FeatureScroll() {
             transition={{ duration: 0.35, ease: 'easeInOut' }}
             className="flex flex-col items-start text-left space-y-4"
           >
-            <Image
-              src={activeFeature.logo}
-              alt={`${activeFeature.title} logo`}
-              width={192}
-              height={48}
-              className="h-auto w-44"
-            />
+            <BidtoryModuleLogo module={activeFeature.module} logoClassName="h-16" />
             <h3 className="text-2xl md:text-3xl font-bold font-headline leading-snug">
               {activeFeature.title}
             </h3>
