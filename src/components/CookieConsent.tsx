@@ -87,7 +87,7 @@ export function CookieConsent() {
               <Cookie className="h-5 w-5 mt-0.5 shrink-0 text-highlight" />
               <p>
                 Utilizamos cookies para mejorar su experiencia y analizar el tráfico. Puede personalizar sus preferencias o aceptarlas todas. Consulte nuestra{' '}
-                <Link href="/privacy-policy" className="underline hover:text-accent">
+                <Link href="/privacidad" className="underline hover:text-accent">
                   Política de Privacidad
                 </Link>
                 .

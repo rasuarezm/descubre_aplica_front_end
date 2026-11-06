@@ -11,7 +11,7 @@ function EndorsementLink({
   children,
   className,
 }: {
-  placement: "header" | "footer";
+  placement: "footer";
   children: ReactNode;
   className?: string;
 }) {
@@ -27,17 +27,6 @@ function EndorsementLink({
     >
       {children}
     </a>
-  );
-}
-
-export function PuroContenidoHeaderMark() {
-  return (
-    <EndorsementLink
-      placement="header"
-      className="hidden shrink-0 text-[11px] font-medium leading-tight tracking-wide text-muted-foreground/80 hover:text-muted-foreground sm:inline"
-    >
-      por Puro Contenido
-    </EndorsementLink>
   );
 }
 

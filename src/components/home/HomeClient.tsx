@@ -8,7 +8,6 @@ import { Badge } from "@/components/ui/badge";
 import { FeatureScroll } from "@/components/home/FeatureScroll";
 import {
   PuroContenidoFooterClaim,
-  PuroContenidoHeaderMark,
 } from "@/components/layout/PuroContenidoEndorsement";
 import { ArrowRight, Menu, X, Zap, ChevronRight, Check } from "lucide-react";
 
@@ -42,7 +41,6 @@ export function HomeClient() {
             <Link href="/" className="flex min-w-0 shrink items-center">
               <BidtoryLogo alt="Bidtory - Licitaciones con IA" className="h-12" />
             </Link>
-            <PuroContenidoHeaderMark />
           </div>
           <nav
             className="hidden items-center gap-6 md:flex"

@@ -3,7 +3,6 @@ import { BidtoryLogo } from "@/components/icons/BidtoryLogo";
 import { Button } from "@/components/ui/button";
 import {
   PuroContenidoFooterClaim,
-  PuroContenidoHeaderMark,
 } from "@/components/layout/PuroContenidoEndorsement";
 
 export function LegalLayout({ children }: { children: React.ReactNode }) {
@@ -15,7 +14,6 @@ export function LegalLayout({ children }: { children: React.ReactNode }) {
             <Link href="/" className="flex items-center">
               <BidtoryLogo alt="Bidtory - Licitaciones con IA" className="h-12" />
             </Link>
-            <PuroContenidoHeaderMark />
           </div>
           <nav className="hidden md:flex items-center gap-6">
             <Link
