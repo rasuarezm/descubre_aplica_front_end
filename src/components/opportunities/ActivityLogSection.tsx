@@ -117,6 +117,7 @@ function CommentThread({ comment, onReply, onRefreshData, currentUserId }: Comme
     try {
         await apiClient.patch('/update_opportunity_comment', {
             comment_id: comment.id,
+            opportunity_id: comment.opportunity_id,
             comment_text: editedText
         });
         
@@ -136,7 +137,8 @@ function CommentThread({ comment, onReply, onRefreshData, currentUserId }: Comme
 
     try {
         await apiClient.delete('/delete_opportunity_comment', { 
-            comment_id: comment.id 
+            comment_id: comment.id,
+            opportunity_id: comment.opportunity_id
         });
 
         toast({ title: "Comentario eliminado" });

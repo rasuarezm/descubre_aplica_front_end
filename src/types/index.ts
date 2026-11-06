@@ -359,6 +359,7 @@ export interface ProposalDocumentStatusInfo {
 
 export interface OpportunityComment {
   id: string;
+  opportunity_id: string;
   author_user_id: string; // Deprecated but kept for backward compatibility
   author_display_name: string; // Deprecated
   author_photo_url: string | null; // Deprecated
