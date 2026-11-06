@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useAuth } from '@/contexts/auth-context';
 import { useToast } from '@/hooks/use-toast';
 import type { DocumentItem, WbsCandidateDocument } from '@/types';
@@ -14,16 +14,22 @@ import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
 import { Bot, Lightbulb, AlertTriangle, Loader2, Info } from 'lucide-react';
 import { Card, CardContent } from '../ui/card';
-import apiClient, { ApiError } from '@/lib/api-client';
+import apiClient from '@/lib/api-client';
+import { useAiGeneration } from '@/hooks/use-ai-generation';
+import { GenerationRecoveryCard } from './GenerationRecoveryCard';
 import {
   clearWbsGenerating,
   isWbsGenerating,
   markWbsGenerating,
 } from '@/lib/wbs-generating-state';
-import { db } from '@/lib/firebase';
-import { doc as firestoreDoc, onSnapshot } from 'firebase/firestore';
 
 type WbsUiState = 'conflict' | 'ready' | 'draft_only' | 'no_pliegos';
+
+interface WbsGenerationPayload {
+  opportunity_id: string;
+  document_ids: number[];
+  strategic_context?: string;
+}
 
 interface WBSGeneratorProps {
   opportunityId: string;
@@ -44,10 +50,6 @@ export function WBSGenerator({
   const { toast } = useToast();
 
   const [isLoading, setIsLoading] = useState(false);
-  const [isBackgroundGenerating, setIsBackgroundGenerating] = useState(() =>
-    isWbsGenerating(opportunityId),
-  );
-  const [wbsProgress, setWbsProgress] = useState<{ progress: number; step: string } | null>(null);
   const [candidateDocs, setCandidateDocs] = useState<WbsCandidateDocument[]>([]);
   const [selectedDocIds, setSelectedDocIds] = useState<number[]>([]);
   const [strategicContext, setStrategicContext] = useState('');
@@ -55,76 +57,50 @@ export function WBSGenerator({
   const [isSelectModalOpen, setIsSelectModalOpen] = useState(false);
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
 
-  const unsubscribeRef = useRef<(() => void) | null>(null);
-
-  useEffect(() => {
-    setIsBackgroundGenerating(isWbsGenerating(opportunityId));
-  }, [opportunityId]);
-
-  // Limpia el listener al desmontar
-  useEffect(() => {
-    return () => {
-      unsubscribeRef.current?.();
-    };
-  }, []);
-
-  const startProgressListener = () => {
-    // Limpia cualquier listener anterior
-    unsubscribeRef.current?.();
-
-    const unsub = onSnapshot(
-      firestoreDoc(db, 'opportunities', opportunityId),
-      (snap) => {
-        if (!snap.exists()) return;
-        const data = snap.data();
-        const status = data?.wbs_generation_status as string | undefined;
-        const progress = typeof data?.wbs_generation_progress === 'number'
-          ? data.wbs_generation_progress
-          : 0;
-        const step = typeof data?.wbs_generation_step === 'string'
-          ? data.wbs_generation_step
-          : 'Procesando...';
-
-        if (status === 'queued' || status === 'processing') {
-          setWbsProgress({ progress, step });
-        } else if (status === 'completed') {
-          unsub();
-          unsubscribeRef.current = null;
-          setWbsProgress(null);
-          clearWbsGenerating(opportunityId);
-          setIsBackgroundGenerating(false);
-          toast({ title: "¡WBS generado!", description: "El borrador de la estructura de trabajo está listo." });
-          onWbsGenerated();
-        } else if (status === 'failed') {
-          unsub();
-          unsubscribeRef.current = null;
-          const errorMsg = data?.wbs_generation_error || 'Error en la generación. Por favor, intente de nuevo.';
-          setWbsProgress(null);
-          clearWbsGenerating(opportunityId);
-          setIsBackgroundGenerating(false);
-          setIsLoading(false);
-          toast({ title: "Error al generar el WBS", description: errorMsg, variant: "destructive" });
-        }
+  const generation = useAiGeneration<WbsGenerationPayload>({
+    kind: 'wbs',
+    opportunityId,
+    serverStatus: wbsGenerationStatus,
+    initiallyActive: isWbsGenerating(opportunityId),
+    handlers: {
+      onCompleted: () => {
+        toast({ title: "¡WBS generado!", description: "El borrador de la estructura de trabajo está listo." });
+        onWbsGenerated();
       },
-      (error) => {
-        console.warn('[WBSGenerator] onSnapshot error:', error);
-      }
-    );
+      onFailed: (message) => {
+        toast({ title: "Error al generar el WBS", description: message, variant: "destructive" });
+      },
+      onRejected: (message) => {
+        toast({ title: "Error", description: message, variant: "destructive" });
+      },
+      onInProgress: () => {
+        toast({
+          title: "Generación en curso",
+          description: "Su WBS ya está siendo procesado. Se le notificará cuando termine.",
+        });
+      },
+      onAlreadyExists: () => {
+        onWbsGenerated();
+        toast({
+          title: "WBS ya disponible",
+          description: "La estructura ya fue generada para esta oportunidad.",
+        });
+      },
+    },
+  });
+  const { view } = generation;
+  const isBackgroundGenerating = view.status === 'running';
 
-    unsubscribeRef.current = unsub;
-  };
-
-  // Reanudar progreso si el usuario recargó mientras había generación en curso
+  // La marca sobrevive a una recarga mientras el servidor no haya resuelto la solicitud.
   useEffect(() => {
-    if (wbsGenerationStatus === 'queued' || wbsGenerationStatus === 'processing') {
-      setIsBackgroundGenerating(true);
+    if (view.status === 'running' || view.status === 'unconfirmed') {
       markWbsGenerating(opportunityId);
-      startProgressListener();
+    } else {
+      clearWbsGenerating(opportunityId);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [view.status, opportunityId]);
 
-  const isBusy = isLoading || isBackgroundGenerating;
+  const isBusy = isLoading || view.status !== 'idle';
 
   const wbsUiState = useMemo((): WbsUiState => {
     const hasDraft = tenderDocuments.some(
@@ -169,15 +145,10 @@ export function WBSGenerator({
     setIsConfirmModalOpen(true);
   };
 
-  const handleFinalConfirm = async () => {
+  const handleFinalConfirm = () => {
     setIsConfirmModalOpen(false);
-    setIsLoading(true);
 
-    const payload: {
-      opportunity_id: string;
-      document_ids: number[];
-      strategic_context?: string;
-    } = {
+    const payload: WbsGenerationPayload = {
       opportunity_id: opportunityId,
       document_ids: selectedDocIds,
     };
@@ -185,47 +156,9 @@ export function WBSGenerator({
       payload.strategic_context = strategicContext.trim();
     }
 
-    markWbsGenerating(opportunityId);
-    setIsBackgroundGenerating(true);
-
-    try {
-      // POST retorna 202 — la respuesta no contiene el WBS, solo confirma el encolamiento
-      await apiClient.post('/generate_wbs', payload);
-
-      // Inicia el listener de Firestore para mostrar progreso en tiempo real
-      startProgressListener();
-    } catch (error) {
-      if (error instanceof ApiError) {
-        if (error.status === 409) {
-          const reason = (error.data as { reason?: string })?.reason;
-          if (reason === 'in_progress') {
-            startProgressListener();
-            toast({
-              title: "Generación en curso",
-              description: "Su WBS ya está siendo procesado. Se le notificará cuando termine.",
-            });
-          } else {
-            clearWbsGenerating(opportunityId);
-            setIsBackgroundGenerating(false);
-            onWbsGenerated();
-            toast({
-              title: "WBS ya disponible",
-              description: "La estructura ya fue generada para esta oportunidad.",
-            });
-          }
-          return;
-        }
-        if (error.status === 400 || error.status === 403) {
-          clearWbsGenerating(opportunityId);
-          setIsBackgroundGenerating(false);
-        }
-      }
-      toast({ title: "Error", description: (error as Error).message, variant: "destructive" });
-    } finally {
-      setIsLoading(false);
-      setSelectedDocIds([]);
-      setStrategicContext('');
-    }
+    setSelectedDocIds([]);
+    setStrategicContext('');
+    void generation.start(payload);
   };
 
   const handleCheckboxChange = (id: number, checked: boolean) => {
@@ -306,10 +239,10 @@ export function WBSGenerator({
         <CardContent className="pt-6 flex flex-col items-center text-center gap-4">
           <Loader2 className="h-10 w-10 animate-spin text-highlight" />
           <h3 className="text-lg font-semibold">Generando borrador de WBS…</h3>
-          {wbsProgress ? (
+          {view.status === 'running' && view.progress ? (
             <div className="w-full max-w-sm space-y-2">
-              <Progress value={wbsProgress.progress} className="h-2" />
-              <p className="text-sm text-muted-foreground">{wbsProgress.step}</p>
+              <Progress value={view.progress.progress} className="h-2" />
+              <p className="text-sm text-muted-foreground">{view.progress.step}</p>
             </div>
           ) : (
             <p className="text-sm text-muted-foreground max-w-md">
@@ -319,6 +252,18 @@ export function WBSGenerator({
           )}
         </CardContent>
       </Card>
+    );
+  }
+
+  if (view.status === 'unconfirmed' || view.status === 'retryable') {
+    return (
+      <GenerationRecoveryCard
+        view={view}
+        isChecking={generation.isChecking}
+        onCheck={() => void generation.check()}
+        onRetry={() => void generation.retry()}
+        onDismiss={generation.dismiss}
+      />
     );
   }
 

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import type { DocumentItem, Observation, ObservationsResult } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -13,11 +13,16 @@ import { Label } from '@/components/ui/label';
 import { Progress } from '@/components/ui/progress';
 import { Bot, Copy, Check, Loader2, Scale, AlertTriangle, RotateCcw, Info, FileCheck2, FileClock } from 'lucide-react';
 import apiClient from '@/lib/api-client';
-import { db } from '@/lib/firebase';
-import { doc as firestoreDoc, onSnapshot } from 'firebase/firestore';
+import { useAiGeneration } from '@/hooks/use-ai-generation';
+import { GenerationRecoveryCard } from './GenerationRecoveryCard';
 
 const CATEGORY_FINAL = 'Terminos de Referencia';
 const CATEGORY_DRAFT = 'Borrador de Terminos de Referencia';
+
+interface ObservationsGenerationPayload {
+  opportunity_id: string;
+  document_ids: string[];
+}
 
 interface ObservationsGeneratorProps {
   opportunityId: string;
@@ -67,14 +72,10 @@ export function ObservationsGenerator({
 }: ObservationsGeneratorProps) {
   const { toast } = useToast();
 
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [obsProgress, setObsProgress] = useState<{ progress: number; step: string } | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedDocIds, setSelectedDocIds] = useState<string[]>([]);
   const [result, setResult] = useState<ObservationsResult | null>(null);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
-
-  const unsubscribeRef = useRef<(() => void) | null>(null);
 
   // Al montar, carga la última observación guardada
   useEffect(() => {
@@ -84,78 +85,53 @@ export function ObservationsGenerator({
       .catch(() => {/* Sin observaciones previas — silencioso */});
   }, [opportunityId]);
 
-  // Limpia el listener al desmontar
-  useEffect(() => {
-    return () => { unsubscribeRef.current?.(); };
-  }, []);
-
-  const startProgressListener = () => {
-    unsubscribeRef.current?.();
-
-    const unsub = onSnapshot(
-      firestoreDoc(db, 'opportunities', opportunityId),
-      async (snap) => {
-        if (!snap.exists()) return;
-        const data = snap.data();
-        const status = data?.observations_generation_status as string | undefined;
-        const progress = typeof data?.observations_generation_progress === 'number'
-          ? data.observations_generation_progress
-          : 0;
-        const step = typeof data?.observations_generation_step === 'string'
-          ? data.observations_generation_step
-          : 'Procesando...';
-
-        if (status === 'queued' || status === 'processing') {
-          setObsProgress({ progress, step });
-        } else if (status === 'completed') {
-          unsub();
-          unsubscribeRef.current = null;
-          setObsProgress(null);
-          setIsGenerating(false);
-
-          // Fetch del resultado desde Firestore (get_observations)
-          try {
-            const obsData = await apiClient.get<ObservationsResult>(
-              `/get_observations?opportunity_id=${opportunityId}`
-            );
-            if (obsData) {
-              setResult(obsData);
-              toast({
-                title: "Observaciones generadas",
-                description: `Se identificaron ${obsData.observations_count} hallazgo(s) en el pliego.`,
-              });
+  const loadGeneratedObservations = async (confirmed: boolean) => {
+    try {
+      const obsData = await apiClient.get<ObservationsResult>(
+        `/get_observations?opportunity_id=${opportunityId}`
+      );
+      if (obsData) {
+        setResult(obsData);
+        toast(confirmed
+          ? {
+              title: "Observaciones generadas",
+              description: `Se identificaron ${obsData.observations_count} hallazgo(s) en el pliego.`,
             }
-          } catch {
-            toast({
-              title: "Observaciones listas",
-              description: "Las observaciones se generaron. Recargue la página si no aparecen.",
+          : {
+              title: "Se muestran las últimas observaciones",
+              description: "No pudimos confirmar su solicitud. Si esperaba un análisis nuevo, use «Regenerar».",
             });
-          }
-        } else if (status === 'failed') {
-          unsub();
-          unsubscribeRef.current = null;
-          const errorMsg = data?.observations_generation_error || 'Error en la generación. Por favor, intente de nuevo.';
-          setObsProgress(null);
-          setIsGenerating(false);
-          toast({ title: "Error al generar observaciones", description: errorMsg, variant: "destructive" });
-        }
-      },
-      (error) => {
-        console.warn('[ObservationsGenerator] onSnapshot error:', error);
       }
-    );
-
-    unsubscribeRef.current = unsub;
+    } catch {
+      toast({
+        title: "Observaciones listas",
+        description: "Las observaciones se generaron. Recargue la página si no aparecen.",
+      });
+    }
   };
 
-  // Reanudar progreso si el usuario recargó mientras había generación en curso
-  useEffect(() => {
-    if (observationsGenerationStatus === 'queued' || observationsGenerationStatus === 'processing') {
-      setIsGenerating(true);
-      startProgressListener();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const generation = useAiGeneration<ObservationsGenerationPayload>({
+    kind: 'observations',
+    opportunityId,
+    serverStatus: observationsGenerationStatus,
+    handlers: {
+      onCompleted: ({ confirmed }) => void loadGeneratedObservations(confirmed),
+      onFailed: (message) => {
+        toast({ title: "Error al generar observaciones", description: message, variant: "destructive" });
+      },
+      onRejected: (message) => {
+        toast({ title: "Error al generar observaciones", description: message, variant: "destructive" });
+      },
+      onInProgress: () => {
+        toast({
+          title: "Generación en curso",
+          description: "Las observaciones ya se están generando. Le avisaremos cuando terminen.",
+        });
+      },
+      onAlreadyExists: () => void loadGeneratedObservations(false),
+    },
+  });
+  const { view } = generation;
 
   const { finalDocs, draftDocs, hasFinal, hasDraft } = useMemo(() => {
     const finalDocs = tenderDocuments.filter(d => d.tender_document_category === CATEGORY_FINAL);
@@ -179,26 +155,13 @@ export function ObservationsGenerator({
     setIsModalOpen(true);
   };
 
-  const handleConfirm = async () => {
+  const handleConfirm = () => {
     if (selectedDocIds.length === 0) {
       toast({ title: "Selección requerida", description: "Seleccione al menos un documento para continuar.", variant: "destructive" });
       return;
     }
     setIsModalOpen(false);
-    setIsGenerating(true);
-
-    try {
-      // POST retorna 202 — el resultado llega por Firestore onSnapshot
-      await apiClient.post('/generate_observations', {
-        opportunity_id: opportunityId,
-        document_ids: selectedDocIds,
-      });
-
-      startProgressListener();
-    } catch (error) {
-      setIsGenerating(false);
-      toast({ title: "Error al generar observaciones", description: (error as Error).message, variant: "destructive" });
-    }
+    void generation.start({ opportunity_id: opportunityId, document_ids: selectedDocIds });
   };
 
   const handleCopy = async (text: string, index: number) => {
@@ -279,16 +242,16 @@ export function ObservationsGenerator({
   }
 
   // --- Vista: Generando (progreso en tiempo real) ---
-  if (isGenerating) {
+  if (view.status === 'running') {
     return (
       <Card className="bg-muted/50 border-dashed">
         <CardContent className="pt-6 flex flex-col items-center text-center gap-4">
           <Loader2 className="h-10 w-10 animate-spin text-highlight" />
           <h3 className="text-lg font-semibold">Analizando el pliego…</h3>
-          {obsProgress ? (
+          {view.progress ? (
             <div className="w-full max-w-sm space-y-2">
-              <Progress value={obsProgress.progress} className="h-2" />
-              <p className="text-sm text-muted-foreground">{obsProgress.step}</p>
+              <Progress value={view.progress.progress} className="h-2" />
+              <p className="text-sm text-muted-foreground">{view.progress.step}</p>
             </div>
           ) : (
             <p className="text-sm text-muted-foreground max-w-md">
@@ -297,6 +260,19 @@ export function ObservationsGenerator({
           )}
         </CardContent>
       </Card>
+    );
+  }
+
+  // --- Vista: Fallo o estado sin confirmar ---
+  if (view.status === 'unconfirmed' || view.status === 'retryable') {
+    return (
+      <GenerationRecoveryCard
+        view={view}
+        isChecking={generation.isChecking}
+        onCheck={() => void generation.check()}
+        onRetry={() => void generation.retry()}
+        onDismiss={generation.dismiss}
+      />
     );
   }
 

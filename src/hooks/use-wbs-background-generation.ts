@@ -32,9 +32,14 @@ export function useWbsBackgroundGeneration(
 
     if (!isWbsGenerating(opportunityId)) return;
 
-    const poll = () => onRefresh();
-    poll();
-    const intervalId = setInterval(poll, WBS_POLL_INTERVAL_MS);
+    onRefresh();
+    const intervalId = setInterval(() => {
+      if (isWbsGenerating(opportunityId)) {
+        onRefresh();
+      } else {
+        clearInterval(intervalId);
+      }
+    }, WBS_POLL_INTERVAL_MS);
     return () => clearInterval(intervalId);
   }, [opportunityId, hasWbs, onRefresh, toast]);
 }
