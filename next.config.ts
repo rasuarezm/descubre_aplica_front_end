@@ -14,9 +14,6 @@ const nextConfig: NextConfig = {
   /* config options here */
   // /api-proxy → `src/app/api-proxy/[...path]/route.ts` reenvía al gateway conservando
   // Authorization (los rewrites de Next hacia URLs externas no lo garantizan y daban 403).
-  typescript: {
-    ignoreBuildErrors: true,
-  },
   images: {
     remotePatterns: [
       {

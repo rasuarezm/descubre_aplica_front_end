@@ -218,6 +218,7 @@ export interface DocumentItem {
   fileUrl?: string; // gs:// URI from backend
   signed_url?: string; // Signed URL for viewing/downloading
   fileName?: string; // This will hold the 'filename' from the backend
+  filename?: string; // Campo que get_documents devuelve sin mapear
   document_type?: string; 
   expected_type_label?: string; // This is the field to match against requirement name
   uploadedAt?: Date;

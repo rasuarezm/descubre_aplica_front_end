@@ -23,7 +23,7 @@ export function AcceptTermsModal() {
     setIsSubmitting(true);
 
     try {
-      await apiClient.post('/accept_terms');
+      await apiClient.post('/accept_terms', {});
 
       toast({
         title: "¡Gracias por aceptar!",

@@ -20,6 +20,15 @@ import { Loader2, Lock } from "lucide-react";
 import descubreApiClient from "@/lib/descubre-api-client";
 import { trackEvent } from "@/lib/analytics";
 
+declare global {
+  interface Window {
+    grecaptcha?: {
+      ready: (callback: () => void) => void;
+      execute: (siteKey: string, options: { action: string }) => Promise<string>;
+    };
+  }
+}
+
 const RECAPTCHA_SITE_KEY =
   process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY ||
   "6LfE3zsrAAAAAEF_CY-ik0PVRxLGfGPCihLQ04YZ";

@@ -98,7 +98,7 @@ export default function UsersClient() {
         const payload: {
             uid: string;
             role: 'admin' | 'customer';
-            customer_id: string | null;
+            customer_id?: string | null;
             customer_role?: CustomerRole | null;
         } = {
         uid: editingUser.uid,
@@ -389,7 +389,6 @@ export default function UsersClient() {
                                     <Select
                                         value={editingUser.customer_id || 'unassigned'}
                                         onValueChange={(value) => setEditingUser(prev => prev ? {...prev, customer_id: value === 'unassigned' ? null : value} : null)}
-                                        disabled={editingUser.role === 'admin'}
                                         name="customer-select"
                                     >
                                         <SelectTrigger>
