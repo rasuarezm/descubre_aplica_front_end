@@ -10,7 +10,8 @@
     "start": "next start",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "test": "node --import tsx --test tests/*.test.ts"
+    "test": "node --import tsx --test tests/*.test.ts",
+    "deploy:check": "node scripts/verify-deploy-target.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.1.0",
