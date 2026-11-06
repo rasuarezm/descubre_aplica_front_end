@@ -1,0 +1,1 @@
+{"hosting":{"site":"portal-own","rewrites":[{"source":"**","run":{"serviceId":"portal-own"}}]}}
