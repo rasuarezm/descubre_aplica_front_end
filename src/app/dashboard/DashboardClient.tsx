@@ -22,6 +22,7 @@ import { cn } from '@/lib/utils';
 import { useDescubre } from '@/contexts/descubre-context';
 import descubreApiClient from '@/lib/descubre-api-client';
 import { getUrgencyInfo } from '@/lib/date-utils';
+import { subscriptionBadgeEntry } from '@/lib/subscription-badge';
 import type { OportunidadesDescubreResponse, Opportunity } from '@/types';
 
 function StatChip({
@@ -484,16 +485,7 @@ export default function DashboardClient() {
     );
 
     const subscriptionBadge = (state: string | null | undefined) => {
-      const map: Record<string, { label: string; className: string }> = {
-        al_dia: { label: 'Al dia', className: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' },
-        por_vencer: { label: 'Por vencer', className: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' },
-        vencido: { label: 'Vencido', className: 'bg-destructive/10 text-destructive' },
-        prueba_gratuita: { label: 'Prueba', className: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' },
-        sin_fecha: { label: 'Sin fecha', className: 'bg-muted text-muted-foreground' },
-        inactivo: { label: 'Inactivo', className: 'bg-muted text-muted-foreground' },
-        desconocido: { label: 'Sin datos', className: 'bg-muted text-muted-foreground' },
-      };
-      const entry = map[state ?? ''] ?? map.desconocido;
+      const entry = subscriptionBadgeEntry(state);
       return (
         <span className={cn('inline-flex items-center rounded-full px-2 py-0.5 text-[11px] font-medium', entry.className)}>
           {entry.label}
