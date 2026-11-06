@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useMemo, useState, useCallback, ChangeEvent } from 'react';
+import { useMemo, useRef, useState, useCallback, ChangeEvent } from 'react';
 import type { Opportunity, ProposalDocument, ProposalDocumentStatusInfo, UserProfile, DocumentItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,6 +20,7 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
+import { uploadProposalDocument, type PendingProposalUpload } from '@/lib/proposal-documents-api';
 import { WBSGenerator } from './WBSGenerator';
 import { WBSViewer } from './WBSViewer';
 
@@ -66,6 +67,7 @@ export function ProposalDocumentsSection({ userProfile, opportunity, proposalDoc
   
   const [modalState, setModalState] = useState<ModalState>({ isOpen: false, mode: 'new', doc: null, file: null });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const pendingUploadRef = useRef<PendingProposalUpload | null>(null);
   
   const [docToDelete, setDocToDelete] = useState<ProposalDocument | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -113,6 +115,7 @@ export function ProposalDocumentsSection({ userProfile, opportunity, proposalDoc
         // Always use the original document's ID as the parent for all subsequent versions.
         parentId = doc.parent_document_id || doc.id || null;
     }
+    pendingUploadRef.current = null;
     
     setModalState({ 
       isOpen: true, 
@@ -165,69 +168,19 @@ export function ProposalDocumentsSection({ userProfile, opportunity, proposalDoc
         if (!response.ok) throw new Error("No se pudo actualizar el documento.");
         toast({ title: "Éxito", description: "Documento actualizado." });
       } else {
+        await uploadProposalDocument(
+          {
+            file: file!,
+            customerId: opportunity.customer_id,
+            opportunityId: opportunity.id,
+            versionLabel: doc.version_label,
+            description: doc.description,
+            status: doc.status,
+            parentDocumentId: doc.parent_document_id,
+          },
+          pendingUploadRef
+        );
 
-        // 1. Obtener URL Firmada
-        // Nota: Usamos el endpoint genérico pero con document_context='proposal'
-        const urlPayload = {
-            metadata: {
-                filename: file!.name,
-                content_type: file!.type,
-                customer_id: opportunity.customer_id,
-                opportunity_id: opportunity.id,
-                document_context: 'proposal', // CRÍTICO: Define la ruta en el bucket
-                proposal_doc_category: 'propuesta', // Valor por defecto o dinámico si aplica
-                version_label: doc.version_label || 'v1',
-                parent_document_id: doc.parent_document_id || ''
-            }
-        };
-
-        const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL;
-        if (!apiBase) throw new Error('Missing NEXT_PUBLIC_API_BASE_URL');
-
-        const signResponse = await fetch(`${apiBase}/generate_document_upload_url`, {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${idToken}` 
-            },
-            body: JSON.stringify(urlPayload)
-        });
-
-        if (!signResponse.ok) throw new Error('Error al obtener permiso de subida.');
-        const { upload_url, gcs_uri } = await signResponse.json();
-
-        // 2. Subir a GCS
-        const uploadResponse = await fetch(upload_url, {
-            method: 'PUT',
-            headers: { 'Content-Type': file!.type },
-            body: file,
-        });
-
-        if (!uploadResponse.ok) throw new Error('Error al subir a Cloud Storage.');
-
-        // 3. Finalizar y Versionar (Nuevo Endpoint)
-        const finalizeResponse = await fetch(`${GATEWAY_URL}/finalize_proposal_document_upload`, {
-            method: 'POST',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${idToken}` 
-            },
-            body: JSON.stringify({
-                opportunity_id: opportunity.id,
-                customer_id: opportunity.customer_id,
-                gcs_uri: gcs_uri,
-                filename: file!.name,
-                content_type: file!.type,
-                category: 'propuesta', // O la categoría que manejes
-                version_label: doc.version_label || 'v1',
-                description: doc.description || '',
-                status: doc.status,
-                parent_document_id: doc.parent_document_id || null
-            })
-        });
-
-        if (!finalizeResponse.ok) throw new Error('Error al finalizar la carga.');
-        
         toast({ title: "Éxito", description: "Documento de propuesta guardado." });
       }
       setModalState({ isOpen: false, mode: 'new', doc: null, file: null });
@@ -235,7 +188,10 @@ export function ProposalDocumentsSection({ userProfile, opportunity, proposalDoc
 
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Ocurrió un error desconocido.';
-      toast({ title: 'Error', description: errorMessage, variant: 'destructive' });
+      const description = pendingUploadRef.current
+        ? `${errorMessage} El archivo ya está cargado: pulse «Subir» para reintentar sin cargarlo de nuevo.`
+        : errorMessage;
+      toast({ title: 'Error', description, variant: 'destructive' });
     } finally {
       setIsSubmitting(false);
     }
