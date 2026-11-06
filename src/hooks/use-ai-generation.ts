@@ -46,7 +46,7 @@ export function useAiGeneration<P>({
     const tracker = createGenerationTracker<P>({
       kind,
       opportunityId,
-      post: (payload) => apiClient.post(`/generate_${kind}`, payload),
+      post: (request) => apiClient.post(`/generate_${kind}`, request),
       subscribe: (onDoc, onError) =>
         onSnapshot(
           firestoreDoc(db, 'opportunities', opportunityId),

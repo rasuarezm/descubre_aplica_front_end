@@ -59,7 +59,7 @@ function harness(kind: GenerationKind = 'wbs', pollMs = 60_000): Harness {
   const tracker = generation.createGenerationTracker<typeof PAYLOAD>({
     kind,
     opportunityId: 'opportunity-a',
-    post: (payload) => apiClient.post(`/generate_${kind}`, payload),
+    post: (request) => apiClient.post(`/generate_${kind}`, request),
     subscribe: (doc, error) => {
       onDoc = doc;
       onError = error;
@@ -114,6 +114,66 @@ beforeEach(() => {
   reads = 0;
 });
 
+describe('R3: request_id identifica la acción del usuario', () => {
+  const requestIds = () => (posts as { request_id?: string }[]).map((post) => post.request_id);
+
+  it('cada solicitud lleva los datos y un request_id con el formato del contrato', async () => {
+    const h = harness('observations');
+
+    await h.tracker.start(PAYLOAD);
+
+    assert.match(requestIds()[0] ?? '', /^[A-Za-z0-9_-]{8,64}$/);
+    assert.deepEqual(posts[0], { ...PAYLOAD, request_id: requestIds()[0] });
+  });
+
+  it('todos los reintentos de una acción repiten el mismo valor', async () => {
+    const h = harness('observations');
+    postResponse = { status: 500 };
+    await h.tracker.start(PAYLOAD);
+    await h.tracker.retry();
+    postResponse = { status: 202 };
+    await h.tracker.retry();
+
+    assert.equal(posts.length, 3);
+    assert.equal(new Set(requestIds()).size, 1);
+  });
+
+  it('un clic nuevo lleva otro valor, también después de un fallo', async () => {
+    const h = harness('observations');
+    postResponse = { status: 500 };
+    await h.tracker.start(PAYLOAD);
+    h.tracker.dismiss();
+
+    postResponse = { status: 202 };
+    await h.tracker.start(PAYLOAD);
+
+    assert.equal(new Set(requestIds()).size, 2);
+  });
+
+  it('200 completed: esa petición ya terminó y se refrescan los resultados sin escuchar', async () => {
+    const h = harness('observations');
+    postResponse = { status: 500 };
+    await h.tracker.start(PAYLOAD);
+
+    postResponse = { status: 200, body: { status: 'completed', operation_id: 'op-1' } };
+    await h.tracker.retry();
+
+    assert.deepEqual(h.events, ['completed:true']);
+    assert.deepEqual(lastView(h), { status: 'idle' });
+    assert.equal(h.isListening(), false);
+  });
+
+  it('un backend anterior responde sin status y se sigue el listener como antes', async () => {
+    const h = harness('observations');
+    postResponse = { status: 202, body: {} };
+
+    await h.tracker.start(PAYLOAD);
+
+    assert.equal(h.isListening(), true);
+    assert.deepEqual(h.events, []);
+  });
+});
+
 describe('B11: un 500 o la red no dejan la generación colgada', () => {
   it('500 sin nada en el servidor: ofrece reintento y no repite la solicitud por su cuenta', async () => {
     const h = harness();
@@ -134,7 +194,8 @@ describe('B11: un 500 o la red no dejan la generación colgada', () => {
     postResponse = { status: 202 };
     await h.tracker.retry();
 
-    assert.deepEqual(posts, [PAYLOAD, PAYLOAD]);
+    assert.equal(posts.length, 2);
+    assert.deepEqual(posts[1], posts[0]);
     assert.equal(lastView(h)?.status, 'running');
     assert.equal(h.isListening(), true);
   });

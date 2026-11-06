@@ -31,6 +31,9 @@ export type GenerationView =
 
 type GenerationDoc = Record<string, unknown>;
 
+/** `request_id` identifica la acción del usuario: el mismo valor es un reintento, no otra generación. */
+export type GenerationRequest<P> = P & { request_id: string };
+
 function updatedAtMs(value: unknown): number | null {
   if (value && typeof (value as { toMillis?: unknown }).toMillis === 'function') {
     return (value as { toMillis: () => number }).toMillis();
@@ -87,7 +90,7 @@ export interface GenerationHandlers {
 interface GenerationTrackerOptions<P> {
   kind: GenerationKind;
   opportunityId: string;
-  post: (payload: P) => Promise<unknown>;
+  post: (request: GenerationRequest<P>) => Promise<unknown>;
   subscribe: (onDoc: (doc: GenerationDoc) => void, onError: (error: unknown) => void) => () => void;
   handlers: GenerationHandlers;
   onView: (view: GenerationView) => void;
@@ -98,7 +101,7 @@ interface GenerationTrackerOptions<P> {
 
 export interface GenerationTracker<P> {
   start: (payload: P) => Promise<void>;
-  /** Repite la última solicitud. Solo actúa si el servidor confirmó que no hay otra en curso. */
+  /** Repite la última solicitud con el mismo `request_id`. Solo actúa si el servidor confirmó que no hay otra en curso. */
   retry: () => Promise<void>;
   /** Consulta el servidor ahora. */
   check: () => Promise<void>;
@@ -116,7 +119,7 @@ export function createGenerationTracker<P>(options: GenerationTrackerOptions<P>)
   const pollMs = options.pollMs ?? GENERATION_POLL_MS;
 
   let view: GenerationView = { status: 'idle' };
-  let lastPayload: P | null = null;
+  let lastRequest: GenerationRequest<P> | null = null;
   let unsubscribe: (() => void) | null = null;
   let pollTimer: ReturnType<typeof setInterval> | null = null;
   let failedChecks = 0;
@@ -144,7 +147,7 @@ export function createGenerationTracker<P>(options: GenerationTrackerOptions<P>)
   };
 
   const offerRetry = (message: string) => {
-    settle(lastPayload === null ? { status: 'idle' } : { status: 'retryable', message });
+    settle(lastRequest === null ? { status: 'idle' } : { status: 'retryable', message });
   };
 
   const apply = (server: ServerGeneration) => {
@@ -157,7 +160,7 @@ export function createGenerationTracker<P>(options: GenerationTrackerOptions<P>)
         return;
       case 'completed': {
         const confirmed = confirmedStart || serverSeenRunning;
-        lastPayload = null;
+        lastRequest = null;
         settle({ status: 'idle' });
         handlers.onCompleted({ confirmed });
         return;
@@ -168,7 +171,7 @@ export function createGenerationTracker<P>(options: GenerationTrackerOptions<P>)
         return;
       case 'stalled':
         offerRetry(STALLED_MESSAGE);
-        if (lastPayload === null) handlers.onFailed(STALLED_MESSAGE);
+        if (lastRequest === null) handlers.onFailed(STALLED_MESSAGE);
         return;
       case 'idle':
         offerRetry(NOT_STARTED_MESSAGE);
@@ -207,14 +210,21 @@ export function createGenerationTracker<P>(options: GenerationTrackerOptions<P>)
     if (!pollTimer) pollTimer = setInterval(() => void check(), pollMs);
   }
 
-  const start = async (payload: P) => {
-    lastPayload = payload;
+  const send = async (request: GenerationRequest<P>) => {
+    lastRequest = request;
     confirmedStart = false;
     serverSeenRunning = false;
     failedChecks = 0;
     setView({ status: 'running', progress: null });
     try {
-      await post(payload);
+      const response = await post(request);
+      // Con este request_id la petición ya terminó: no hay nada nuevo que escuchar.
+      if ((response as { status?: string } | undefined)?.status === 'completed') {
+        lastRequest = null;
+        settle({ status: 'idle' });
+        handlers.onCompleted({ confirmed: true });
+        return;
+      }
       confirmedStart = true;
       watch();
     } catch (error) {
@@ -225,7 +235,7 @@ export function createGenerationTracker<P>(options: GenerationTrackerOptions<P>)
           watch();
           handlers.onInProgress();
         } else {
-          lastPayload = null;
+          lastRequest = null;
           settle({ status: 'idle' });
           handlers.onAlreadyExists();
         }
@@ -233,7 +243,7 @@ export function createGenerationTracker<P>(options: GenerationTrackerOptions<P>)
       }
       // Un 4xx es un rechazo: no se encoló nada. Un 5xx o la red no dicen si se encoló.
       if (error instanceof ApiError && error.status >= 400 && error.status < 500 && error.status !== 408) {
-        lastPayload = null;
+        lastRequest = null;
         settle({ status: 'idle' });
         handlers.onRejected(error.message);
         return;
@@ -243,10 +253,10 @@ export function createGenerationTracker<P>(options: GenerationTrackerOptions<P>)
   };
 
   return {
-    start,
+    start: (payload) => send({ ...payload, request_id: crypto.randomUUID() }),
     check,
     retry: async () => {
-      if (view.status === 'retryable' && lastPayload !== null) await start(lastPayload);
+      if (view.status === 'retryable' && lastRequest !== null) await send(lastRequest);
     },
     resume: async () => {
       if (view.status !== 'idle') return;
@@ -255,7 +265,7 @@ export function createGenerationTracker<P>(options: GenerationTrackerOptions<P>)
     },
     dismiss: () => {
       if (view.status !== 'retryable') return;
-      lastPayload = null;
+      lastRequest = null;
       setView({ status: 'idle' });
     },
     dispose: () => {
