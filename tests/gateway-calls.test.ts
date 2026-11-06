@@ -23,6 +23,7 @@ interface InterceptedCall {
 let calls: InterceptedCall[] = [];
 let failFinalize = false;
 let rejectFinalize = false;
+let alreadyFinalized = false;
 
 /** Backend falso: responde como el gateway y registra cada llamada que hace el código real. */
 const interceptedFetch = async (input: RequestInfo | URL, init: RequestInit = {}): Promise<Response> => {
@@ -41,6 +42,9 @@ const interceptedFetch = async (input: RequestInfo | URL, init: RequestInit = {}
   if (url === SIGNED_URL) return new Response(null, { status: 200 });
   if (url.endsWith('/generate_document_upload_url')) return json({ upload_url: SIGNED_URL, gcs_uri: GCS_URI });
   if (url.endsWith('/finalize_proposal_document_upload')) {
+    if (alreadyFinalized) {
+      return json({ error: 'Esta subida ya se finalizó.', reason: 'already_finalized', id: 'doc-previo' }, 403);
+    }
     if (rejectFinalize) return json({ error: 'La subida no está autorizada para este destino.' }, 403);
     return failFinalize ? json({ error: 'Error interno del servidor.' }, 500) : json({ id: 'doc-1' }, 201);
   }
@@ -49,6 +53,7 @@ const interceptedFetch = async (input: RequestInfo | URL, init: RequestInit = {}
 
 let proposalApi: typeof import('@/lib/proposal-documents-api');
 let contactApi: typeof import('@/lib/contact-api');
+let uploadApi: typeof import('@/lib/upload-finalize');
 
 before(async () => {
   const { auth } = await import('@/lib/firebase');
@@ -56,6 +61,7 @@ before(async () => {
   globalThis.fetch = interceptedFetch as typeof fetch;
   proposalApi = await import('@/lib/proposal-documents-api');
   contactApi = await import('@/lib/contact-api');
+  uploadApi = await import('@/lib/upload-finalize');
 });
 
 const uploadInput = () => ({
@@ -72,6 +78,7 @@ beforeEach(() => {
   calls = [];
   failFinalize = false;
   rejectFinalize = false;
+  alreadyFinalized = false;
 });
 
 describe('B06 · subida de documentos de propuesta', () => {
@@ -136,6 +143,50 @@ describe('B06 · subida de documentos de propuesta', () => {
     await proposalApi.uploadProposalDocument(uploadInput(), pendingUpload);
 
     assert.equal(calls.length, 3);
+  });
+});
+
+describe('R2 · una subida ya finalizada es un éxito', () => {
+  it('tras perder la respuesta, el reintento devuelve el id y no vuelve a cargar el archivo', async () => {
+    const input = uploadInput();
+    const pendingUpload: { current: PendingProposalUpload | null } = { current: null };
+
+    failFinalize = true;
+    await assert.rejects(proposalApi.uploadProposalDocument(input, pendingUpload));
+
+    failFinalize = false;
+    alreadyFinalized = true;
+    calls = [];
+    const result = await proposalApi.uploadProposalDocument(input, pendingUpload);
+
+    assert.deepEqual(endpoints(), ['POST /api-proxy/finalize_proposal_document_upload']);
+    assert.equal(result.id, 'doc-previo');
+    assert.equal(pendingUpload.current, null);
+  });
+
+  it('una finalización normal también devuelve el id', async () => {
+    const result = await proposalApi.uploadProposalDocument(uploadInput(), { current: null });
+
+    assert.equal(result.id, 'doc-1');
+  });
+
+  it('otro 403 sigue siendo un error', async () => {
+    rejectFinalize = true;
+
+    await assert.rejects(
+      uploadApi.finalizeUpload('/finalize_proposal_document_upload', {}),
+      /no está autorizada/,
+    );
+  });
+
+  it('ningún finalizador se salta el helper', () => {
+    const sourceFiles = readdirSync('src', { recursive: true, withFileTypes: true })
+      .filter((entry) => entry.isFile() && /\.tsx?$/.test(entry.name))
+      .map((entry) => join(entry.parentPath, entry.name));
+
+    for (const file of sourceFiles) {
+      assert.doesNotMatch(readFileSync(file, 'utf8'), /apiClient\.post(<[^(]*>)?\(\s*'\/finalize_/, file);
+    }
   });
 });
 

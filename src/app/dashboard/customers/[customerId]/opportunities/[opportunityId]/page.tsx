@@ -38,6 +38,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { AdendaReviewModal } from '@/components/opportunities/AdendaReviewModal';
 import { OpportunityDetailSkeleton } from '@/components/opportunities/OpportunityDetailSkeleton';
 import apiClient from '@/lib/api-client';
+import { finalizeUpload } from '@/lib/upload-finalize';
 import {
   IA_ANALYSIS_ERROR_STATUSES,
   IA_ANALYSIS_IN_PROGRESS_STATUSES,
@@ -405,7 +406,7 @@ const sortedRequiredDocs = useMemo(() => {
         if (!uploadResponse.ok) throw new Error('Error al subir a Cloud Storage');
 
         // 3. Finalizar y Guardar Metadatos
-        await apiClient.post('/finalize_opportunity_document_upload', {
+        await finalizeUpload('/finalize_opportunity_document_upload', {
             opportunity_id: opportunityId,
             customer_id: customerId,
             gcs_uri: gcs_uri,
@@ -457,7 +458,7 @@ const sortedRequiredDocs = useMemo(() => {
       if (!uploadResponse.ok) throw new Error('Error al subir a Cloud Storage');
 
       // 3. Finalizar
-      await apiClient.post('/finalize_opportunity_document_upload', {
+      await finalizeUpload('/finalize_opportunity_document_upload', {
           opportunity_id: opportunityId,
           customer_id: customerId,
           gcs_uri: gcs_uri,

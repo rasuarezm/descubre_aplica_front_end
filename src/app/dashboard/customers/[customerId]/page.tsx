@@ -25,6 +25,7 @@ import { BidtoryRadarIcon } from '@/components/icons/BidtoryRadarIcon';
 import { Separator } from '@/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import apiClient from '@/lib/api-client';
+import { finalizeUpload } from '@/lib/upload-finalize';
 import { customerLogoImgSrc } from '@/lib/gcs-display';
 import { FinancialProfileWidget } from '@/components/customers/FinancialProfileWidget';
 import { RupContractsWidget } from '@/components/customers/RupContractsWidget';
@@ -761,7 +762,7 @@ const handleUploadGeneralDocument = async () => {
         category: newDocInfo.category
       };
 
-      const finalizeRes = await apiClient.post<{ financial_extraction_status?: string | null; id?: string }>(
+      const finalizeRes = await finalizeUpload<{ financial_extraction_status?: string | null; id?: string }>(
         '/finalize_general_document_upload',
         finalizePayload
       );
@@ -843,7 +844,7 @@ const handleUploadGeneralDocument = async () => {
         document_type: name
       };
 
-      await apiClient.post('/finalize_ia_analysis', finalizeBody);
+      await finalizeUpload('/finalize_ia_analysis', finalizeBody);
       
       toast({ title: "Éxito", description: "Análisis iniciado correctamente. Redirigiendo..." });
       setIsAnalysisModalOpen(false);

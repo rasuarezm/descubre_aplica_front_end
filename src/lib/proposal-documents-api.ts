@@ -1,4 +1,5 @@
 import apiClient, { ApiError } from '@/lib/api-client';
+import { finalizeUpload } from '@/lib/upload-finalize';
 
 export interface ProposalUploadInput {
   file: File;
@@ -24,7 +25,7 @@ export interface PendingProposalUpload {
 export async function uploadProposalDocument(
   input: ProposalUploadInput,
   pendingUpload: { current: PendingProposalUpload | null }
-): Promise<void> {
+): Promise<{ id?: string }> {
   const { file, customerId, opportunityId, versionLabel, description, status, parentDocumentId } = input;
 
   if (pendingUpload.current?.file !== file) {
@@ -59,7 +60,7 @@ export async function uploadProposalDocument(
   }
 
   try {
-    await apiClient.post('/finalize_proposal_document_upload', {
+    const finalized = await finalizeUpload<{ id?: string }>('/finalize_proposal_document_upload', {
       opportunity_id: opportunityId,
       customer_id: customerId,
       gcs_uri: pendingUpload.current.gcsUri,
@@ -71,14 +72,14 @@ export async function uploadProposalDocument(
       status,
       parent_document_id: parentDocumentId || null,
     });
+    pendingUpload.current = null;
+    return finalized;
   } catch (error) {
     // Un 4xx es un rechazo definitivo (la concesión de subida se consume una sola vez, caduca o no
     // admite el archivo): reintentar con el mismo objeto no serviría, hay que cargarlo de nuevo.
     if (error instanceof ApiError && error.status < 500) pendingUpload.current = null;
     throw error;
   }
-
-  pendingUpload.current = null;
 }
 
 export interface ProposalDocumentRef {
