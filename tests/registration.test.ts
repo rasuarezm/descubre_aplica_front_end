@@ -237,6 +237,58 @@ describe('B20: no toca cuentas que no le corresponden', () => {
   });
 });
 
+describe('B36: el motivo del 409 decide si el alta terminó', () => {
+  it('reason already_member es un error: no se presenta como registro completo', async () => {
+    const { auth, state } = fakeAuth({ signedIn: true, accountExists: true });
+    profileReply = { status: 409, body: { error: 'Este usuario ya pertenece a una empresa.', reason: 'already_member' } };
+
+    await assert.rejects(registration.registerOrResume(auth, input()), (error: Error) => {
+      assert.ok(error instanceof registration.AlreadyMemberError);
+      assert.match(error.message, /administrador/);
+      return true;
+    });
+
+    assert.equal(state.verificationEmails, 0);
+  });
+
+  it('reason profile_exists sigue siendo registro completo', async () => {
+    const { auth, state } = fakeAuth({ signedIn: true, accountExists: true });
+    profileReply = { status: 409, body: { error: 'El perfil de cliente para este usuario ya existe.', reason: 'profile_exists' } };
+
+    const result = await registration.registerOrResume(auth, input());
+
+    assert.deepEqual(result, { outcome: 'already_complete' });
+    assert.equal(state.verificationEmails, 0);
+  });
+});
+
+describe('B36: reCAPTCHA no verificable (503 de B35)', () => {
+  const unavailable = { error: 'No se pudo verificar la solicitud. Inténtelo de nuevo más tarde.' };
+
+  it('muestra el mensaje de reintento y no envía correo', async () => {
+    const { auth, state } = fakeAuth();
+    profileReply = { status: 503, body: unavailable };
+
+    await assert.rejects(registration.registerOrResume(auth, input()), /Inténtelo de nuevo/);
+
+    assert.equal(state.verificationEmails, 0);
+  });
+
+  it('el reintento reanuda el alta con la misma cuenta y un token nuevo', async () => {
+    const { auth, state } = fakeAuth();
+    profileReply = { status: 503, body: unavailable };
+    await assert.rejects(registration.registerOrResume(auth, input()));
+
+    profileReply = { status: 201 };
+    const result = await registration.registerOrResume(auth, input());
+
+    assert.deepEqual(result, { outcome: 'created', verificationSent: true });
+    assert.equal(state.accountsCreated, 1);
+    assert.equal(state.verificationEmails, 1);
+    assert.notEqual(profilePosts[0].recaptcha_token, profilePosts[1].recaptcha_token);
+  });
+});
+
 describe('B20: quién debe completar el registro', () => {
   const cases: Array<[string, { role: 'customer' | 'admin'; customer_id: string | null } | null, boolean, boolean]> = [
     ['pendiente sin perfil de Descubre', { role: 'customer', customer_id: null }, true, true],

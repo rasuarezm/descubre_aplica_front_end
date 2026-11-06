@@ -36,6 +36,14 @@ export class ExistingAccountError extends Error {
   }
 }
 
+/** La cuenta ya pertenece a otra empresa o al equipo Bidtory: no hay registro que completar. */
+export class AlreadyMemberError extends Error {
+  constructor() {
+    super('Esta cuenta ya pertenece a una empresa o al equipo de Bidtory y no puede registrar otra. Si necesita acceso, pídalo a su administrador.');
+    this.name = 'AlreadyMemberError';
+  }
+}
+
 const WRONG_CREDENTIAL_CODES = ['auth/invalid-credential', 'auth/wrong-password', 'auth/user-not-found'];
 
 /** Un usuario sin vínculo a un cliente y sin perfil de Descubre no terminó de registrarse. */
@@ -106,8 +114,11 @@ export async function registerOrResume<U extends VerifiableUser, P>(
   try {
     await descubreApiClient.post('/v1/client_profile', await input.buildProfile());
   } catch (error) {
-    // La respuesta anterior pudo perderse después de crear el perfil.
-    if (error instanceof ApiError && error.status === 409) return { outcome: 'already_complete' };
+    if (error instanceof ApiError && error.status === 409) {
+      if (error.data?.reason === 'already_member') throw new AlreadyMemberError();
+      // La respuesta anterior pudo perderse después de crear el perfil. Un backend sin B36 no manda reason.
+      return { outcome: 'already_complete' };
+    }
     throw error;
   }
 
