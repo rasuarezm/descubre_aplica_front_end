@@ -9,12 +9,20 @@
 > Antes de cualquier despliegue, ejecuta la verificación previa con el proyecto de destino:
 >
 > ```bash
-> npm run deploy:check -- --project PROYECTO_DE_DESTINO
+> npm run deploy:check -- --project PROYECTO_DE_DESTINO --service SERVICIO_DE_DESTINO
 > ```
 >
-> Sale con error si `.firebaserc`, `firebase.json`, `--project`, las variables de proyecto o el proyecto activo de `gcloud` apuntan al portal protegido (por ID o por número, como Cloud Run o como Function), si `firebase.json` no nombra un `site` o `target` propio de Hosting, o si no puede leer la configuración. Hoy falla, y debe seguir fallando.
+> Falla cerrado: solo pasa si el destino es completo, explícito y coherente.
 >
-> La verificación no impide por sí sola un `gcloud run deploy` o `firebase deploy` lanzado a mano: hay que ejecutarla antes.
+> - `--project` y `--service` se declaran una sola vez y ninguno es el portal protegido.
+> - `.firebaserc` tiene `default` igual a `--project` y ningún alias protegido.
+> - `firebase.json` nombra un `site` o un `target` propio, no el sitio por defecto del proyecto. Si usa `target`, `.firebaserc` lo mapea a sitios de ese proyecto.
+> - Hay un rewrite al servicio declarado y ninguno a otro servicio o Function.
+> - `gcloud` responde, y las variables de proyecto y el proyecto activo de `gcloud`, si existen, coinciden con `--project`. Para fijarlo solo en esta terminal: `export CLOUDSDK_CORE_PROJECT=PROYECTO_DE_DESTINO`.
+>
+> Cualquier otro caso sale con error, también si no puede leer la configuración. Hoy falla, y debe seguir fallando: B08 sigue abierto mientras la configuración apunte al portal protegido.
+>
+> La verificación no impide por sí sola un `gcloud run deploy` o `firebase deploy` lanzado a mano: hay que ejecutarla antes y revisar el comando final.
 
 ## Estado comprobado en la nube (6-nov-2026)
 
@@ -37,7 +45,7 @@ Si un despliegue llegara al servicio protegido por error, la revisión a la que 
 1. Tener los listados de Hosting de ambos proyectos. `agente_oportunidades` publica HTML en el sitio por defecto de `pc-sitioweb-1724428189856`: cambiar solo el proyecto en `.firebaserc` lo sobrescribiría.
 2. Que el propietario defina proyecto, servicio, sitio de Hosting y dominio propios.
 3. Crear ese destino y apuntar a él `.firebaserc`, `firebase.json` y este documento.
-4. Que `npm run deploy:check -- --project PROYECTO_DE_DESTINO` pase, y que el propietario autorice publicar.
+4. Que `npm run deploy:check -- --project PROYECTO_DE_DESTINO --service SERVICIO_DE_DESTINO` pase, y que el propietario autorice publicar.
 
 ## Arquitectura
 
