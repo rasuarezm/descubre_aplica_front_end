@@ -452,20 +452,23 @@ export interface EligibilityAnalysis {
 
 export type NivelSuscripcion = 'esencial' | 'profesional' | 'experto';
 
+/** Tope de un plan. `sin_limite` lo declara `configuracion_planes`. */
+export type PlanLimit = number | 'sin_limite';
+
 export interface PlanConfig {
   nombre_visible: string;
   descripcion_corta?: string;
   precio_mensual_cop?: string;
   limites: {
-    max_fuentes_secop_rss?: number;
-    max_palabras_clave_positivas?: number;
-    max_palabras_clave_negativas?: number;
-    max_destinatarios_correo?: number;
-    max_palabras_clave_doradas?: number;
-    max_tipos_servicio_items?: number;
-    max_ubicaciones_preferidas_items?: number;
-    max_entidades_interes_items?: number;
-    max_areas_fortaleza_colaboracion?: number;
+    max_fuentes_secop_rss?: PlanLimit;
+    max_palabras_clave_positivas?: PlanLimit;
+    max_palabras_clave_negativas?: PlanLimit;
+    max_destinatarios_correo?: PlanLimit;
+    max_palabras_clave_doradas?: PlanLimit;
+    max_tipos_servicio_items?: PlanLimit;
+    max_ubicaciones_preferidas_items?: PlanLimit;
+    max_entidades_interes_items?: PlanLimit;
+    max_areas_fortaleza_colaboracion?: PlanLimit;
   };
   features_habilitadas: {
     dashboard_oportunidades?: boolean;

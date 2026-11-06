@@ -9,6 +9,7 @@ import {
   getFuenteDocumentId,
   nombreFuenteSecop,
 } from '@/lib/descubre-fuente-utils';
+import { fuentesActivasLabel, isLimitReached, limitLabel } from '@/lib/plan-limits';
 import type { DescubreClienteProfile, FuenteSecop } from '@/types';
 import {
   Card, CardContent, CardDescription, CardHeader, CardTitle,
@@ -360,7 +361,7 @@ export default function DescubrePerfilPage() {
   const maxFuentes = limites.max_fuentes_secop_rss ?? 0;
   const fuentesSuscritas = descubreData?.fuentes_suscritas ?? [];
   const fuentesDisponibles = descubreData?.fuentes_secop_disponibles_para_suscripcion ?? [];
-  const limiteAlcanzado = fuentesSuscritas.length >= maxFuentes;
+  const limiteAlcanzado = isLimitReached(fuentesSuscritas.length, maxFuentes);
   const fuentesNoSuscritas = fuentesDisponibles.filter((f) => {
     const fid = getFuenteDocumentId(f);
     return !fuentesSuscritas.some((s) => getFuenteDocumentId(s) === fid);
@@ -433,7 +434,7 @@ export default function DescubrePerfilPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label>Tipos de servicio (máx. {maxTipos})</Label>
+              <Label>Tipos de servicio ({limitLabel(maxTipos)})</Label>
               <ExampleHint>Consultoría TI, Desarrollo Web</ExampleHint>
               <Textarea
                 value={arrayToLines(form.tipos_servicio)}
@@ -444,7 +445,7 @@ export default function DescubrePerfilPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label>Palabras clave positivas (máx. {maxPos})</Label>
+              <Label>Palabras clave positivas ({limitLabel(maxPos)})</Label>
               <ExampleHint>IA, Big Data</ExampleHint>
               <Textarea
                 value={arrayToLines(form.palabras_clave_positivas)}
@@ -455,7 +456,7 @@ export default function DescubrePerfilPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label>Palabras clave negativas (máx. {maxNeg})</Label>
+              <Label>Palabras clave negativas ({limitLabel(maxNeg)})</Label>
               <ExampleHint>Manual, Obsoleto</ExampleHint>
               <Textarea
                 value={arrayToLines(form.palabras_clave_negativas)}
@@ -549,7 +550,7 @@ export default function DescubrePerfilPage() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2"><Bell className="h-5 w-5" />Notificaciones</CardTitle>
-            <CardDescription>Emails que recibirán las alertas de nuevas oportunidades (máx. {maxEmails})</CardDescription>
+            <CardDescription>Emails que recibirán las alertas de nuevas oportunidades ({limitLabel(maxEmails)})</CardDescription>
           </CardHeader>
           <CardContent>
             <Textarea value={arrayToLines(form.send_notifications)} onChange={(e) => updateField('send_notifications', splitLinesRaw(e.target.value))} placeholder={'alerta1@empresa.com\nalerta2@empresa.com'} rows={3} />
@@ -571,7 +572,7 @@ export default function DescubrePerfilPage() {
             </CardTitle>
             <CardDescription>
               <Badge variant="secondary" className="mr-2">{fuentesSuscritas.length}</Badge>
-              de {maxFuentes} fuente(s) activa(s) en su plan
+              {fuentesActivasLabel(maxFuentes)}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
