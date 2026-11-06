@@ -12,7 +12,6 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/contexts/auth-context';
 import { FileStack, PlusCircle, ChevronsUpDown, Download, Trash2, GitCommitVertical, Loader2, Edit, FileUp, Replace, Info } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Badge } from '@/components/ui/badge';
@@ -20,7 +19,12 @@ import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Tooltip, TooltipProvider, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
-import { uploadProposalDocument, type PendingProposalUpload } from '@/lib/proposal-documents-api';
+import {
+  deleteProposalDocument,
+  updateProposalDocument,
+  uploadProposalDocument,
+  type PendingProposalUpload,
+} from '@/lib/proposal-documents-api';
 import { WBSGenerator } from './WBSGenerator';
 import { WBSViewer } from './WBSViewer';
 
@@ -62,7 +66,6 @@ const getStatusClass = (status: string | undefined): string => {
 
 
 export function ProposalDocumentsSection({ userProfile, opportunity, proposalDocuments, proposalDocumentStatuses, tenderDocuments, onRefreshData, onNavigateToChecklist, wbsGenerationStatus }: ProposalDocumentsSectionProps) {
-  const { getIdToken } = useAuth();
   const { toast } = useToast();
   
   const [modalState, setModalState] = useState<ModalState>({ isOpen: false, mode: 'new', doc: null, file: null });
@@ -146,26 +149,13 @@ export function ProposalDocumentsSection({ userProfile, opportunity, proposalDoc
     }
     
     setIsSubmitting(true);
-    const idToken = await getIdToken();
-    if (!idToken) {
-      toast({ title: "Error de Autenticación", variant: "destructive" });
-      setIsSubmitting(false);
-      return;
-    }
     
     try {
       if (mode === 'edit') {
-        const payload = {
-          id: doc.id,
-          version_label: doc.version_label,
-          description: doc.description,
-        };
-        const response = await fetch('https://us-central1-procurement-portal-app.cloudfunctions.net/update_proposal_document', {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${idToken}` },
-            body: JSON.stringify(payload),
-        });
-        if (!response.ok) throw new Error("No se pudo actualizar el documento.");
+        await updateProposalDocument(
+          { id: doc.id!, customerId: opportunity.customer_id, opportunityId: opportunity.id },
+          { version_label: doc.version_label, description: doc.description }
+        );
         toast({ title: "Éxito", description: "Documento actualizado." });
       } else {
         await uploadProposalDocument(
@@ -198,16 +188,11 @@ export function ProposalDocumentsSection({ userProfile, opportunity, proposalDoc
   };
   
   const handleStatusChange = async (docId: string, newStatus: string) => {
-    const idToken = await getIdToken();
-    if (!idToken) return toast({ title: "Error de Autenticación", variant: "destructive" });
-
     try {
-      const response = await fetch('https://us-central1-procurement-portal-app.cloudfunctions.net/update_proposal_document', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${idToken}` },
-        body: JSON.stringify({ id: docId, status: newStatus }),
-      });
-      if (!response.ok) throw new Error("No se pudo actualizar el estado.");
+      await updateProposalDocument(
+        { id: docId, customerId: opportunity.customer_id, opportunityId: opportunity.id },
+        { status: newStatus }
+      );
       toast({ title: "Estado Actualizado" });
       onRefreshData();
     } catch (error) {
@@ -218,32 +203,13 @@ export function ProposalDocumentsSection({ userProfile, opportunity, proposalDoc
   const handleDelete = async () => {
     if (!docToDelete) return;
     setIsDeleting(true);
-    const idToken = await getIdToken();
-    if (!idToken) {
-      setIsDeleting(false);
-      return toast({ title: "Error de Autenticación", variant: "destructive" });
-    }
     
     try {
-        const payload = {
-            document_id: docToDelete.id,
-            kind: "ProposalDocuments"
-        };
-        console.log("Enviando payload para eliminar:", payload);
-        
-        const response = await fetch('https://us-central1-procurement-portal-app.cloudfunctions.net/delete_document', {
-            method: 'DELETE',
-            headers: { 
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${idToken}` 
-            },
-            body: JSON.stringify(payload),
+        await deleteProposalDocument({
+            id: docToDelete.id,
+            customerId: opportunity.customer_id,
+            opportunityId: opportunity.id,
         });
-
-        if (!response.ok) {
-            const errorData = await response.json().catch(() => ({}));
-            throw new Error(errorData.message || 'Error al eliminar el documento.');
-        }
         
         toast({ title: "Éxito", description: "Documento eliminado." });
         setDocToDelete(null);

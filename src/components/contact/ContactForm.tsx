@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { CheckCircle, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useGoogleReCaptcha } from 'react-google-recaptcha-v3';
+import { sendContactForm } from '@/lib/contact-api';
 
 export function ContactForm() {
   const [formData, setFormData] = useState({
@@ -56,24 +57,7 @@ export function ContactForm() {
         throw new Error('No se pudo obtener el token de reCAPTCHA. Por favor, intente de nuevo.');
       }
 
-      const CF_BASE_URL = process.env.NEXT_PUBLIC_CF_BASE_URL ||
-        'https://us-central1-procurement-portal-app.cloudfunctions.net';
-
-      const response = await fetch(`${CF_BASE_URL}/handle_contact_form`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          ...formData,
-          recaptchaToken,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'Ocurrió un error en el servidor.' }));
-        throw new Error(errorData.message || 'No se pudo enviar su mensaje.');
-      }
+      await sendContactForm({ ...formData, recaptchaToken });
 
       setIsSubmitted(true);
 

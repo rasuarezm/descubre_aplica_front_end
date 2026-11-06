@@ -80,3 +80,30 @@ export async function uploadProposalDocument(
 
   pendingUpload.current = null;
 }
+
+export interface ProposalDocumentRef {
+  id: string;
+  customerId: string;
+  opportunityId: string;
+}
+
+export async function updateProposalDocument(
+  { id, customerId, opportunityId }: ProposalDocumentRef,
+  changes: { version_label?: string; description?: string; status?: string }
+): Promise<void> {
+  await apiClient.patch('/update_proposal_document', {
+    id,
+    customer_id: customerId,
+    opportunity_id: opportunityId,
+    ...changes,
+  });
+}
+
+export async function deleteProposalDocument({ id, customerId, opportunityId }: ProposalDocumentRef): Promise<void> {
+  await apiClient.delete('/delete_document', {
+    document_id: id,
+    kind: 'ProposalDocuments',
+    customer_id: customerId,
+    opportunity_id: opportunityId,
+  });
+}
